@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "programmable.robinhood-initial-buy-usd-quote.v1",
+  "executionChainId": "4663",
+  "referenceChainId": "1",
+  "nativeCurrency": "ETH",
+  "quoteCurrency": "USD",
+  "assessmentBase": "gross-native-initial-buy-at-admission",
+  "feedAddress": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+  "feedDecimals": 8,
+  "blockNumber": "25967163",
+  "blockHash": "0xe397e3e3637154f09b383a7c9f3e2d61a00bda1690a4077310953b95b6e3ece3",
+  "blockTimestamp": "1789286267",
+  "roundId": "129127208515966894887",
+  "answeredInRound": "129127208515966894887",
+  "answer": "251459000000",
+  "startedAt": "1789283398",
+  "updatedAt": "1789283411",
+  "minimumUsdWad": "1000000000000000000",
+  "minimumInitialBuyWei": "397679144512625",
+  "observedAt": "2026-09-13T07:58:00.511Z",
+  "expiresAt": "2026-09-13T07:59:00.511Z",
+  "providers": [
+    {
+      "providerId": "drpc",
+      "trustDomain": "drpc.org"
+    },
+    {
+      "providerId": "quicknode",
+      "trustDomain": "quicknode.com"
+    }
+  ],
+  "evidenceDigest": "sha256:70e792aa587780dfd12417cc8e990d5aaecf92c872234229df971e922aa6c3ad"
+}

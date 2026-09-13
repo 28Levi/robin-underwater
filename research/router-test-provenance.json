@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "robin.router-test-provenance.v1",
+  "routerPackage": "@uniswap/universal-router@2.1.0",
+  "routerSourceCommit": "67553d8b067249dd7841d9d1b0eb2997b19d4bf9",
+  "peripherySourceCommit": "3779387e5d296f39df543d23524b050f89a62917",
+  "routerCreationBytecodeHash": "0x6b797c56c9355176d9d15f9c70b159621bbd0db485822d2d02167b5aa1061173",
+  "permit2Source": "https://sourcify.dev/server/v2/contract/1/0x000000000022D473030F116dDEE9F6B43aC78BA3?fields=all",
+  "permit2RuntimeHash": "0xc67d1657868aa5146eaf24fb879fb1fdec3d2d493b3683a61c9c2f4fb2851131",
+  "exactRobinhoodRouterDeploymentVerified": false,
+  "scope": "Pinned upstream router artifact and Ethereum verified Permit2 runtime in a local EVM; not a Robinhood fork"
+}

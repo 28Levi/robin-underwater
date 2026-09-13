@@ -1,0 +1,30 @@
+{
+  "name": "sherwood-prototype",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "compile": "node scripts/compile.mjs",
+    "compile:native20": "node scripts/compile-native20.mjs",
+    "pretest": "node scripts/compile.mjs && node scripts/compile-native20.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "demo": "node scripts/demo.mjs",
+    "check:platform": "node scripts/check-platform.mjs",
+    "snapshot": "node scripts/snapshot.mjs",
+    "prepare:payout": "node scripts/prepare-payout.mjs",
+    "estimate:gas": "node scripts/estimate-launch-gas.mjs",
+    "operator": "node scripts/operator.mjs",
+    "executor:local": "node scripts/executor.mjs",
+    "operator:production": "node scripts/production-operator.mjs"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.4.0",
+    "@uniswap/v4-core": "1.0.2",
+    "ethers": "6.17.0"
+  },
+  "devDependencies": {
+    "@uniswap/universal-router": "2.1.0",
+    "hardhat": "2.26.3",
+    "solc": "0.8.26"
+  }
+}

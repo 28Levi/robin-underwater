@@ -1,0 +1,10 @@
+{
+  "mode": "local-only",
+  "feeVault": null,
+  "codeHashes": {"token": null, "hook": null, "distributor": null, "feeVault": null},
+  "maxGasPerTransactionWei": null,
+  "maxTotalGasWei": null,
+  "minimumHarvestWei": null,
+  "minimumBatchWei": null,
+  "retryIntervalSeconds": 3600
+}

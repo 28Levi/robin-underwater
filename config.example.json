@@ -1,0 +1,22 @@
+{
+  "name": "ROBINHOOD",
+  "symbol": "ROBIN",
+  "chainId": 4663,
+  "rpcUrlEnvironment": "ROBIN_RPC_URL",
+  "token": null,
+  "hook": null,
+  "hookFlavor": "native20",
+  "initializer": null,
+  "distributor": null,
+  "poolManager": "0x8366a39CC670B4001A1121B8F6A443A643e40951",
+  "poolId": null,
+  "deploymentBlock": null,
+  "excludedAddresses": [],
+  "minimumAgeSeconds": 3600,
+  "twapWindowSeconds": 1800,
+  "maxOracleAgeSeconds": 300,
+  "maxSnapshotAgeSeconds": 300,
+  "maxFinalityLagSeconds": 7200,
+  "batchSize": 100,
+  "status": "local-prototype-not-authorized-for-launch"
+}
