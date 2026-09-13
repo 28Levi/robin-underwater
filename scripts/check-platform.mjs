@@ -13,10 +13,10 @@ const result={chainId:coverage.chainId,profile:coverage.profile.profileVersion,l
  canonicalKernelReproduced:compiled,localPayoutExecutorImplemented:true,upstreamRouterTests:'six flows pass locally',
  exactLiveRouterVerified:false,liveRuntimeCompatibilityTests:'six flows with copied deployed router and Permit2 runtime',
  productionEntryPointPrepared:true,productionActivated:false,serverAccepted:false,liveSigned:false,liveBroadcast:false},
- assets:{logo:intent.localImage,privateWebsiteReview:intent.privateWebsiteReview},
+ assets:{logo:intent.localImage,publicLogo:intent.image,publicSource:intent.publicSource,website:intent.website,separateWebsiteRequired:false},
  wallet:{balanceWeiAtReadback:readback.walletBalanceWei,checkedAt:readback.checkedAt},
  missing:['Minimum token output, reviewed gas budgets and wallet funding',
- 'Public website/image and X profile links; exact source revision',
+ 'Project X profile required by platform metadata',
  'Deployed reward distributor and its declared trusted operator',
  'Production host, dedicated operator custody, historical-state RPC and ongoing gas funding',
  'Fresh platform quote, exact launch pack, authenticated preflight and wallet handoff']};

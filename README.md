@@ -92,7 +92,7 @@ Output goes to `output/operator/`. Prepared calldata expires and is not permissi
 
 ## Launch status
 
-Confirmed: **ROBINHOOD / ROBIN, 1 billion tokens, buyer-funded liquidity, 2% total buy/sell fee and a 0.1 ETH first purchase**. An original PNG logo and a private launch-page review are prepared. Public website/image metadata and the project X profile remain to be finalized.
+Confirmed: **ROBINHOOD / ROBIN, 1 billion tokens, buyer-funded liquidity, 2% total buy/sell fee and a 0.1 ETH first purchase**. No separate website is needed or planned. The existing public GitHub project page supplies Programmable's website metadata link; the logo is published. The platform still requires a project X profile.
 
 Launch wallet: `0x9479ac7ED3A72866F63F37013F2c7Cc68936B519` (checksum validated).
 

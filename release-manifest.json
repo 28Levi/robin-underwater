@@ -1,6 +1,6 @@
 {
   "schemaVersion": "robin.source-release.v1",
-  "createdAt": "2026-09-13T08:08:02.272Z",
+  "createdAt": "2026-09-13T08:27:08.117Z",
   "status": "source-for-review; no production deployment or platform acceptance",
   "files": [
     {
@@ -40,8 +40,8 @@
     },
     {
       "path": "src/payout-plan.mjs",
-      "bytes": 3507,
-      "sha256": "dc9843849e4edcc7bad301a9ae2909c103b89a8afb7dde892ead866b52400049"
+      "bytes": 3628,
+      "sha256": "efdc61994e50b7f6bf9cc4debabe05c624c9ad4e8e1af594b09d55dccc270718"
     },
     {
       "path": "src/production-network.mjs",
@@ -70,8 +70,8 @@
     },
     {
       "path": "src/worker.mjs",
-      "bytes": 1883,
-      "sha256": "b178297c7e704dfcf4667c76f774cdfb7d18ea57ab10930ae7f8ccca3eba7aec"
+      "bytes": 1886,
+      "sha256": "9bcffd576ee86d7719c4ebe027501060d080993120e818e2dfec9b6b2a23d78d"
     },
     {
       "path": "contracts/SherwoodToken.sol",
@@ -95,8 +95,8 @@
     },
     {
       "path": "test/contracts.test.mjs",
-      "bytes": 10963,
-      "sha256": "612caa4046aea1d443654c4725403e1cbefa5519d74af84ed95ef02f4d76f985"
+      "bytes": 11607,
+      "sha256": "893fe4be0d7830368df6eacc88aaa0dacbbe6c60b6718f97f9808380b01caa02"
     },
     {
       "path": "test/economic-attacks.test.mjs",
@@ -180,13 +180,13 @@
     },
     {
       "path": "docs/payout-operator.md",
-      "bytes": 6791,
-      "sha256": "ec3723089b3b186ce4a9ede4d24926670ed2941eb75ab8e22a81e968d9d9b71f"
+      "bytes": 7205,
+      "sha256": "9c8c66c7cc66439e8cab8b204d78a4927e46453382a80459987d99c94d937fc0"
     },
     {
       "path": "docs/production-setup.md",
-      "bytes": 5653,
-      "sha256": "f2be740ad4400732ae1318b8d43e8965e8858b7dfbef6514cecf92da04edd29d"
+      "bytes": 5872,
+      "sha256": "b6e86166bb6ab7e1485c2a99912050e4b33d120439c3aad8e63e6e9c4142dc43"
     },
     {
       "path": "docs/router-and-economic-validation.md",
@@ -205,8 +205,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 12687,
-      "sha256": "75fc2358c912c85ad1f3e6381d13ed02bff99fe491f8a3c97a8f47d15422017e"
+      "bytes": 12740,
+      "sha256": "a23c4d5a815dfbd082c9b3be1da9d4f41f44f478b15690fc786266de770bcc24"
     },
     {
       "path": ".gitignore",
@@ -250,8 +250,8 @@
     },
     {
       "path": "launch-intent.json",
-      "bytes": 2222,
-      "sha256": "6a2323541ed8b2144f4d9284a7ad2ba3b98e7badbb7ecaeb44eff08fb36d0f06"
+      "bytes": 2619,
+      "sha256": "70d705c8a48029c173bc4d9e89d18db50c086e4f414c08ed55340e351df68fa5"
     },
     {
       "path": "scripts/compile.mjs",
@@ -270,8 +270,8 @@
     },
     {
       "path": "scripts/check-platform.mjs",
-      "bytes": 2046,
-      "sha256": "b279606589d6e07990c73b9a307cdbab59f16f4efa60234041991ee5dfb4e73f"
+      "bytes": 2091,
+      "sha256": "59da37bff3411ea86ca9138f3a6b506a9b524f909c8044d2ad6b146e33e23599"
     },
     {
       "path": "scripts/snapshot.mjs",

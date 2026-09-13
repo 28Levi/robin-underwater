@@ -31,6 +31,8 @@ Rewards are grouped into durable rounds. The initial round fixes each holder's p
 
 Before signing each transaction, the executor estimates gas and rejects a head change during preparation. The executor uses `distributeEligible`, which checks expiry and accepts token balances at or above the measured amount. A lower balance skips just that recipient; even an all-skipped batch is recorded without allocating funds. Only actual `RewardAllocated` events reduce future relief eligibility. The contract retains the older operator-only `distribute` and `distributeGuarded` methods for compatibility, but the executor does not use them. The operator remains trusted under every method.
 
+Unsigned payment preparation also uses `distributeEligible`. Version 2 plans include the expiry, token address and measured minimum balances in the actual calldata. Version 1's report-only expiry did not restrict the older unguarded calldata. Worker plan filenames now include `v2` so old saved plans are never reused as the current output; retain historical plans for reconciliation rather than submitting them.
+
 Failed ETH deliveries remain reserved credits. The executor can retry them, with a configured retry interval. A retry targets the same recipient, does not create another allocation, and consumes the operator's gas budget.
 
 ## Recovery

@@ -1,7 +1,7 @@
 import {Contract,Interface,keccak256,toUtf8Bytes} from 'ethers';
 import {LossLedger,address} from './ledger.mjs';
 import {transferInterface,rewardInterface} from './replay.mjs';
-export const payoutInterface=new Interface(['function distribute(bytes32,bytes32,address[],uint256[])']);
+export const payoutInterface=new Interface(['function distributeEligible(bytes32,bytes32,address,uint256,address[],uint256[],uint256[])']);
 export async function preparePlan(provider,c,snapshot,{now=Math.floor(Date.now()/1000)}={}) {
  if((await provider.getNetwork()).chainId!==BigInt(c.chainId))throw Error('Wrong chain');
  if(now<snapshot.generatedAt||now-snapshot.generatedAt>c.maxSnapshotAgeSeconds)throw Error('Snapshot generation is stale');
@@ -27,15 +27,16 @@ export async function preparePlan(provider,c,snapshot,{now=Math.floor(Date.now()
  const [pastBudget,currentBudget,operator]=await Promise.all([vault.available({blockTag:cp.blockNumber}),vault.available({blockTag:head.number}),vault.operator()]);
  const budget=pastBudget<currentBudget?pastBudget:currentBudget;
  // Eligibility is explicitly evaluated at the finalized checkpoint, not falsely marked as a live price.
- const plan=ledger.plan(budget,{...snapshot.oracle,now:cp.timestamp});
+ const plan=ledger.plan(budget,{...snapshot.oracle,now:cp.timestamp}),expiresAt=now+c.maxSnapshotAgeSeconds;
  const transactions=[];
  for(let i=0;i<plan.allocations.length;i+=c.batchSize){
   const entries=plan.allocations.slice(i,i+c.batchSize);
   const batchId=keccak256(toUtf8Bytes(`${c.chainId}:${address(c.distributor)}:${cp.blockHash}:${i}`));
   if(await vault.processed(batchId))throw Error('Snapshot already has a processed batch; wait for finalized replay');
   transactions.push({chainId:c.chainId,from:operator,to:c.distributor,value:'0',batchId,
-   data:payoutInterface.encodeFunctionData('distribute',[batchId,plan.auditHash,entries.map(a=>a.account),entries.map(a=>a.amount)])});
+   data:payoutInterface.encodeFunctionData('distributeEligible',[batchId,plan.auditHash,c.token,expiresAt,
+    entries.map(a=>a.account),entries.map(a=>a.amount),entries.map(a=>ledger.get(a.account).balance)])});
  }
- return {schemaVersion:'robin.payout-plan.v1',checkpoint:cp,checkedHead:{number:head.number,hash:head.hash},
-  generatedAt:now,expiresAt:now+c.maxSnapshotAgeSeconds,changedAccountsExcluded:[...changed],plan,transactions,status:'unsigned-not-submitted'};
+ return {schemaVersion:'robin.payout-plan.v2',checkpoint:cp,checkedHead:{number:head.number,hash:head.hash},
+  generatedAt:now,expiresAt,changedAccountsExcluded:[...changed],plan,transactions,status:'unsigned-not-submitted'};
 }

@@ -9,7 +9,7 @@ export async function runCycle(provider,c,dir='output/operator'){
  try{
   const snapshot=await buildSnapshot(provider,c,readSnapshot(snapshotFile,c));
   writeSnapshot(snapshotFile,c,snapshot);
-  const filename=`${snapshot.checkpoint.blockNumber}-${snapshot.checkpoint.blockHash.slice(2)}.json`;
+  const filename=`v2-${snapshot.checkpoint.blockNumber}-${snapshot.checkpoint.blockHash.slice(2)}.json`;
   const planFile=path.join(dir,'plans',filename);
   // Never silently overwrite previously prepared bytes. A stale plan is not authorization to send.
   if(fs.existsSync(planFile)){

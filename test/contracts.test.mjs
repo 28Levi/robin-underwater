@@ -123,7 +123,15 @@ test('real Uniswap v4 PoolManager integration and funded ETH distribution',async
    const same=await runCycle(provider,c,dir);assert.equal(same.state,'unchanged');
    const prepared=JSON.parse(fs.readFileSync(first.planFile));assert.equal(prepared.transactions.length,1);
    assert.ok(prepared.plan.allocations.some(a=>a.account===otherAddress.toLowerCase()));
-   const tx=prepared.transactions[0];await(await admin.sendTransaction({to:tx.to,data:tx.data,value:0})).wait();
+   const tx=prepared.transactions[0],decoded=vault.interface.parseTransaction({data:tx.data});
+   assert.equal(prepared.schemaVersion,'robin.payout-plan.v2');
+   assert.equal(decoded.name,'distributeEligible');assert.equal(decoded.args[2].toLowerCase(),c.token.toLowerCase());
+   assert.equal(decoded.args[3],BigInt(prepared.expiresAt));
+   const beforeExpiry=await hre.network.provider.send('evm_snapshot');
+   await hre.network.provider.send('evm_increaseTime',[301]);await hre.network.provider.send('evm_mine');
+   await assert.rejects(admin.sendTransaction({to:tx.to,data:tx.data,value:0}),/Expired payout/);
+   await hre.network.provider.send('evm_revert',[beforeExpiry]);
+   await(await admin.sendTransaction({to:tx.to,data:tx.data,value:0})).wait();
    const snapshot=await buildSnapshot(provider,c);
    const rebuilt=LossLedger.restore(snapshot.ledger);assert.ok(rebuilt.get(otherAddress).relief>0n);
    const incremental=await buildSnapshot(provider,c,snapshot);assert.equal(incremental.transactionsReplayed,0);
