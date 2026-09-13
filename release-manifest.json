@@ -310,8 +310,8 @@
     },
     {
       "path": "scripts/build-release.mjs",
-      "bytes": 2356,
-      "sha256": "e5d1b14b537afc11ec124cf04ddced4d8f731f5b875aca0460fa1cc6ae9c325a"
+      "bytes": 2373,
+      "sha256": "8ce31a5ead32b33b801f9964b81f4de58efa5be794b2e2f9ae347fc6bc06523a"
     },
     {
       "path": "research/coverage.json",
@@ -417,6 +417,11 @@
       "path": "research/current/v4Quoter-runtime.txt",
       "bytes": 12238,
       "sha256": "0a69fb997440ad6ca7ae7f25d5d57083fb10ae3c3451817a3e74bd322e22510f"
+    },
+    {
+      "path": ".gitattributes",
+      "bytes": 84,
+      "sha256": "e38da6a034628181c52c97ceec8234be8ed1c771943711c6bd546518d0fd5add"
     }
   ]
 }
