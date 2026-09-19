@@ -2,6 +2,7 @@ import fs from 'node:fs';import path from 'node:path';
 import {buildSnapshot} from './replay.mjs';
 import {preparePlan} from './payout-plan.mjs';
 import {atomicWrite,readSnapshot,writeSnapshot,fingerprint} from './store.mjs';
+import {LEDGER_VERSION} from './ledger.mjs';
 
 /** Read-only operator loop: immutable per-checkpoint plans plus durable status. No wallet keys. */
 export async function runCycle(provider,c,dir='output/operator'){
@@ -9,7 +10,7 @@ export async function runCycle(provider,c,dir='output/operator'){
  try{
   const snapshot=await buildSnapshot(provider,c,readSnapshot(snapshotFile,c));
   writeSnapshot(snapshotFile,c,snapshot);
-  const filename=`v2-${snapshot.checkpoint.blockNumber}-${snapshot.checkpoint.blockHash.slice(2)}.json`;
+  const filename=`v2-ledger${LEDGER_VERSION}-${snapshot.checkpoint.blockNumber}-${snapshot.checkpoint.blockHash.slice(2)}.json`;
   const planFile=path.join(dir,'plans',filename);
   // Never silently overwrite previously prepared bytes. A stale plan is not authorization to send.
   if(fs.existsSync(planFile)){

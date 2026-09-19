@@ -161,7 +161,7 @@ test('exact Native20 source: 1 billion tokens, buyer-funded liquidity and separa
    const racing=new Proxy(provider,{get(target,prop){if(prop==='estimateGas')return async request=>{const units=await target.estimateGas(request);
      await(await token.connect(alice).transfer(await helper.getAddress(),1n)).wait();return units;};
     const value=Reflect.get(target,prop);return typeof value==='function'?value.bind(target):value;}});
-   await assert.rejects(executeCycle(racing,localSigner,automationConfig,dir),/Head changed/);
+   assert.equal((await executeCycle(racing,localSigner,automationConfig,dir)).state,'idle');
    const journal=JSON.parse(fs.readFileSync(`${dir}/journal.json`)).state;assert.equal(journal.pending,null);assert.equal(journal.reservedGasWei,'0');
   });
   await t.test('failed ETH receiver keeps credit and automatic retry does not allocate twice',async()=>{
@@ -179,6 +179,20 @@ test('exact Native20 source: 1 billion tokens, buyer-funded liquidity and separa
    assert.equal(await reward.pending(recipient),pending);
    assert.equal(LossLedger.restore((await buildSnapshot(provider,automationConfig)).ledger).get(recipient).relief,relief);
    assert.equal((await executeCycle(provider,localSigner,automationConfig,dir)).state,'idle');
+   for(let retry=1;retry<3;retry++){
+    await hre.network.provider.send('evm_increaseTime',[automationConfig.execution.retryIntervalSeconds+1]);await hre.network.provider.send('evm_mine');
+    localTime=(await provider.getBlock('latest')).timestamp;
+    assert.equal((await executeCycle(provider,localSigner,automationConfig,dir)).kind,'retry');
+    await executeCycle(provider,localSigner,automationConfig,dir);
+   }
+   await hre.network.provider.send('evm_increaseTime',[automationConfig.execution.retryIntervalSeconds+1]);await hre.network.provider.send('evm_mine');
+   localTime=(await provider.getBlock('latest')).timestamp;
+   const before=JSON.parse(fs.readFileSync(`${dir}/journal.json`)).state;
+   assert.equal((await executeCycle(provider,localSigner,automationConfig,dir)).state,'idle');
+   const after=JSON.parse(fs.readFileSync(`${dir}/journal.json`)).state;
+   assert.equal(after.retryAttempts[recipient.toLowerCase()],3);assert.equal(after.reservedGasWei,before.reservedGasWei);
+   assert.ok(BigInt(after.retryGasWei)<=BigInt(automationConfig.execution.maxTotalGasWei)/10n);
+   assert.equal(await reward.pending(recipient),pending);
   });
   await t.test('journal edits are rejected instead of trusting a modified pending transaction',async()=>{
    const dir=await resetExecutor();await executeCycle(provider,localSigner,automationConfig,dir);

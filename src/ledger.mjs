@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 
 export const ZERO = '0x0000000000000000000000000000000000000000';
-export const LEDGER_VERSION = 2;
+export const LEDGER_VERSION = 3;
 const positive = x => { x=BigInt(x); if(x<=0n) throw Error('Expected positive amount'); return x; };
 export const address = a => {if(!/^0x[0-9a-fA-F]{40}$/.test(a))throw Error('Invalid address');return a.toLowerCase();};
 const empty = () => ({balance:0n,cost:0n,relief:0n,lastAcquired:0,quarantined:false,ageLots:[]});

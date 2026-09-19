@@ -7,6 +7,7 @@ import {acquireLock,atomicWrite,readSnapshot,writeSnapshot} from './store.mjs';
 import {executionBinding,readJournal,writeJournal} from './execution-journal.mjs';
 import {createRound,nextRoundBatch} from './reward-round.mjs';
 import {verifyProductionNetwork,verifyProductionToken} from './production-network.mjs';
+import {verifyCandidateState} from './candidate-state.mjs';
 
 const rewardAbi=['function operator() view returns(address)','function available() view returns(uint256)',
  'function pending(address) view returns(uint256)','function pay(address)',
@@ -81,7 +82,7 @@ async function recover(provider,state,file,now){
 
 async function submit(provider,signer,c,e,state,file,candidate){
  const from=await signer.getAddress(),head=await provider.getBlock('latest');
- if(head.hash!==candidate.headHash)throw Error('Head changed during preparation; rebuild next cycle');
+ await verifyCandidateState(provider,c,candidate,head,'preparation');
  const latest=await provider.getTransactionCount(from,'latest'),pending=await provider.getTransactionCount(from,'pending');
  if(latest!==pending)throw Error('Operator has an untracked pending transaction');
  const request={from,to:candidate.to,data:candidate.data,value:0n};
@@ -91,9 +92,12 @@ async function submit(provider,signer,c,e,state,file,candidate){
  const gasLimit=(units*120n+99n)/100n,reservation=gasLimit*feeData.maxFeePerGas;
  if(reservation>BigInt(e.maxGasPerTransactionWei)||BigInt(state.reservedGasWei)+reservation>BigInt(e.maxTotalGasWei))
   throw Error('Execution gas budget exceeded');
+ if(candidate.kind==='retry'&&BigInt(state.retryGasWei)+reservation>BigInt(e.maxTotalGasWei)/10n)
+  return {state:'idle',reason:'Automatic retry gas allowance exhausted; recipient can call pay directly'};
  if(await provider.getBalance(from)<reservation)throw Error('Operator lacks gas funding');
- if((await provider.getBlock('latest')).hash!==candidate.headHash)throw Error('Head changed during estimation; rebuild next cycle');
- if(candidate.deadline!==null&&(await provider.getBlock('latest')).timestamp>candidate.deadline)throw Error('Payout expired before signing');
+ const afterEstimate=await provider.getBlock('latest');
+ await verifyCandidateState(provider,c,candidate,afterEstimate,'estimation');
+ if(candidate.deadline!==null&&afterEstimate.timestamp>candidate.deadline)throw Error('Payout expired before signing');
  const raw=await signer.signTransaction({to:candidate.to,data:candidate.data,value:0n,chainId:c.chainId,nonce:latest,type:2,
   gasLimit,maxFeePerGas:feeData.maxFeePerGas,maxPriorityFeePerGas:feeData.maxPriorityFeePerGas});
  const signed=Transaction.from(raw);
@@ -102,6 +106,10 @@ async function submit(provider,signer,c,e,state,file,candidate){
   ||signed.maxFeePerGas!==feeData.maxFeePerGas||signed.maxPriorityFeePerGas!==feeData.maxPriorityFeePerGas)
   throw Error('Signer changed prepared transaction');
  state.reservedGasWei=(BigInt(state.reservedGasWei)+reservation).toString();
+ if(candidate.kind==='retry'){
+  state.retryGasWei=(BigInt(state.retryGasWei)+reservation).toString();
+  const recipient=address(candidate.recipient);state.retryAttempts[recipient]=(state.retryAttempts[recipient]??0)+1;
+ }
  state.pending={hash:signed.hash,raw,nonce:latest,kind:candidate.kind,deadline:candidate.deadline,recipient:candidate.recipient??null,roundEnd:candidate.roundEnd??null};
  // Signed bytes are durable BEFORE broadcasting. Gas reservations are never automatically replenished.
  writeJournal(file,state);
@@ -133,11 +141,15 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
   while(state.round){
    const batch=await nextRoundBatch(provider,c,state.round,prepared,ledger,snapshot);
    if(batch.total>=BigInt(e.minimumBatchWei)){
-    const candidate={kind:'payout',to:c.distributor,deadline:prepared.expiresAt,headHash:prepared.checkedHead.hash,roundEnd:batch.end,
+    const candidate={kind:'payout',to:c.distributor,deadline:prepared.expiresAt,headHash:prepared.checkedHead.hash,headNumber:prepared.checkedHead.number,roundEnd:batch.end,
      data:rewards.encodeFunctionData('distributeEligible',[batch.batchId,batch.auditHash,c.token,prepared.expiresAt,
       batch.entries.map(a=>a.account),batch.entries.map(a=>a.amount),batch.entries.map(a=>a.balance)])};
     atomicWrite(path.join(dir,'plans',`${batch.batchId.slice(2)}.json`),{...batch.audit,auditHash:batch.auditHash,guardedTransaction:candidate});
-    return await submit(provider,signer,c,e,state,file,candidate);
+    try{return await submit(provider,signer,c,e,state,file,candidate);}
+    catch(error){
+     if(!/^Head changed during (preparation|estimation); rebuild next cycle$/.test(error.message))throw error;
+     break; // Leave the round intact, but permit independent harvest/retry work.
+    }
    }
    state.round.nextIndex=batch.end;
    if(batch.end>=state.round.allocations.length)state.round=null;
@@ -145,11 +157,12 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
   }
   const head=await provider.getBlock('latest');
   if(await feeVault.creatorAccrued({blockTag:head.number})>=BigInt(e.minimumHarvestWei))
-   return await submit(provider,signer,c,e,state,file,{kind:'harvest',to:e.feeVault,data:fees.encodeFunctionData('claimCreator'),deadline:null,headHash:head.hash});
-  for(const account of [...ledger.accounts.keys()].sort()){
+   return await submit(provider,signer,c,e,state,file,{kind:'harvest',to:e.feeVault,data:fees.encodeFunctionData('claimCreator'),deadline:null,headHash:head.hash,headNumber:head.number});
+  for(const account of snapshot.pendingRecipients){
+   if((state.retryAttempts[account]??0)>=3)continue;
    if(now-(state.retryAt[account]??0)<e.retryIntervalSeconds)continue;
    if(await vault.pending(account,{blockTag:head.number})>0n)
-    return await submit(provider,signer,c,e,state,file,{kind:'retry',recipient:account,to:c.distributor,data:rewards.encodeFunctionData('pay',[account]),deadline:null,headHash:head.hash});
+    return await submit(provider,signer,c,e,state,file,{kind:'retry',recipient:account,to:c.distributor,data:rewards.encodeFunctionData('pay',[account]),deadline:null,headHash:head.hash,headNumber:head.number});
   }
   return {state:'idle',reason:'No eligible funded batch, harvest or due payment retry'};
  }finally{release();}

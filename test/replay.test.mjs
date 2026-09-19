@@ -3,6 +3,7 @@ import {Interface} from 'ethers';
 import {LossLedger} from '../src/ledger.mjs';
 import {applyReceipt,rewardInterface} from '../src/replay.mjs';
 import {readSnapshot,writeSnapshot,acquireLock} from '../src/store.mjs';
+import {hookInterface} from '../src/receipt-adapter.mjs';
 const a=n=>'0x'+n.toString(16).padStart(40,'0'),E=10n**18n;
 const c={token:a(1),hook:a(2),poolManager:a(3),distributor:a(4),poolId:'0x'+'1'.repeat(64),excludedAddresses:[],chainId:31337};
 const erc20=new Interface(['event Transfer(address indexed from,address indexed to,uint256 value)']);
@@ -61,4 +62,47 @@ test('snapshot cache is atomic, configuration-bound and detects corruption',()=>
 test('worker lock rejects concurrent runs and releases cleanly',()=>{
  fs.mkdirSync('output/test',{recursive:true});const dir=fs.mkdtempSync('output/test/lock-'),file=path.join(dir,'worker.lock');
  const release=acquireLock(file);assert.throws(()=>acquireLock(file),/lock/);release();acquireLock(file)();
+});
+
+const batch='0x'+'3'.repeat(64),audit='0x'+'4'.repeat(64);
+const rewardLog=(name,args,index)=>({address:c.distributor,index,...rewardInterface.encodeEventLog(rewardInterface.getEvent(name),args)});
+const allocation=(amount=E/2n)=>[rewardLog('BatchRecorded',[batch,audit,amount],1),rewardLog('RewardAllocated',[batch,a(9),amount],2)];
+test('full and partial callback transfers carry prior relief in log order',()=>{
+ for(const amount of [E,E/2n]){
+  const r=receipt([...allocation(),transfer(a(9),a(10),amount,3)]);
+  const next=applyReceipt(ledger(),r,c,100).ledger;
+  assert.equal(next.get(a(10)).relief,amount/2n);assert.equal(next.get(a(9)).relief,(E-amount)/2n);
+  assert.equal(next.get(a(10)).cost,2n*amount);
+  assert.equal(applyReceipt(ledger(),{...r,logs:[...r.logs].reverse()},c,100).ledger.serialize(),next.serialize());
+ }
+});
+test('allocation after a transfer stays with its actual recipient; logIndex is supported',()=>{
+ const r=receipt([transfer(a(9),a(10),E/2n,0),...allocation()].map(({index,...log})=>({...log,logIndex:index})));
+ const next=applyReceipt(ledger(),r,c,100).ledger;
+ assert.equal(next.get(a(10)).relief,0n);assert.equal(next.get(a(9)).relief,E/2n);
+});
+test('bad callback and malformed allocation leave original ledger unchanged',()=>{
+ for(const logs of [[...allocation(),transfer(a(9),a(10),2n*E,3)],
+  [...allocation(),rewardLog('RewardAllocated',[batch,a(9),1n],3)],
+  [rewardLog('RewardAllocated',[batch,a(9),1n],3)]]){
+  const l=ledger(),before=l.serialize();assert.throws(()=>applyReceipt(l,receipt(logs),c,100));assert.equal(l.serialize(),before);
+ }
+});
+test('payment retries and all-skipped batches add no relief',()=>{
+ const logs=[rewardLog('BatchRecorded',[batch,audit,0n],1),rewardLog('RewardPaid',[a(9),E],2)];
+ const next=applyReceipt(ledger(),receipt(logs),c,100).ledger;assert.equal(next.get(a(9)).relief,0n);
+ assert.throws(()=>applyReceipt(next,receipt(logs),c,100),/Duplicate reward/);
+});
+test('reward crossing a collapsed swap route is conservatively unsupported',()=>{
+ const trade={address:c.hook,index:0,...hookInterface.encodeEventLog(hookInterface.getEvent('TradeObserved'),[c.poolId,a(8),true,E,E,1n,1n<<96n,0])};
+ const logs=[trade,transfer(c.poolManager,a(9),E,1),rewardLog('BatchRecorded',[batch,audit,E/2n],2),
+  rewardLog('RewardAllocated',[batch,a(9),E/2n],3),transfer(a(9),a(10),E,4)];
+ const next=applyReceipt(ledger(),receipt(logs),c,100);
+ assert.match(next.unsupported.reason,/crosses swap/);
+ assert.equal(next.ledger.get(a(9)).relief,E/4n);
+ assert.equal(next.ledger.get(a(10)).cost,0n); // Unsupported new ownership never invents purchase basis.
+});
+test('pre-fix ledgers cannot be reused after chronology migration',()=>{
+ const old=JSON.parse(ledger().serialize());old.version=2;
+ assert.throws(()=>LossLedger.restore(JSON.stringify(old)),/Unsupported ledger/);
 });

@@ -1,12 +1,16 @@
-# ROBINHOOD / ROBIN
+# HOOD / HOOD
+
+Current launch intent: **1 billion HOOD, 0.01 ETH initial purchase, fixed 2% buy/sell fees**, and [@HOOKHOOD](https://x.com/HOOKHOOD). HOOD is an independent project, not affiliated with Robinhood Markets. The chain name below refers to Robinhood Chain.
+
+September 19 update: ledger version 3 replays allocations and token movements in actual log order, including ETH payment callbacks. Unrelated transfers no longer invalidate another holder's payout. Automatic retries are limited to three per recipient and 10% of the existing cumulative gas allowance. The current readiness record is [HOOD launch readiness](docs/hood-launch-readiness.md); older dated notes are historical.
 
 **Launch implementation and production service entry point prepared. No token has been launched. Programmable admission and production activation are pending.**
 
 **2026-09-13: the user chose to retain the original loss-weighted rewards and accept the documented two-wallet farming risk. Capped fee refunds were rejected.** The farming risk remains reproduced, not fixed. Incoming amounts age independently; incoming dust no longer cancels a payout round or reverts the entire payment batch. Equal-balance round trips after the final RPC check remain undetected. See [router and economic validation](docs/router-and-economic-validation.md). The farming test deliberately demonstrates the flaw; a green test suite does not establish launch admission or economic safety.
 
-ROBIN is a regular, transferable token with **1 billion supply** and **buyer-funded liquidity**. Project trading fees accumulate in an ETH reward vault. A background service measures holders' unrealized ETH losses and prepares proportional payments. Someone down 2 ETH receives twice as much as someone down 1 ETH; profitable holders receive none. Rewards are limited to collected fees and remaining measured losses.
+HOOD is a regular, transferable token with **1 billion supply** and **buyer-funded liquidity**. Project trading fees accumulate in an ETH reward vault. A background service measures holders' unrealized ETH losses and prepares proportional payments. Someone down 2 ETH receives twice as much as someone down 1 ETH; profitable holders receive none. Rewards are limited to collected fees and remaining measured losses.
 
-Holders do not stake, register or claim. The contracts send ETH directly to ordinary wallets. The complete automatic collection/payment cycle is implemented and tested on a local EVM; a production service has not been deployed.
+Holders do not stake, register or claim. The contracts send ETH directly to ordinary wallets. The complete automatic collection/payment cycle is implemented and tested on a local EVM; the hosted service is staged but production payouts have not been activated.
 
 ## Build and verify
 
@@ -57,7 +61,7 @@ uncovered loss = max(remaining purchase cost − current value − prior allocat
 reward = min(available fee budget, total eligible loss) × holder loss / total eligible loss
 ```
 
-All calculations use ETH wei and 18-decimal ROBIN units. Allocation rounds down and leaves residue in the vault. If no holder qualifies, fees remain for later distributions. Rewards reduce future eligibility once allocated, including credits reserved for failed ETH receivers. Payment retries are not counted twice.
+All calculations use ETH wei and 18-decimal HOOD units. Allocation rounds down and leaves residue in the vault. If no holder qualifies, fees remain for later distributions. Rewards reduce future eligibility once allocated, including credits reserved for failed ETH receivers. Payment retries are not counted twice.
 
 Buys add gross ETH actually paid into the designated pool. Gas and external routing charges are excluded. Sells remove proportional purchase cost and previous relief; this tracks the remaining holding's unrealized shortfall, not lifetime realized losses. A gift carries existing basis and relief. Initial issuance and unknown incoming inventory have zero purchase basis.
 
@@ -71,7 +75,7 @@ Six flows pass both with upstream Universal Router 2.1.0 and with the actual Rob
 
 ## Operator and trust
 
-The distributor's operator is **trusted to calculate and submit honest allocations**. Its audit hash commits to a report; it does not prove loss eligibility onchain. A malicious operator could redirect the reward treasury. It cannot mint/freeze ROBIN, change the canonical hook fee or take tokens from holder wallets through these contracts.
+The distributor's operator is **trusted to calculate and submit honest allocations**. Its audit hash commits to a report; it does not prove loss eligibility onchain. A malicious operator could redirect the reward treasury. It cannot mint/freeze HOOD, change the canonical hook fee or take tokens from holder wallets through these contracts.
 
 Ordinary wallets receive ETH when a batch executes. A contract that rejects ETH keeps reserved credit, and anyone can retry payment to that same recipient. The immutable operator needs a durable production key/custody arrangement.
 

@@ -21,6 +21,8 @@ export async function verifyProductionNetwork(provider,c,{now=Math.floor(Date.no
 }
 
 export async function verifyProductionToken(provider,c){
+ if(typeof c.name!=='string'||!c.name.trim()||typeof c.symbol!=='string'||!c.symbol.trim())
+  throw Error('Missing explicit production token identity');
  const hook=new Contract(c.hook,['function creatorBuyFeeBps() view returns(uint16)','function creatorSellFeeBps() view returns(uint16)',
   'function PLATFORM_FEE_BPS() view returns(uint16)','function lpFee() view returns(uint24)','function module() view returns(address)',
   'function initialized() view returns(bool)','function token() view returns(address)','function initializer() view returns(address)',
@@ -31,6 +33,6 @@ export async function verifyProductionToken(provider,c){
   hook.initializer(),hook.poolManager(),hook.tickSpacing(),token.name(),token.symbol(),token.totalSupply()]);
  const poolId=keccak256(AbiCoder.defaultAbiCoder().encode(['address','address','uint24','int24','address'],[ZeroAddress,c.token,0,60,c.hook]));
  if(buy!==180n||sell!==180n||platform!==20n||lp!==0n||module!==ZeroAddress||!initialized||address(hookToken)!==address(c.token)
-  ||address(initializer)!==address(c.initializer)||address(manager)!==address(c.poolManager)||spacing!==60n||name!=='ROBINHOOD'||symbol!=='ROBIN'
-  ||supply!==10n**27n||poolId!==c.poolId)throw Error('Production deployment differs from confirmed ROBIN settings');
+  ||address(initializer)!==address(c.initializer)||address(manager)!==address(c.poolManager)||spacing!==60n||name!==c.name||symbol!==c.symbol
+  ||supply!==10n**27n||poolId!==c.poolId)throw Error('Production deployment differs from configured token identity or fixed fee settings');
 }

@@ -7,18 +7,18 @@
   "assessmentBase": "gross-native-initial-buy-at-admission",
   "feedAddress": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
   "feedDecimals": 8,
-  "blockNumber": "25967163",
-  "blockHash": "0xe397e3e3637154f09b383a7c9f3e2d61a00bda1690a4077310953b95b6e3ece3",
-  "blockTimestamp": "1789286267",
-  "roundId": "129127208515966894887",
-  "answeredInRound": "129127208515966894887",
-  "answer": "251459000000",
-  "startedAt": "1789283398",
-  "updatedAt": "1789283411",
+  "blockNumber": "26010693",
+  "blockHash": "0xdd8e8d11597b60055936d69fd621bb3696045efebd8b4806f99f600aa31d73e0",
+  "blockTimestamp": "1789810427",
+  "roundId": "129127208515966895120",
+  "answeredInRound": "129127208515966895120",
+  "answer": "263739954261",
+  "startedAt": "1789810405",
+  "updatedAt": "1789810427",
   "minimumUsdWad": "1000000000000000000",
-  "minimumInitialBuyWei": "397679144512625",
-  "observedAt": "2026-09-13T07:58:00.511Z",
-  "expiresAt": "2026-09-13T07:59:00.511Z",
+  "minimumInitialBuyWei": "379161360970887",
+  "observedAt": "2026-09-19T09:33:56.559Z",
+  "expiresAt": "2026-09-19T09:34:56.559Z",
   "providers": [
     {
       "providerId": "drpc",
@@ -29,5 +29,5 @@
       "trustDomain": "quicknode.com"
     }
   ],
-  "evidenceDigest": "sha256:70e792aa587780dfd12417cc8e990d5aaecf92c872234229df971e922aa6c3ad"
+  "evidenceDigest": "sha256:95677edcf23aa9db2e5d1c2a1f72ba2cd188de71b9e10f1a04933540bac86371"
 }

@@ -56,3 +56,7 @@ An unexplained consumed nonce, changed finalized history, changed contract runti
 The minimum-balance check is not complete protection against transaction ordering: a transfer out and back after the final RPC check can restore the same balance before execution, and prices can change after the snapshot. Outgoing transfers already recorded before preparation are excluded, including round trips. The reference price is still derived from the traded pool. No claim is made that these controls prove live losses or prevent reward farming.
 
 Live deployment and gas spending remain unapproved and have not occurred.
+
+## September 19: ledger version 3
+
+Version 3 orders reward allocations and token movements chronologically, including payment callbacks. Versions 1 and 2 are rejected. Replay chain history; never silently reuse old snapshots or reset an execution journal. Reconcile pending transactions and rounds before explicit migration, retaining cumulative gas reservations. Plan filenames now include the accounting version. Automatic retries have a lifetime maximum of three per recipient and a shared allowance of 10% of the original total gas cap. Failed payments remain reserved and permissionlessly payable to the same recipient.

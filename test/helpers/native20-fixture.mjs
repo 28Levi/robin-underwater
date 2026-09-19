@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {BrowserProvider,JsonRpcSigner,ContractFactory,Contract,ZeroAddress,MaxUint256,keccak256,getCreate2Address,toBeHex,AbiCoder} from 'ethers';
 export const E=10n**18n,MANAGER='0x8366a39CC670B4001A1121B8F6A443A643e40951',GRAPH='0x0B6b3F40f84Df25D3bd69238f937096177DD09Bd';
 export const artifact=name=>JSON.parse(fs.readFileSync(`artifacts/${name}.json`));
-export async function native20Fixture(hre,{operatorIndex=0}={}){
+export async function native20Fixture(hre,{operatorIndex=0,name='ROBINHOOD',symbol='ROBIN',firstBuyWei=E/10n}={}){
  await hre.network.provider.send('hardhat_reset');
  const provider=new BrowserProvider(hre.network.provider,undefined,{cacheTimeout:-1});provider.pollingInterval=10;
  const owner=await provider.getSigner(0),alice=await provider.getSigner(1),bob=await provider.getSigner(2),ownerAddress=await owner.getAddress();
@@ -12,7 +12,7 @@ export async function native20Fixture(hre,{operatorIndex=0}={}){
  await(await owner.sendTransaction({to:MANAGER,gasLimit:5_000_000})).wait();await hre.network.provider.send('hardhat_setCode',[MANAGER,runtime]);
  const keeper=await provider.getSigner(operatorIndex);
  const reward=await deploy('UnderwaterDistributor',[await keeper.getAddress()]),initializer=await deploy('RobinhoodNative20Initializer',[MANAGER,GRAPH]);
- const token=await deploy('RobinhoodNative20Token',[await initializer.getAddress(),'ROBINHOOD','ROBIN']),factory=await deploy('Create2Deployer');
+ const token=await deploy('RobinhoodNative20Token',[await initializer.getAddress(),name,symbol]),factory=await deploy('Create2Deployer');
  const config={token:await token.getAddress(),lpFee:0,tickSpacing:60,initialSqrtPriceX96:1747735933952748037356115466503453n,
   initializer:await initializer.getAddress(),creatorFeeRecipient:await reward.getAddress(),creatorBuyFeeBps:180,creatorSellFeeBps:180,module:ZeroAddress,maxModuleLpFeePips:0};
  const code=(await new ContractFactory(artifact('RobinhoodNativeFeeHookV1').abi,artifact('RobinhoodNativeFeeHookV1').bytecode,owner).getDeployTransaction(MANAGER,config)).data;
@@ -25,8 +25,8 @@ export async function native20Fixture(hre,{operatorIndex=0}={}){
  const poolId=keccak256(AbiCoder.defaultAbiCoder().encode(['address','address','uint24','int24','address'],[ZeroAddress,key.currency1,0,60,hookAddress]));
  const swapper=await deploy('PoolSwapTest',[MANAGER]);
  await hre.network.provider.send('hardhat_impersonateAccount',[GRAPH]);await hre.network.provider.send('hardhat_setBalance',[GRAPH,toBeHex(E)]);
- const launched=await(await initializer.connect(new JsonRpcSigner(provider,GRAPH)).initialize(key.currency1,hookAddress,ownerAddress,1,{value:E/10n})).wait();
- const c={chainId:4663,token:key.currency1,hook:hookAddress,hookFlavor:'native20',initializer:await initializer.getAddress(),poolManager:MANAGER,
+ const launched=await(await initializer.connect(new JsonRpcSigner(provider,GRAPH)).initialize(key.currency1,hookAddress,ownerAddress,1,{value:firstBuyWei})).wait();
+ const c={name,symbol,chainId:4663,token:key.currency1,hook:hookAddress,hookFlavor:'native20',initializer:await initializer.getAddress(),poolManager:MANAGER,
   distributor:await reward.getAddress(),poolId,excludedAddresses:[await swapper.getAddress()],deploymentBlock:(await token.deploymentTransaction().wait()).blockNumber,
   minimumAgeSeconds:3600,twapWindowSeconds:1800,maxOracleAgeSeconds:300,maxSnapshotAgeSeconds:300,maxFinalityLagSeconds:7200,batchSize:100};
  for(const who of [owner,alice,bob])await(await token.connect(who).approve(await swapper.getAddress(),MaxUint256)).wait();

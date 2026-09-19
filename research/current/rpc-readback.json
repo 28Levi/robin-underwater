@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-09-13T07:58:05.395Z",
+  "checkedAt": "2026-09-19T09:33:58.027Z",
   "chainId": 4663,
   "checkpoint": {
-    "number": "0x3aed16d",
-    "hash": "0x3e595907c1acb22b25fedf5252b7c864df1d378b1959f55636061ab4cd5b8921",
-    "timestamp": "0x6aa65432"
+    "number": "0x3fde2a5",
+    "hash": "0xcd60fc9d352f5b39158bc9f7f8aef65b014b1840c7f84f9e8d5b3546dbee4597",
+    "timestamp": "0x6aae53c6"
   },
   "infrastructure": [
     {
@@ -81,6 +81,6 @@
     }
   ],
   "launchWallet": "0x9479ac7ED3A72866F63F37013F2c7Cc68936B519",
-  "walletBalanceWei": "0",
-  "walletNonce": "0"
+  "walletBalanceWei": "286643592443416000",
+  "walletNonce": "5"
 }

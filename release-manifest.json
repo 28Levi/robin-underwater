@@ -1,8 +1,23 @@
 {
   "schemaVersion": "robin.source-release.v1",
-  "createdAt": "2026-09-13T08:27:08.117Z",
+  "createdAt": "2026-09-19T09:40:34.665Z",
   "status": "source-for-review; no production deployment or platform acceptance",
   "files": [
+    {
+      "path": "src/RobinhoodNative20Initializer.sol",
+      "bytes": 8310,
+      "sha256": "617a369ff8a5bb92493be98b2bc95209d3f4f09348b6a78987eaa6610e01dede"
+    },
+    {
+      "path": "src/RobinhoodNative20Token.sol",
+      "bytes": 2565,
+      "sha256": "7d2d1fcb28acbc570aface3db75846636ac4e124ce9007ee095960147d6cdb96"
+    },
+    {
+      "path": "src/candidate-state.mjs",
+      "bytes": 2081,
+      "sha256": "963a1870a6298ad0be95f8c8b65c3d76963de42561372cd07fef813e4a8c7941"
+    },
     {
       "path": "src/config.mjs",
       "bytes": 1539,
@@ -10,13 +25,18 @@
     },
     {
       "path": "src/execution-journal.mjs",
-      "bytes": 1344,
-      "sha256": "627449d21304b0c0484a933ed6f7738d70d93a0b8f66c61c87854794dc809473"
+      "bytes": 1421,
+      "sha256": "ed822274d5fec59d289a53cc20edf59764481bf69b779450a75c7c87044e3f81"
     },
     {
       "path": "src/executor.mjs",
-      "bytes": 11392,
-      "sha256": "883192e3d6583ccc741924caeb7a5aa1f490c9cb127c6c52b1e0c795a8793377"
+      "bytes": 12178,
+      "sha256": "6b6e9d5f5e68feef7f1e98db59fdac89ca5a9e38bc87e63c7582a320c6c37ecb"
+    },
+    {
+      "path": "src/launch-fees.mjs",
+      "bytes": 2568,
+      "sha256": "005d4be103f69fb03f8aba9b812e3d3af9314c5675dd9d20338c52b298cfd6b1"
     },
     {
       "path": "src/launch-gas.mjs",
@@ -26,7 +46,7 @@
     {
       "path": "src/ledger.mjs",
       "bytes": 6880,
-      "sha256": "8d05921452cf153fa800ed81aa414103587a21e56c45fa240eac6069bd06b163"
+      "sha256": "b38969e93ec0ffbc3bd5012a0cc1555b43760c857f83ae642ccbd86aba81ba9b"
     },
     {
       "path": "src/native20-adapter.mjs",
@@ -45,8 +65,8 @@
     },
     {
       "path": "src/production-network.mjs",
-      "bytes": 3366,
-      "sha256": "49abfa2e8372d9d4090a5c0bf30c41d987d66a623c8031031c8f072d318c063c"
+      "bytes": 3538,
+      "sha256": "992a1221bd41155d0309c42533ea5ecddb0f22a13518ff28ce88777b936bc1f5"
     },
     {
       "path": "src/receipt-adapter.mjs",
@@ -55,13 +75,23 @@
     },
     {
       "path": "src/replay.mjs",
-      "bytes": 6590,
-      "sha256": "29f6d7aa20c5cfe33bbee7d01c25cff14d5ceedde044a4cea1321d21e500ad0a"
+      "bytes": 9614,
+      "sha256": "d525fec413971b04b2fa552100ea17eb20efabd7d542db634d8213b2aea3ff61"
     },
     {
       "path": "src/reward-round.mjs",
       "bytes": 2371,
       "sha256": "668bdb8b89dd3ca44d466439e67bb20c6273a1263a859b6d35c7ee92e60bbcdf"
+    },
+    {
+      "path": "src/robinhood-fee-v1/RobinhoodNativeFeeHookV1.sol",
+      "bytes": 13250,
+      "sha256": "d1d6f1cdf23ca9eff3ba80723a20a1a3d5283c17f1ed4719f0a125dbffa85ada"
+    },
+    {
+      "path": "src/robinhood-fee-v1/RobinhoodNativeFeeVaultV1.sol",
+      "bytes": 3724,
+      "sha256": "c2776aae1918d5a362e60838754b60e5897cfad9aa12ae542d29e077ddd31a82"
     },
     {
       "path": "src/store.mjs",
@@ -70,8 +100,138 @@
     },
     {
       "path": "src/worker.mjs",
-      "bytes": 1886,
-      "sha256": "9bcffd576ee86d7719c4ebe027501060d080993120e818e2dfec9b6b2a23d78d"
+      "bytes": 1955,
+      "sha256": "28bf795a92c6119e4b49f44cfe863f9850342013117b5117ef08704ab1fc50c9"
+    },
+    {
+      "path": "lib/openzeppelin-contracts/contracts/utils/Panic.sol",
+      "bytes": 1973,
+      "sha256": "270fc8401c1a13fae6a7a4a2dd6e381b95d658896701e51f0d3e2688acab3dec"
+    },
+    {
+      "path": "lib/openzeppelin-contracts/contracts/utils/math/Math.sol",
+      "bytes": 32145,
+      "sha256": "92fee281fd46a1b058b190cf21d6b1a528f0433a907850ae1c9bcf36c5c0cd98"
+    },
+    {
+      "path": "lib/openzeppelin-contracts/contracts/utils/math/SafeCast.sol",
+      "bytes": 34943,
+      "sha256": "9769274bf53f26a7c7896c526ea1980dc9bea5bf5c2a5fd04870008c4afc1de9"
+    },
+    {
+      "path": "lib/openzeppelin-uniswap-hooks/src/base/BaseHook.sol",
+      "bytes": 10197,
+      "sha256": "fd2d7369ccff06504da5d819f1a1bbfe55c9674e85c7167cbadaf4549aac1c10"
+    },
+    {
+      "path": "lib/v4-core/src/interfaces/IExtsload.sol",
+      "bytes": 1023,
+      "sha256": "9421ef4ba198d94058cd9a4c9fd2d663c61fc682f7dafa449a873456853f0025"
+    },
+    {
+      "path": "lib/v4-core/src/interfaces/IExttload.sol",
+      "bytes": 699,
+      "sha256": "c21643d2c7f48d2d2407438a64a3ff0f376324cf6a0c62608977713652308c9e"
+    },
+    {
+      "path": "lib/v4-core/src/interfaces/IHooks.sol",
+      "bytes": 8229,
+      "sha256": "6eb35c9c598eb932e963219f1ff180748bc4c30ac6a02d924893b3c29abb1d73"
+    },
+    {
+      "path": "lib/v4-core/src/interfaces/IPoolManager.sol",
+      "bytes": 12835,
+      "sha256": "a98405333567e4ab344489728014795721cf0071c151536377d2fcc986e0600c"
+    },
+    {
+      "path": "lib/v4-core/src/interfaces/IProtocolFees.sol",
+      "bytes": 2489,
+      "sha256": "807d68adea106ec2aa51a8009155de09ebfe09e1ee7053d5a5ae448d7e840654"
+    },
+    {
+      "path": "lib/v4-core/src/interfaces/callback/IUnlockCallback.sol",
+      "bytes": 488,
+      "sha256": "2e4a514730654da2e08a82eff5b3eabae12dc1c6198951396e1d466d4c0e223e"
+    },
+    {
+      "path": "lib/v4-core/src/interfaces/external/IERC20Minimal.sol",
+      "bytes": 3041,
+      "sha256": "5e966a2d22b3b234a56af4b17e36bf7be90f9b29b1ddb6a15bfefc0b6dab4282"
+    },
+    {
+      "path": "lib/v4-core/src/interfaces/external/IERC6909Claims.sol",
+      "bytes": 3162,
+      "sha256": "1cd65496c829036bc6aee67bc71363ab5fb6989c65e793087d0e1e2379f7d7d8"
+    },
+    {
+      "path": "lib/v4-core/src/libraries/BitMath.sol",
+      "bytes": 2609,
+      "sha256": "e8a45eb3d57f9427fc47bbb2543c1a6a5f394113b378123ac7ca9f113a7502b4"
+    },
+    {
+      "path": "lib/v4-core/src/libraries/CustomRevert.sol",
+      "bytes": 5174,
+      "sha256": "9d3dbe6b742cb1ac30f57df89d879ade9649389de1165fc637114bd062d39fca"
+    },
+    {
+      "path": "lib/v4-core/src/libraries/FullMath.sol",
+      "bytes": 5463,
+      "sha256": "a9607255a6fd604d9c92f6b7416811c38b9d86e5dfdb0c345a494ebd35f7a4a3"
+    },
+    {
+      "path": "lib/v4-core/src/libraries/Hooks.sol",
+      "bytes": 16511,
+      "sha256": "297d577998cdede64d48b47b12f15e4f442eea032fbb9676bb3c2f89da89b83c"
+    },
+    {
+      "path": "lib/v4-core/src/libraries/LPFeeLibrary.sol",
+      "bytes": 3596,
+      "sha256": "e96c3fa7deac991dc09b6c5e560a340d01d6c68ccba483d4b29f8a66e5aa44e0"
+    },
+    {
+      "path": "lib/v4-core/src/libraries/ParseBytes.sol",
+      "bytes": 1200,
+      "sha256": "6a6f3d1cec0143fd70ea68c34e6dce3bde72f368b213f1a225ada23dbfd99bb8"
+    },
+    {
+      "path": "lib/v4-core/src/libraries/SafeCast.sol",
+      "bytes": 2269,
+      "sha256": "c1a815a41607be5b4c86ca588a951f368156da8ee21bdfc18b5d51b58a0f27be"
+    },
+    {
+      "path": "lib/v4-core/src/libraries/TickMath.sol",
+      "bytes": 12382,
+      "sha256": "272d4f6d3ff9ae33596ebcdb84a71a3c2d4542ae8fb5c88ddf1aca8043f5d06b"
+    },
+    {
+      "path": "lib/v4-core/src/types/BalanceDelta.sol",
+      "bytes": 2339,
+      "sha256": "320d9c13dec135c3903729e66d3a1040fe86d537a7ee53728915012ca183af32"
+    },
+    {
+      "path": "lib/v4-core/src/types/BeforeSwapDelta.sol",
+      "bytes": 1466,
+      "sha256": "6aee06f1553e879f5909e8f4c0eac26ec23dd4821a7e56e4d5077db39a227e12"
+    },
+    {
+      "path": "lib/v4-core/src/types/Currency.sol",
+      "bytes": 5458,
+      "sha256": "ba6726fd24fbc66848208dfbb2899116c10729c505e6e5552316ac2444f1dfc3"
+    },
+    {
+      "path": "lib/v4-core/src/types/PoolId.sol",
+      "bytes": 539,
+      "sha256": "548424ac50ad58212545da70207283fb8990731578c115c85d5acbcb0e1d3c9f"
+    },
+    {
+      "path": "lib/v4-core/src/types/PoolKey.sol",
+      "bytes": 805,
+      "sha256": "99e1afe285b5c614ebc9586ab5196db9d24a63fd924a449f5d99f490a6a6d6a9"
+    },
+    {
+      "path": "lib/v4-core/src/types/PoolOperation.sol",
+      "bytes": 907,
+      "sha256": "cf72ad0c3e5e91662029e862acd841fabce8753040b0d4e802dee64ef1157232"
     },
     {
       "path": "contracts/SherwoodToken.sol",
@@ -94,9 +254,19 @@
       "sha256": "e0495d6703426d2cc2e03b0bc458ce13788e0a10ae309f8060bb25ebaba98dbf"
     },
     {
+      "path": "test/candidate-state.test.mjs",
+      "bytes": 2821,
+      "sha256": "e75670871a7553df71cc76b507d63c2d4c7ba206e8eac27d5ad1a0eb126432f9"
+    },
+    {
       "path": "test/contracts.test.mjs",
       "bytes": 11607,
       "sha256": "893fe4be0d7830368df6eacc88aaa0dacbbe6c60b6718f97f9808380b01caa02"
+    },
+    {
+      "path": "test/distributor-wallet.test.mjs",
+      "bytes": 2864,
+      "sha256": "31840daff020638ec744eab5729624c98c745d510c6c0b8b362ccbe0b3a2a368"
     },
     {
       "path": "test/economic-attacks.test.mjs",
@@ -105,8 +275,13 @@
     },
     {
       "path": "test/helpers/native20-fixture.mjs",
-      "bytes": 4390,
-      "sha256": "6c04fba0b5704e9941464dc312f0476ccc9567c4078dc6f79b6c75ba9bba0191"
+      "bytes": 4450,
+      "sha256": "e1f46fcc98b39617dd901fcc3cf0f953a0dee5e5d0f2a8f1ae350043f6fc1800"
+    },
+    {
+      "path": "test/launch-fees.test.mjs",
+      "bytes": 2240,
+      "sha256": "e9ae358c3cc554385bfb0df3e838f76d4f88fa91000624792c9a0dadc434d4fd"
     },
     {
       "path": "test/launch-gas.test.mjs",
@@ -119,9 +294,14 @@
       "sha256": "7db95632d5c1ff066b3a4b9430b330e703b056925164e1c746f17f9291ddb61d"
     },
     {
+      "path": "test/moss-launch-wallet.test.mjs",
+      "bytes": 2612,
+      "sha256": "8c013fe5335ed7a182ac2759be1aab472b13e886534224cbd8bec02d02376917"
+    },
+    {
       "path": "test/native20.test.mjs",
-      "bytes": 23270,
-      "sha256": "9ac9e5dd6552cc32808c40ba07636b87747a12d48baaaa495d6cd465e91aba8a"
+      "bytes": 24417,
+      "sha256": "5650e306fc155fa241b39958c9bbeea421d63ff067f0f3d5a1ad737365e02b33"
     },
     {
       "path": "test/production-network.test.mjs",
@@ -135,13 +315,23 @@
     },
     {
       "path": "test/replay.test.mjs",
-      "bytes": 4847,
-      "sha256": "791edfe681f92a47ca48dd49e7e59d40bf23c4b5a47120a7598240c94a664d7d"
+      "bytes": 7750,
+      "sha256": "5aaf5692cbcacd032b57bd80730ac701b6e68927685baa39336b7e4bdb4d7f48"
+    },
+    {
+      "path": "test/reward-callback.test.mjs",
+      "bytes": 4058,
+      "sha256": "449e407549c4670ae28188413f145e2aa67c62f5c221d0409a941d0502d18651"
     },
     {
       "path": "test/reward-round.test.mjs",
       "bytes": 2733,
       "sha256": "45b0c8977f9f7579136653dd25802364c6de5d5da2fe5543dc5d79275a57adbb"
+    },
+    {
+      "path": "test/test-launch.test.mjs",
+      "bytes": 1822,
+      "sha256": "5b10cf33557669844c89796c42c21c581261e50028e2ada28ac469d894b33045"
     },
     {
       "path": "test/universal-router.test.mjs",
@@ -179,14 +369,39 @@
       "sha256": "0e5589d828dcc6a91de3f043af20f16ce63f76cc2cda4c77210badc9b7537703"
     },
     {
+      "path": "docs/funding-and-signing.md",
+      "bytes": 4617,
+      "sha256": "8913173e8ed2c15dd7f8301bba3d280cb69d74b0a88d00173cb8e73d8f75eebb"
+    },
+    {
+      "path": "docs/hood-launch-readiness.md",
+      "bytes": 3827,
+      "sha256": "09f6013b8cbf9e507b178fb86e6c777ede238b5d0fd1c5f5ad625e2ff143a012"
+    },
+    {
+      "path": "docs/local-rehearsal.md",
+      "bytes": 3134,
+      "sha256": "0ac76999a2201411caed7c94a62820e1cae55bc864a792d56d8afd2bce62f5a6"
+    },
+    {
+      "path": "docs/moss-live-test-handoff.md",
+      "bytes": 14204,
+      "sha256": "a5ffa3762cdcb51127a3d9ece4d0561751a7abea2ad0222d5cb0ae5aa258cfc7"
+    },
+    {
+      "path": "docs/moss-wallet-review-incident.md",
+      "bytes": 2518,
+      "sha256": "54e52a1ac319716728c0f21e1e3cecaf2af6c1864fcecea02f933c601af32025"
+    },
+    {
       "path": "docs/payout-operator.md",
-      "bytes": 7205,
-      "sha256": "9c8c66c7cc66439e8cab8b204d78a4927e46453382a80459987d99c94d937fc0"
+      "bytes": 7832,
+      "sha256": "c40a7bd829eddf303a3c2b1bbca1ef9f541bbf7f84580c50df38120383ac4c3f"
     },
     {
       "path": "docs/production-setup.md",
-      "bytes": 5872,
-      "sha256": "b6e86166bb6ab7e1485c2a99912050e4b33d120439c3aad8e63e6e9c4142dc43"
+      "bytes": 8895,
+      "sha256": "905a8fbb1ba1dff7a2f02606f49ce7fef9b649c3d0970e85a2ccd0fb8d7ddc4d"
     },
     {
       "path": "docs/router-and-economic-validation.md",
@@ -205,13 +420,18 @@
     },
     {
       "path": "README.md",
-      "bytes": 12740,
-      "sha256": "a23c4d5a815dfbd082c9b3be1da9d4f41f44f478b15690fc786266de770bcc24"
+      "bytes": 13443,
+      "sha256": "8ccfab2e16ebf835817845de4696d39ab634dd99b0be4ccea81bee3de749028a"
     },
     {
       "path": ".gitignore",
-      "bytes": 136,
-      "sha256": "00baa151e08b75c8d45e0278bd656594ab6fdc8d30d3e82add13259e4d9fd74f"
+      "bytes": 146,
+      "sha256": "d1360f460658f39cf2e9c56266360c28c6bff1138e5b75ff3cb789d561046409"
+    },
+    {
+      "path": ".gitattributes",
+      "bytes": 84,
+      "sha256": "e38da6a034628181c52c97ceec8234be8ed1c771943711c6bd546518d0fd5add"
     },
     {
       "path": ".dockerignore",
@@ -225,8 +445,8 @@
     },
     {
       "path": "config.example.json",
-      "bytes": 578,
-      "sha256": "ec768380313d723a9a3116e901ecc957992043bae3d825abfce0c5e7e731e9fc"
+      "bytes": 594,
+      "sha256": "ccf82f148645fa7c86dee94c7a727c492496b2345fccbeff74f9f1cdf98d2452"
     },
     {
       "path": "execution.example.json",
@@ -249,9 +469,14 @@
       "sha256": "2fdf092c84abe43f3a0aeca45a255a43e0a5b0a493bd8cb9f6b8b068911f3896"
     },
     {
+      "path": "hardhat.rehearsal.config.cjs",
+      "bytes": 214,
+      "sha256": "f3be9bfd52d44892e3b54f227a259087bd82f3e7c02d62b3e162d2ccfe9b1ef4"
+    },
+    {
       "path": "launch-intent.json",
-      "bytes": 2619,
-      "sha256": "70d705c8a48029c173bc4d9e89d18db50c086e4f414c08ed55340e351df68fa5"
+      "bytes": 4480,
+      "sha256": "8011f720d2e7b0ddcb3e4e8ad62f99184a5d6fa6c5157f535570ae55e064873a"
     },
     {
       "path": "scripts/compile.mjs",
@@ -290,8 +515,8 @@
     },
     {
       "path": "scripts/executor.mjs",
-      "bytes": 2138,
-      "sha256": "ca41a460ffade01d30ae791bdbe164c26b4fb14de0304c47d0d68c2f26127a33"
+      "bytes": 2268,
+      "sha256": "494ed12b31139776860348537d31bfb06d383db7d3255192b3a9f066911842a5"
     },
     {
       "path": "scripts/production-operator.mjs",
@@ -310,8 +535,23 @@
     },
     {
       "path": "scripts/build-release.mjs",
-      "bytes": 2373,
-      "sha256": "8ce31a5ead32b33b801f9964b81f4de58efa5be794b2e2f9ae347fc6bc06523a"
+      "bytes": 2501,
+      "sha256": "369927da39cf215723b3dab5aa76c2479f09f84e4ead87b37a5f3acdb589b81d"
+    },
+    {
+      "path": "scripts/rehearse-local.mjs",
+      "bytes": 10842,
+      "sha256": "b756cbebf1647f424c27e02b0b22fbe3f3037c11a3ffc87fbb32e3a2c5016f97"
+    },
+    {
+      "path": "signing-ui/guards.mjs",
+      "bytes": 3137,
+      "sha256": "78c45368bd1a66fd35c707a3ca41b23bd488812d9aaf3c9b648633443af82e59"
+    },
+    {
+      "path": "signing-ui/moss-launch-guards.mjs",
+      "bytes": 3786,
+      "sha256": "4f4b3f62b25e8bd151806004ca99da9d72b7ec92cb1a6df33894243c0a4cf6f8"
     },
     {
       "path": "research/coverage.json",
@@ -341,7 +581,7 @@
     {
       "path": "research/current/capabilities.json",
       "bytes": 45784,
-      "sha256": "b76ad634a692eb5d80a6e147a7e05c74a950f7ceea86040c128f6b7706406d7e"
+      "sha256": "1b1397f155ce39a17c1920e88eecb00da6306694fe7f9ad0a4ad9a2bc2c2f251"
     },
     {
       "path": "research/current/coverage.json",
@@ -351,7 +591,7 @@
     {
       "path": "research/current/discovery.json",
       "bytes": 52756,
-      "sha256": "2c82edb4c38436737f70bcf21c1f7601ebd1a47be036fb7e8ba61451ce503c5a"
+      "sha256": "479e140a8d23ed0d5bb271b61ab45debf40a320542faba721e7d89aca39c0eb3"
     },
     {
       "path": "research/current/graphFactory-runtime.txt",
@@ -362,6 +602,11 @@
       "path": "research/current/guide.json",
       "bytes": 23735,
       "sha256": "461bcfca74e15c9abee4268679e5d354f3e6e223e9f41e9bacb3e63f03d22a8b"
+    },
+    {
+      "path": "research/current/pack-config-schema.json",
+      "bytes": 161522,
+      "sha256": "2b18fe13314b674b990f39055fd705961bbbe4a5012d646d72843bcba88ee46b"
     },
     {
       "path": "research/current/permit2-runtime.txt",
@@ -391,17 +636,17 @@
     {
       "path": "research/current/quote.json",
       "bytes": 1091,
-      "sha256": "87ba756ca9c0a2376990b5700321b1e07a230567d65a44a7742c2d91f8737f54"
+      "sha256": "467e19a67bac6ddeafd2f4ad554208487e97e801ed6c7e03f30eef3f2e19a376"
     },
     {
       "path": "research/current/readiness.json",
       "bytes": 4288,
-      "sha256": "6ab49588607fbdcef648ab7ce91b4cf89f0fc051f6f42de520f524f78cd07e72"
+      "sha256": "841950777e8f8fed675a500331e7aaaf32250585c2d36b4813716c7618fce9fd"
     },
     {
       "path": "research/current/rpc-readback.json",
-      "bytes": 3384,
-      "sha256": "f5d66658df096b095f98ef5aa8de3b19629783271bee02f93ae20649145650cc"
+      "bytes": 3401,
+      "sha256": "5fa952166b574d489b829791c210c34d32f515711bb2269e88c4e0f6db78d7d1"
     },
     {
       "path": "research/current/stateView-runtime.txt",
@@ -417,11 +662,6 @@
       "path": "research/current/v4Quoter-runtime.txt",
       "bytes": 12238,
       "sha256": "0a69fb997440ad6ca7ae7f25d5d57083fb10ae3c3451817a3e74bd322e22510f"
-    },
-    {
-      "path": ".gitattributes",
-      "bytes": 84,
-      "sha256": "e38da6a034628181c52c97ceec8234be8ed1c771943711c6bd546518d0fd5add"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
-  "name": "ROBINHOOD",
-  "symbol": "ROBIN",
+  "name": "HOOD",
+  "symbol": "HOOD",
   "chainId": 4663,
   "rpcUrlEnvironment": "ROBIN_RPC_URL",
   "token": null,

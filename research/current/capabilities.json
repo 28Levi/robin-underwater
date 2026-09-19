@@ -1,7 +1,7 @@
 {
   "schemaVersion": "programmable.custom-launch-capabilities.v2",
   "apiVersion": "v4",
-  "serverTime": "2026-09-13T07:58:00.459Z",
+  "serverTime": "2026-09-19T09:33:56.405Z",
   "readinessUrl": "/readyz",
   "chain": {
     "id": "4663",
