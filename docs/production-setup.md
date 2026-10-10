@@ -1,5 +1,7 @@
 # Production activation
 
+Current launch identity (October 10): **ROBINHOOK / ROBIN**, with https://robinhook.wtf/ as the website. Use `launch-intent.json`, `config.example.json` and [current launch readiness](hood-launch-readiness.md) for new preparation. Dated HOOD identity, funding, deployment and hosting statements below are historical evidence and need fresh verification; the identity update does not alter deployed contracts, activate payouts or authorize new transactions. The recorded source revision and existing launch packages must be replaced by a validated new release before the ROBIN launch.
+
 The Render worker is live in inactive setup mode at service `srv-daj6jt95efls73foumv0`, with a verified 1 GB persistent disk and $7.25/month base hosting. Following explicit user approval, the dedicated operator's encrypted keystore and password were installed in Render secret storage. On-server decryption restored the expected operator address on 2026-09-13, and the RPC evidence survived a service restart. No token or distributor has been deployed, and no blockchain transaction has been signed or sent.
 
 ## Required resources
@@ -43,6 +45,6 @@ The guard does not detect transfers out and back after the last RPC check, nor p
 
 The user does not want a separate website. The existing public GitHub project page is the website link in the launch metadata; the generated private Site is outside the remaining work. Programmable's current schema still requires a real X profile, alongside the already published image and exact source revision. This metadata requirement is separate from token and rewards functionality. Programmable preflight must accept the exact packed launch before the controller can sign. Both wallets are funded: after distributor deployment the launch wallet had 0.29266699428424 ETH and the operator had 0.005 ETH. The purchase remains capped at 0.1 ETH, token launch gas at 0.0008 ETH and cumulative bot gas at 0.005 ETH. Extra wallet funds and unused distributor gas allowance do not increase these caps.
 
-## Current HOOD preparation — September 19
+## Historical HOOD preparation — September 19
 
 Current token identity is HOOD / HOOD and the first purchase is 0.01 ETH. The distributor is already deployed and reverified; do not redeploy. The existing Render worker remains idle until the repaired release and exact token configuration pass checks. Use docs/hood-launch-readiness.md for current status; older statements above about no deployments, ROBIN naming, and 0.1 ETH are superseded.

@@ -5,10 +5,10 @@ import {twap} from '../src/oracle.mjs';
 const E=10n**18n,A='0x0000000000000000000000000000000000000001',B='0x0000000000000000000000000000000000000002',C='0x0000000000000000000000000000000000000003';
 const oracle={priceWeiPerToken:E,observedAt:7200,now:7200};
 function buy(l,a,quantity,cost,id=a,time=0){l.apply({id,type:'buy',account:a,amount:quantity*E,costWei:cost*E,time});}
-test('only underwater holders receive funds, weighted by absolute loss',()=>{
+test('scarce rewards go to the deepest percentage loss first',()=>{
  const l=new LossLedger();buy(l,A,4n,2n);buy(l,B,4n,6n);buy(l,C,4n,5n);
  const p=l.plan(3n*E/10n,oracle);
- assert.deepEqual(p.allocations.map(a=>[a.account,a.amount]),[[B,E/5n],[C,E/10n]]);
+ assert.deepEqual(p.allocations.map(a=>[a.account,a.amount]),[[B,3n*E/10n]]);
  assert.equal(p.carryForward,0n);
 });
 test('partial sale removes proportional cost and prior relief; exit removes eligibility',()=>{

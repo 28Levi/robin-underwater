@@ -15,7 +15,14 @@
     "estimate:gas": "node scripts/estimate-launch-gas.mjs",
     "operator": "node scripts/operator.mjs",
     "executor:local": "node scripts/executor.mjs",
-    "operator:production": "node scripts/production-operator.mjs"
+    "operator:production": "node scripts/production-operator.mjs",
+    "wallet-feed": "node scripts/export-wallet-feed.mjs",
+    "launch:prepare": "node scripts/prepare-robin-launch-plan.mjs",
+    "launch:api": "node scripts/robin-launch-api.mjs",
+    "launch:handoff": "node scripts/prepare-launch-handoff.mjs",
+    "launch:review": "node scripts/serve-robin-launch-wallet.mjs",
+    "launch:watch": "node scripts/watch-launch.mjs",
+    "launch:standby": "node scripts/launch-standby.mjs --loop"
   },
   "dependencies": {
     "@openzeppelin/contracts": "5.4.0",

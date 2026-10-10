@@ -1,0 +1,267 @@
+{
+  "schemaVersion": "programmable.custom-launch-artifact-index.v1",
+  "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+  "generatorVersion": "1.4.2",
+  "esbuildVersion": "0.28.2",
+  "artifacts": [
+    {
+      "fileName": "manifest.json",
+      "path": "/v4/chains/4663/custom-launch-contract/manifest.json",
+      "contentSha256": "sha256:1e16a3065c51e1cc89dd1303f03eaf0909cb30f265449ef869f2f46a3a2b3ba6",
+      "byteLength": 141556,
+      "mediaType": "application/json"
+    },
+    {
+      "fileName": "schema.json",
+      "path": "/v4/chains/4663/custom-launch-contract/schema.json",
+      "contentSha256": "sha256:4904f8c863d3714db783a46411b8f909f8c8b01a3ba07ff6eb494e5324c59667",
+      "byteLength": 45606,
+      "mediaType": "application/schema+json"
+    },
+    {
+      "fileName": "openapi.json",
+      "path": "/v4/chains/4663/custom-launch-contract/openapi.json",
+      "contentSha256": "sha256:63b90ab688c5bf857ce9b42f05e07f6fb0a3fed1b78625aae9ea07349892eac1",
+      "byteLength": 182502,
+      "mediaType": "application/json"
+    },
+    {
+      "fileName": "errors.json",
+      "path": "/v4/chains/4663/custom-launch-contract/errors.json",
+      "contentSha256": "sha256:22a58f56c80fd966062829a2d249f9f838e01aba17aeb96070a1ba08919d1dc2",
+      "byteLength": 17674,
+      "mediaType": "application/json"
+    },
+    {
+      "fileName": "capabilities.json",
+      "path": "/v4/chains/4663/custom-launch-contract/capabilities.json",
+      "contentSha256": "sha256:001fdbeb62470575aad96215993c62315311316042e6dfd86ff5a5150045666c",
+      "byteLength": 1174,
+      "mediaType": "application/json"
+    },
+    {
+      "fileName": "discovery.json",
+      "path": "/v4/chains/4663/custom-launch-contract/discovery.json",
+      "contentSha256": "sha256:ec954c310674e9a8b90973cf394d91353383e511edc2d793d11cdc413034925c",
+      "byteLength": 3632,
+      "mediaType": "application/json"
+    },
+    {
+      "fileName": "agent-setup.json",
+      "path": "/v4/chains/4663/custom-launch-contract/agent-setup.json",
+      "contentSha256": "sha256:72d51a54fae2e096b9f3f772ee40b8b0f0810fb7eca94431488211f9fc70aedb",
+      "byteLength": 11951,
+      "mediaType": "application/json"
+    },
+    {
+      "fileName": "reference.json",
+      "path": "/v4/chains/4663/custom-launch-contract/reference.json",
+      "contentSha256": "sha256:0a373752ffa104d60b039df0723662c7450923fd74fa021e0c50a8fdfe83246f",
+      "byteLength": 50579,
+      "mediaType": "application/json"
+    },
+    {
+      "fileName": "guide.md",
+      "path": "/v4/chains/4663/custom-launch-contract/guide.md",
+      "contentSha256": "sha256:79785336a6a8c8fc7a50cb5570693192c18065574bd91fbb2b9283d8c9e2c116",
+      "byteLength": 12872,
+      "mediaType": "text/markdown"
+    },
+    {
+      "fileName": "agent-setup.md",
+      "path": "/v4/chains/4663/custom-launch-contract/agent-setup.md",
+      "contentSha256": "sha256:a6abb9e8f7caad170262b6c01c694b16c34da19e8aec07e76a7c535688ded993",
+      "byteLength": 11609,
+      "mediaType": "text/markdown"
+    },
+    {
+      "fileName": "request-packer.mjs",
+      "path": "/v4/chains/4663/custom-launch-contract/request-packer.mjs",
+      "contentSha256": "sha256:419ce9aaa514f8ec57ad96ed56a97c5ab314dd55c9c6698abfe83aca1248d741",
+      "byteLength": 156369,
+      "mediaType": "text/javascript"
+    }
+  ],
+  "packerSourceInputs": [
+    {
+      "path": "node_modules/@noble/hashes/esm/_u64.js",
+      "contentSha256": "sha256:e48c0cfc10810439a4807b46db136ce603a3fa09b62584f513ef2f3ca496af54"
+    },
+    {
+      "path": "node_modules/@noble/hashes/esm/sha3.js",
+      "contentSha256": "sha256:0260b46f92a3a94c7179958600d7f92469ef2c8f5d2e966bd9a838ff815713e9"
+    },
+    {
+      "path": "node_modules/@noble/hashes/esm/utils.js",
+      "contentSha256": "sha256:4cf4c1e05affedcb4fd584a43d76ae1a3711e34a36e2251b90c27e33ecc74fad"
+    },
+    {
+      "path": "node_modules/viem/_esm/errors/abi.js",
+      "contentSha256": "sha256:7de67d56675c7cf4d92b67aea1d42bfcbff25288e08e54102336a1c70bfafd20"
+    },
+    {
+      "path": "node_modules/viem/_esm/errors/address.js",
+      "contentSha256": "sha256:15fbee8a0ff7da80403c224139ed54a26782949b6844d02a550799fda5d96c9c"
+    },
+    {
+      "path": "node_modules/viem/_esm/errors/base.js",
+      "contentSha256": "sha256:956b5bc5e76dc9e00bba8eef5d2b9574fbf48781e4ad44e4ecb2bf6cf18d3663"
+    },
+    {
+      "path": "node_modules/viem/_esm/errors/cursor.js",
+      "contentSha256": "sha256:f041ba973830c0be1fd9c1f59b337963581bfb050e8569fa81997b866ddaeec8"
+    },
+    {
+      "path": "node_modules/viem/_esm/errors/data.js",
+      "contentSha256": "sha256:84f699da9d0e04ccdb1ff68d2d2eac1e65eb7e5b87b11bda54900d200296fd91"
+    },
+    {
+      "path": "node_modules/viem/_esm/errors/encoding.js",
+      "contentSha256": "sha256:54fa2408543f89d8b49897187f8cf9ebb8ae6121bf2bca98c1a77427055e0acc"
+    },
+    {
+      "path": "node_modules/viem/_esm/errors/version.js",
+      "contentSha256": "sha256:5de6b948506c158cc597e5416558bf4ade9f6c7cc90ac4a31a50f94816994e04"
+    },
+    {
+      "path": "node_modules/viem/_esm/index.js",
+      "contentSha256": "sha256:22476331c727284ba23b62a1c3cfa8084f29701203e7de8c2110b69ed6d4ecbe"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/abi/encodeAbiParameters.js",
+      "contentSha256": "sha256:a716027b45ce239f75b46e1dbafc92d4a181edec6d828361dcd3a90c7d8fe4e9"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/address/getAddress.js",
+      "contentSha256": "sha256:e17499a48cfa1a8a5f9557060559fca9c09dd46883761ee1e75e618af260b434"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/address/getContractAddress.js",
+      "contentSha256": "sha256:efc1199ddb70d8f5dcd38cc99b509fe6f2a056b1d2e7d8185befe16b49ab7eb9"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/address/isAddress.js",
+      "contentSha256": "sha256:20726d625eee442dd81c6d08493ab141535b7bb279eb20f4e072c65bf1a827db"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/cursor.js",
+      "contentSha256": "sha256:abc9a8f676a52f86ffd4cb4bb893a1139519e471f9428ad2b31e6aeaa552e32b"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/data/concat.js",
+      "contentSha256": "sha256:90b2d33df5224056ea23b789a4c6693269a1d662ac83a3eb4b2e63f2cd95f5d4"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/data/isBytes.js",
+      "contentSha256": "sha256:7c40af7bcc1bdecf037b02a4c5a7569b2b12d5f2e38f26931f088b096775711c"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/data/isHex.js",
+      "contentSha256": "sha256:517d4d66877ab4bcd1e62d449fe66c25104d99fdbbef6aae3596b1c4e506609c"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/data/pad.js",
+      "contentSha256": "sha256:9e92b5b552c364d30bfb9df355a32efac32eec2763f26adda3dc3e17cbb7fa0b"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/data/size.js",
+      "contentSha256": "sha256:d8a6ac44b4897d63dd71c598e3161fcbb30a748175fe81610f6571eaa8b26d42"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/data/slice.js",
+      "contentSha256": "sha256:836e7cdaeb10f81b8a61762fd5ae1e5a6a21319e03bde13c6cfdaad20b7181aa"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/encoding/fromHex.js",
+      "contentSha256": "sha256:faa38cd6bd285ef4add923d7dfc57565992b8c9347c86d6785b2d120ff5090c8"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/encoding/toBytes.js",
+      "contentSha256": "sha256:c67c68428c516b67b27ea3094c79632771efbf9a2df9c65b412f8f9220d7741d"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/encoding/toHex.js",
+      "contentSha256": "sha256:53fcd5ab40bcaf191735355e4d107092818a5006cf2ca75580d581e568966629"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/encoding/toRlp.js",
+      "contentSha256": "sha256:c48506827ab3366e7a68511b826b745440a18a4da618c3cfa1712298a830bc3f"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/hash/keccak256.js",
+      "contentSha256": "sha256:3e3b256aa1b5537440955848234b84aa4de248225cb038c82317420279e77c14"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/lru.js",
+      "contentSha256": "sha256:a69d2518dd312fa7ff2a523f05fa3fe90a86089efa47a367bff3f8b6f13def8a"
+    },
+    {
+      "path": "node_modules/viem/_esm/utils/regex.js",
+      "contentSha256": "sha256:22764f9a3d8c8bdeddd68bbdb9c114a8dd3564bb69c7bd83565e7f5d5cf07ec2"
+    },
+    {
+      "path": "src/client/custom-launch-plan-packer-cli-v1.ts",
+      "contentSha256": "sha256:57262687ca731b895207a88e9141a1e650a08fddccabf3fba51acf14b5e538ae"
+    },
+    {
+      "path": "src/client/custom-launch-plan-packer-v1.ts",
+      "contentSha256": "sha256:323058e5f861fdec85e3c38c53a94726c8423c57fcf837a920249ace0c11251c"
+    },
+    {
+      "path": "src/domain/custom-launch-plan-contract-v1.ts",
+      "contentSha256": "sha256:7479f7ffdc55861eabe88134d9ffda94d616177fb31e42e05b34d7f71a478308"
+    },
+    {
+      "path": "src/domain/custom-launch-trade-fee-v2.ts",
+      "contentSha256": "sha256:e5107c824d1aaf5fafd69d3fc7dccf7a8f138a0a78513d69348daa1ba8cb0026"
+    },
+    {
+      "path": "src/domain/delegated-eoa-custom-launch-plan-v1.ts",
+      "contentSha256": "sha256:5ef9f01f6c9162df8988d16b3faabf9979adfd73d87e339d28a507c3bbf6900f"
+    },
+    {
+      "path": "src/domain/errors-custom-launch-plan-v1.ts",
+      "contentSha256": "sha256:810e8b507eb4d19a07f32c8e49c51d0b3124af0a5364d413fbb64b964f441382"
+    },
+    {
+      "path": "src/domain/execution-atomic-custom-launch-plan-v2.ts",
+      "contentSha256": "sha256:aef79a70d04b2c2c4c207ca58dffa7e420303750893a55b5c44a4ed8fb659457"
+    },
+    {
+      "path": "src/domain/json.ts",
+      "contentSha256": "sha256:9ac4793436a43acd2925a0a2f7b4f66b8b754cd2d753df3e496468f845c61d37"
+    },
+    {
+      "path": "src/domain/request-custom-launch-plan-v1.ts",
+      "contentSha256": "sha256:c9ff86eafa73b667e3649f3f8a667736392fd8f0220dc3f6c6e8fc452da50602"
+    },
+    {
+      "path": "src/domain/types-custom-launch-plan-v1.ts",
+      "contentSha256": "sha256:315d85f33a77017c7ee1aa08a94fd1edf39e5c8def05362fd68ec928162f18f4"
+    },
+    {
+      "path": "src/launch/canonical-v1.ts",
+      "contentSha256": "sha256:654754c749257ef7ac6df180b15d8f918c4f57c37777eae27e05e670d7ecfdf8"
+    },
+    {
+      "path": "src/verification/bundle-v1.ts",
+      "contentSha256": "sha256:b61b461b799366ff0f2ebb71cfbda2335bcdf7b55316acc40e95ac241cb22e2e"
+    },
+    {
+      "path": "src/verification/bundle-v2.ts",
+      "contentSha256": "sha256:2b6e6937e16be9b12422f3748876c6c17cf9bdee3af49b0756f32e2d3725a10c"
+    },
+    {
+      "path": "src/verification/strict-json-v4.ts",
+      "contentSha256": "sha256:f8dc7efa32404e37ae826ed4533946032a23267f436e7b4ec10d96eebcea7e4d"
+    },
+    {
+      "path": "src/verification/types-v1.ts",
+      "contentSha256": "sha256:a283b5dbb5981eda8f8ce15eff19690e82d757055879d11bd253791ce5bb07bd"
+    },
+    {
+      "path": "src/verification/types-v2.ts",
+      "contentSha256": "sha256:7f968e0f6cd1b6cea174a434388da6a38484623bd2c3dabc0d9173b302b946cc"
+    }
+  ]
+}

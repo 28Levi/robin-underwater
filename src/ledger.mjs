@@ -1,7 +1,8 @@
 import {createHash} from 'node:crypto';
+import {allocateRecoveryLadder} from './recovery-ladder.mjs';
 
 export const ZERO = '0x0000000000000000000000000000000000000000';
-export const LEDGER_VERSION = 3;
+export const LEDGER_VERSION = 4;
 const positive = x => { x=BigInt(x); if(x<=0n) throw Error('Expected positive amount'); return x; };
 export const address = a => {if(!/^0x[0-9a-fA-F]{40}$/.test(a))throw Error('Invalid address');return a.toLowerCase();};
 const empty = () => ({balance:0n,cost:0n,relief:0n,lastAcquired:0,quarantined:false,ageLots:[]});
@@ -70,18 +71,16 @@ export class LossLedger {
       const value=a.balance*price/10n**18n;
       const covered=value+a.relief;
       const loss=a.cost>covered?(a.cost-covered)*mature/a.balance:0n;
-      return loss>0n?[{account,loss}]:[];
+      const basis=a.cost*mature/a.balance;
+      return loss>0n?[{account,loss,basis}]:[];
     });
   }
   plan(budgetWei,oracle) {
     const budget=BigInt(budgetWei);if(budget<0n)throw Error('Negative budget');
-    const weights=this.shortfalls(oracle),totalLoss=weights.reduce((n,w)=>n+w.loss,0n);
-    const distributable=min(budget,totalLoss);
-    // Round DOWN. Remainder stays in the vault; never overpay to exhaust the pot.
-    const allocations=totalLoss===0n?[]:weights.map(w=>({...w,amount:distributable*w.loss/totalLoss})).filter(w=>w.amount>0n);
-    const allocated=allocations.reduce((n,a)=>n+a.amount,0n);
-    const content={schemaVersion:'robin.loss-allocation.v2',ledgerVersion:LEDGER_VERSION,checkpoint:this.checkpoint,oracle,
-      budgetWei:budget,totalLoss,allocated,carryForward:budget-allocated,allocations};
+    const eligiblePositions=this.shortfalls(oracle);
+    const result=allocateRecoveryLadder(eligiblePositions,budget);
+    const content={schemaVersion:'robin.loss-allocation.v3',ledgerVersion:LEDGER_VERSION,checkpoint:this.checkpoint,oracle,
+      budgetWei:budget,eligiblePositions,...result};
     const json=stringify(content);
     return {...content,auditHash:'0x'+createHash('sha256').update(json).digest('hex')};
   }

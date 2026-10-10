@@ -1,0 +1,1274 @@
+{
+  "schemaVersion": "programmable.custom-launch-plan-reference.v1",
+  "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+  "productionAuthority": false,
+  "validation": "offline_structural_reference_requires_live_controller_chain_and_runtime_binding",
+  "examples": {
+    "noPool": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "observe_and_stamp_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        }
+      ],
+      "markets": [],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [
+        {
+          "obligationId": "fee",
+          "mode": "not_applicable",
+          "policyVersion": "programmable.custom-launch-fee.v1",
+          "rateBps": 0,
+          "scope": "no_qualifying_swap_flow",
+          "recipient": null,
+          "marketIds": []
+        }
+      ],
+      "claimDescriptors": [],
+      "distributionPreferences": []
+    },
+    "singlePool": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "controller_multi_step_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        },
+        {
+          "actionId": "init-native-pair",
+          "kind": "initializePool",
+          "marketId": "native-pair",
+          "sqrtPriceX96": "79228162514264337593543950336",
+          "dependsOn": [
+            "observe"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [],
+          "execution": {
+            "target": {
+              "address": "0x000000000004444c5dc75cB358380D2e3dE08A90"
+            },
+            "data": "0x6276cbbe000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        }
+      ],
+      "markets": [
+        {
+          "marketId": "native-pair",
+          "kind": "uniswap_v4",
+          "poolManager": "0x000000000004444c5dc75cB358380D2e3dE08A90",
+          "currency0": {
+            "address": "0x0000000000000000000000000000000000000000"
+          },
+          "currency1": {
+            "address": "0x0000000000000000000000000000000000004000"
+          },
+          "fee": 3000,
+          "tickSpacing": 60,
+          "hooks": {
+            "address": "0x0000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [
+        {
+          "obligationId": "fee",
+          "mode": "programmable_routed",
+          "policyVersion": "programmable.custom-launch-fee.v1",
+          "rateBps": 20,
+          "scope": "programmable_built_or_routed_qualifying_swaps",
+          "recipient": "0xD88539d3c4C460136a733A3Fd60cf6BF269079da",
+          "marketIds": [
+            "native-pair"
+          ]
+        }
+      ],
+      "claimDescriptors": [],
+      "distributionPreferences": []
+    },
+    "multiPool": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "controller_multi_step_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        },
+        {
+          "actionId": "init-native-pair",
+          "kind": "initializePool",
+          "marketId": "native-pair",
+          "sqrtPriceX96": "79228162514264337593543950336",
+          "dependsOn": [
+            "observe"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [],
+          "execution": {
+            "target": {
+              "address": "0x000000000004444c5dc75cB358380D2e3dE08A90"
+            },
+            "data": "0x6276cbbe000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        },
+        {
+          "actionId": "init-token-pair",
+          "kind": "initializePool",
+          "marketId": "token-pair",
+          "sqrtPriceX96": "79228162514264337593543950336",
+          "dependsOn": [
+            "init-native-pair"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [],
+          "execution": {
+            "target": {
+              "address": "0x000000000004444c5dc75cB358380D2e3dE08A90"
+            },
+            "data": "0x6276cbbe000000000000000000000000000000000000000000000000000000000000400000000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        }
+      ],
+      "markets": [
+        {
+          "marketId": "native-pair",
+          "kind": "uniswap_v4",
+          "poolManager": "0x000000000004444c5dc75cB358380D2e3dE08A90",
+          "currency0": {
+            "address": "0x0000000000000000000000000000000000000000"
+          },
+          "currency1": {
+            "address": "0x0000000000000000000000000000000000004000"
+          },
+          "fee": 3000,
+          "tickSpacing": 60,
+          "hooks": {
+            "address": "0x0000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "marketId": "token-pair",
+          "kind": "uniswap_v4",
+          "poolManager": "0x000000000004444c5dc75cB358380D2e3dE08A90",
+          "currency0": {
+            "address": "0x0000000000000000000000000000000000004000"
+          },
+          "currency1": {
+            "address": "0x1111111111111111111111111111111111111111"
+          },
+          "fee": 3000,
+          "tickSpacing": 60,
+          "hooks": {
+            "address": "0x0000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [
+        {
+          "obligationId": "fee",
+          "mode": "programmable_routed",
+          "policyVersion": "programmable.custom-launch-fee.v1",
+          "rateBps": 20,
+          "scope": "programmable_built_or_routed_qualifying_swaps",
+          "recipient": "0xD88539d3c4C460136a733A3Fd60cf6BF269079da",
+          "marketIds": [
+            "native-pair",
+            "token-pair"
+          ]
+        }
+      ],
+      "claimDescriptors": [],
+      "distributionPreferences": []
+    },
+    "nonNativePair": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "controller_multi_step_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        },
+        {
+          "actionId": "init-token-pair",
+          "kind": "initializePool",
+          "marketId": "token-pair",
+          "sqrtPriceX96": "79228162514264337593543950336",
+          "dependsOn": [
+            "observe"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [],
+          "execution": {
+            "target": {
+              "address": "0x000000000004444c5dc75cB358380D2e3dE08A90"
+            },
+            "data": "0x6276cbbe000000000000000000000000000000000000000000000000000000000000400000000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        }
+      ],
+      "markets": [
+        {
+          "marketId": "token-pair",
+          "kind": "uniswap_v4",
+          "poolManager": "0x000000000004444c5dc75cB358380D2e3dE08A90",
+          "currency0": {
+            "address": "0x0000000000000000000000000000000000004000"
+          },
+          "currency1": {
+            "address": "0x1111111111111111111111111111111111111111"
+          },
+          "fee": 3000,
+          "tickSpacing": 60,
+          "hooks": {
+            "address": "0x0000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [
+        {
+          "obligationId": "fee",
+          "mode": "programmable_routed",
+          "policyVersion": "programmable.custom-launch-fee.v1",
+          "rateBps": 20,
+          "scope": "programmable_built_or_routed_qualifying_swaps",
+          "recipient": "0xD88539d3c4C460136a733A3Fd60cf6BF269079da",
+          "marketIds": [
+            "token-pair"
+          ]
+        }
+      ],
+      "claimDescriptors": [],
+      "distributionPreferences": []
+    },
+    "openProvenanceNoPool": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "observe_and_stamp_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        }
+      ],
+      "markets": [],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [],
+      "claimDescriptors": [],
+      "distributionPreferences": [],
+      "admissionPolicy": "programmable.custom-launch-policy.provenance.v1",
+      "publication": {
+        "visibility": "listed",
+        "primaryComponentId": "clock"
+      }
+    },
+    "openProvenanceSinglePool": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "controller_multi_step_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        },
+        {
+          "actionId": "init-native-pair",
+          "kind": "initializePool",
+          "marketId": "native-pair",
+          "sqrtPriceX96": "79228162514264337593543950336",
+          "dependsOn": [
+            "observe"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [],
+          "execution": {
+            "target": {
+              "address": "0x000000000004444c5dc75cB358380D2e3dE08A90"
+            },
+            "data": "0x6276cbbe000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        }
+      ],
+      "markets": [
+        {
+          "marketId": "native-pair",
+          "kind": "uniswap_v4",
+          "poolManager": "0x000000000004444c5dc75cB358380D2e3dE08A90",
+          "currency0": {
+            "address": "0x0000000000000000000000000000000000000000"
+          },
+          "currency1": {
+            "address": "0x0000000000000000000000000000000000004000"
+          },
+          "fee": 3000,
+          "tickSpacing": 60,
+          "hooks": {
+            "address": "0x0000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [],
+      "claimDescriptors": [],
+      "distributionPreferences": [],
+      "admissionPolicy": "programmable.custom-launch-policy.provenance.v1",
+      "publication": {
+        "visibility": "listed",
+        "primaryComponentId": "clock"
+      }
+    },
+    "openProvenanceMultiPool": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "controller_multi_step_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        },
+        {
+          "actionId": "init-native-pair",
+          "kind": "initializePool",
+          "marketId": "native-pair",
+          "sqrtPriceX96": "79228162514264337593543950336",
+          "dependsOn": [
+            "observe"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [],
+          "execution": {
+            "target": {
+              "address": "0x000000000004444c5dc75cB358380D2e3dE08A90"
+            },
+            "data": "0x6276cbbe000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        },
+        {
+          "actionId": "init-token-pair",
+          "kind": "initializePool",
+          "marketId": "token-pair",
+          "sqrtPriceX96": "79228162514264337593543950336",
+          "dependsOn": [
+            "init-native-pair"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [],
+          "execution": {
+            "target": {
+              "address": "0x000000000004444c5dc75cB358380D2e3dE08A90"
+            },
+            "data": "0x6276cbbe000000000000000000000000000000000000000000000000000000000000400000000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        }
+      ],
+      "markets": [
+        {
+          "marketId": "native-pair",
+          "kind": "uniswap_v4",
+          "poolManager": "0x000000000004444c5dc75cB358380D2e3dE08A90",
+          "currency0": {
+            "address": "0x0000000000000000000000000000000000000000"
+          },
+          "currency1": {
+            "address": "0x0000000000000000000000000000000000004000"
+          },
+          "fee": 3000,
+          "tickSpacing": 60,
+          "hooks": {
+            "address": "0x0000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "marketId": "token-pair",
+          "kind": "uniswap_v4",
+          "poolManager": "0x000000000004444c5dc75cB358380D2e3dE08A90",
+          "currency0": {
+            "address": "0x0000000000000000000000000000000000004000"
+          },
+          "currency1": {
+            "address": "0x1111111111111111111111111111111111111111"
+          },
+          "fee": 3000,
+          "tickSpacing": 60,
+          "hooks": {
+            "address": "0x0000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [],
+      "claimDescriptors": [],
+      "distributionPreferences": [],
+      "admissionPolicy": "programmable.custom-launch-policy.provenance.v1",
+      "publication": {
+        "visibility": "listed",
+        "primaryComponentId": "clock"
+      }
+    },
+    "openProvenanceNonNativePair": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "controller_multi_step_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        },
+        {
+          "actionId": "init-token-pair",
+          "kind": "initializePool",
+          "marketId": "token-pair",
+          "sqrtPriceX96": "79228162514264337593543950336",
+          "dependsOn": [
+            "observe"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [],
+          "execution": {
+            "target": {
+              "address": "0x000000000004444c5dc75cB358380D2e3dE08A90"
+            },
+            "data": "0x6276cbbe000000000000000000000000000000000000000000000000000000000000400000000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        }
+      ],
+      "markets": [
+        {
+          "marketId": "token-pair",
+          "kind": "uniswap_v4",
+          "poolManager": "0x000000000004444c5dc75cB358380D2e3dE08A90",
+          "currency0": {
+            "address": "0x0000000000000000000000000000000000004000"
+          },
+          "currency1": {
+            "address": "0x1111111111111111111111111111111111111111"
+          },
+          "fee": 3000,
+          "tickSpacing": 60,
+          "hooks": {
+            "address": "0x0000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [],
+      "claimDescriptors": [],
+      "distributionPreferences": [],
+      "admissionPolicy": "programmable.custom-launch-policy.provenance.v1",
+      "publication": {
+        "visibility": "listed",
+        "primaryComponentId": "clock"
+      }
+    },
+    "openProvenanceDirectEoaCreate": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "controller_multi_step_v1",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x8F7a45eBDe059392E46A46DCc14AB24681A961Ea",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "create",
+          "kind": "deployEoaCreate",
+          "componentId": "clock",
+          "nonce": "0",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ],
+          "execution": {
+            "target": null,
+            "data": "0x6080604052348015600e575f80fd5b50607380601a5f395ff3fe6080604052348015600e575f80fd5b50600436106026575f3560e01c80636c42411214602a575b5f80fd5b4360405190815260200160405180910390f3fea2646970667358221220eeedc1a2425e3d69cfba601f5098c0816bc71428377bb66c5bcd190b5e56ddb664736f6c634300081a0033",
+            "value": "0",
+            "gasLimit": "1000000"
+          }
+        }
+      ],
+      "markets": [],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [],
+      "claimDescriptors": [],
+      "distributionPreferences": [],
+      "admissionPolicy": "programmable.custom-launch-policy.provenance.v1",
+      "publication": {
+        "visibility": "listed",
+        "primaryComponentId": "clock"
+      }
+    },
+    "openProvenanceAtomicExisting": {
+      "schemaVersion": "programmable.custom-launch-plan.v1",
+      "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+      "chainId": "4663",
+      "controller": {
+        "kind": "eoa",
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "executor": "atomic_execute_and_stamp_v2",
+      "verificationBundle": {
+        "schemaVersion": "programmable.exact-source-verification-bundle.v2",
+        "compilationUnits": [
+          {
+            "compilationUnitId": "main",
+            "compilerVersion": "0.8.26+commit.8a97fa7a",
+            "standardJsonInputBase64": "eyJsYW5ndWFnZSI6IlNvbGlkaXR5Iiwic2V0dGluZ3MiOnsiZXZtVmVyc2lvbiI6ImNhbmN1biIsIm9wdGltaXplciI6eyJlbmFibGVkIjp0cnVlLCJydW5zIjoyMDB9LCJvdXRwdXRTZWxlY3Rpb24iOnsiKiI6eyIqIjpbImFiaSIsImV2bS5ieXRlY29kZSIsImV2bS5kZXBsb3llZEJ5dGVjb2RlIl19fX0sInNvdXJjZXMiOnsic3JjL1VuY2xhc3NpZmllZENsb2NrLnNvbCI6eyJjb250ZW50IjoiLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IE1JVFxucHJhZ21hIHNvbGlkaXR5IDAuOC4yNjtcbmNvbnRyYWN0IFVuY2xhc3NpZmllZENsb2NrIHsgZnVuY3Rpb24gcmVhZENsb2NrKCkgZXh0ZXJuYWwgdmlldyByZXR1cm5zICh1aW50MjU2KSB7IHJldHVybiBibG9jay5udW1iZXI7IH0gfVxuIn19fQ==",
+            "standardJsonInputSha256": "sha256:9e5bde9f06f4abcd19c25a9be879517b7cd1a05acada796c226dbf4ba4d6577b"
+          }
+        ],
+        "components": [
+          {
+            "targetId": "clock-artifact",
+            "compilationUnitId": "main",
+            "sourcePath": "src/UnclassifiedClock.sol",
+            "contractName": "UnclassifiedClock",
+            "constructorArguments": "0x",
+            "runtimeMaterialization": {
+              "immutableReferences": [],
+              "runtimeImmutables": [],
+              "deployedRuntimeCodeBase64": "YIBgQFI0gBVgDldfgP1bUGAENhBgJldfNWDgHIBjbEJBEhRgKldbX4D9W0NgQFGQgVJgIAFgQFGAkQOQ8/6iZGlwZnNYIhIg7u3BokJePWnPumAfUJjAgWvHFCg3e7ZsW80ZC15W3bZkc29sY0MACBoAMw==",
+              "deployedRuntimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+            }
+          }
+        ]
+      },
+      "components": [
+        {
+          "componentId": "clock",
+          "artifactId": "clock-artifact",
+          "expectedAddress": "0x0000000000000000000000000000000000004000",
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360",
+          "tags": [
+            "unclassified-reference"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "observe",
+          "kind": "useExisting",
+          "componentId": "clock",
+          "dependsOn": [],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ]
+        },
+        {
+          "actionId": "read-clock",
+          "kind": "call",
+          "dependsOn": [
+            "observe"
+          ],
+          "authority": {
+            "kind": "controller"
+          },
+          "preconditions": [],
+          "postconditions": [
+            "runtime"
+          ],
+          "execution": {
+            "target": {
+              "componentId": "clock"
+            },
+            "data": "0x6c424112",
+            "value": "0",
+            "gasLimit": "100000"
+          }
+        }
+      ],
+      "markets": [],
+      "hookBindings": [],
+      "dependencies": [],
+      "expectedEffects": [
+        {
+          "effectId": "runtime",
+          "kind": "runtime",
+          "criticality": "critical",
+          "target": {
+            "componentId": "clock"
+          },
+          "runtimeCodeHash": "0xd0cc90fcfadc6061b3a294bbe0227322e456e18166dc64afc2a7c5aea0fbc360"
+        }
+      ],
+      "budgets": {
+        "maxTotalValue": "0",
+        "maxTotalGas": "3000000",
+        "validAfter": "0",
+        "deadline": "2147483647"
+      },
+      "feeObligations": [],
+      "claimDescriptors": [],
+      "distributionPreferences": [],
+      "admissionPolicy": "programmable.custom-launch-policy.provenance.v1",
+      "publication": {
+        "visibility": "listed",
+        "primaryComponentId": "clock"
+      }
+    }
+  }
+}

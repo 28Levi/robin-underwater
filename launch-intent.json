@@ -1,7 +1,7 @@
 {
   "schemaVersion": "robin.launch-intent.draft.v1",
-  "name": "HOOD",
-  "symbol": "HOOD",
+  "name": "ROBINHOOK",
+  "symbol": "ROBIN",
   "chainId": 4663,
   "supply": "1000000000",
   "decimals": 18,
@@ -24,17 +24,17 @@
     "monthlyAccountLimitUsd": 5,
     "status": "user-approved-and-saved; shared-with-other-account-apps"
   },
-  "descriptionDraft": "HOOD distributes collected project trading fees to eligible underwater HOOD holders, weighted by their unrealized ETH losses. Holders trade normally; a background service calculates and sends funded rewards.",
-  "website": "https://github.com/28Levi/robin-underwater",
-  "websiteDecision": "no-separate-website; use-public-source-project-page-for-required-platform-metadata",
+  "descriptionDraft": "ROBINHOOK uses collected project trading fees to help eligible holders with the deepest remaining percentage losses recover first. Tied loss levels share relief in proportion to eligible purchase cost. A background service calculates and sends funded ETH rewards.",
+  "website": "https://robinhook.wtf/",
+  "websiteDecision": "public-robinhook-website; source-repository-remains-separate",
   "x": "https://x.com/HOOKHOOD",
-  "image": "https://raw.githubusercontent.com/28Levi/robin-underwater/e75155b59fec90fd6fb4f76dc4dd0d262a2ff3e1/assets/robin-token-logo.png",
+  "image": "https://robinhook.wtf/assets/robinhook-token-logo.png",
   "publicSource": {
     "url": "https://github.com/28Levi/robin-underwater",
-    "revision": "4eaba48a59b27579442e197ef8cf9a8fb0a4e01a"
+    "revision": "979656912b8e2ebcf67124f30868220593468db2"
   },
   "operatorHostingDecision": "Render-one-worker-plus-1GB-disk; 7.25-USD-monthly-base-approved-2026-09-13; service-srv-daj6jt95efls73foumv0-created; payouts-inactive",
-  "localImage": "assets/robin-token-logo.png",
+  "localImage": "assets/robinhook-token-logo.png",
   "privateWebsiteReview": "https://robin-underwater.dreamy-gleam-6937.chatgpt.site",
   "launchWallet": "0x9479ac7ED3A72866F63F37013F2c7Cc68936B519",
   "initialBuyWei": "10000000000000000",
@@ -47,12 +47,13 @@
   "operatorMaxGasPerTransactionWei": "200000000000000",
   "gasBudgetApproval": "approved-2026-09-13; no-automatic-refills; both-wallets-funded",
   "status": "draft-not-a-programmable-request",
-  "launchReadiness": "97-regressions-and-HOOD-end-to-end-rehearsal-passed; release-and-platform-admission-pending",
+  "launchReadiness": "recovery-ladder-implemented; 104-tests-and-local-end-to-end-rehearsal-passed; mainnet-release-platform-admission-and-activation-pending",
   "rewardModelDecision": {
-    "model": "original-loss-weighted-redistribution",
+    "model": "deepest-percentage-first-recovery-ladder",
     "feeCappedAlternative": "rejected-by-user",
     "twoWalletFarmingRisk": "accepted-by-user-not-fixed",
-    "transferOutAccounting": "remove-proportional-purchase-cost-and-prior-relief-from-sender; carry-both-to-recipient"
+    "transferOutAccounting": "remove-proportional-purchase-cost-and-prior-relief-from-sender; carry-both-to-recipient",
+    "approvedAt": "2026-10-10"
   },
   "economicAssessment": {
     "status": "confirmed-local-counterexamples",
@@ -71,7 +72,7 @@
       }
     ],
     "report": "docs/router-and-economic-validation.md",
-    "rewardRuleChanged": false
+    "rewardRuleChanged": true
   },
   "distributorDeployment": {
     "address": "0x62C12ae94CcbbE470CC1857261Fae9E36074Fb36",
@@ -81,9 +82,9 @@
   },
   "localRehearsal": {
     "passed": true,
-    "regressionTestsPassed": 97,
+    "regressionTestsPassed": 104,
     "regressionTestsFailed": 0,
-    "report": "output/hood-audit-rehearsal.json",
+    "report": "output/robinhook-ladder-rehearsal.json",
     "summary": "docs/hood-launch-readiness.md",
     "botLivenessFixPendingRenderDeployment": true,
     "realTestFundsSpentWei": "0"
@@ -93,5 +94,6 @@
     "slippageBps": 100,
     "approvedAt": "2026-09-19",
     "simulation": "output/hood-initial-buy-simulation.json"
-  }
+  },
+  "identityUpdatedAt": "2026-10-10"
 }

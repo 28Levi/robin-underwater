@@ -6,7 +6,7 @@ export const commitment=value=>keccak256(toUtf8Bytes(stringify(value)));
 export function createRound(prepared){return {id:commitment({checkpoint:prepared.checkpoint,auditHash:prepared.plan.auditHash}),
  checkpoint:prepared.checkpoint,allocations:prepared.plan.allocations.map(a=>({account:a.account,amount:a.amount.toString()})),nextIndex:0};}
 
-/** Keep original proportional entitlements across batches; never recalculate just the first group.
+/** Keep original recovery-ladder entitlements across batches; never recalculate just the first group.
  * Later batches can only shrink: recheck current loss and exclude outgoing transfers since the round snapshot.
  */
 export async function nextRoundBatch(provider,c,round,prepared,ledger,snapshot){

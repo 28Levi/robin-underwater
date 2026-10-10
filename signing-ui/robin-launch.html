@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Robinhook — Launch review</title>
+<style>
+:root{color-scheme:dark;font:16px/1.55 system-ui,sans-serif;background:#0e150d;color:#f0f5eb}*{box-sizing:border-box}body{max-width:880px;margin:48px auto;padding:0 24px 60px}h1{font-size:clamp(32px,6vw,52px);line-height:1.05;margin:16px 0;color:#bfff32}h2{font-size:20px;margin-top:0}.eyebrow{color:#bfff32;font-size:13px;letter-spacing:.12em;text-transform:uppercase}section{padding:24px;border:1px solid #344521;border-radius:18px;margin:22px 0;background:#172011}dl{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:12px 22px;margin:0}dt{color:#b6c4a6}dd{margin:0;overflow-wrap:anywhere}button,select{font:inherit;padding:13px 17px;border-radius:10px;border:1px solid #53693e;background:#22301a;color:inherit;max-width:100%}button{cursor:pointer}button.primary{background:#bfff32;border-color:#bfff32;color:#111a0b;font-weight:750}button:disabled{opacity:.4;cursor:default}label{display:flex;align-items:flex-start;gap:10px;margin:20px 0}input[type=checkbox]{width:20px;height:20px;flex-shrink:0;accent-color:#bfff32;margin-top:3px}#status{white-space:pre-wrap;overflow-wrap:anywhere}.muted{color:#b6c4a6}.controls{display:flex;flex-wrap:wrap;gap:12px}.hash{font:12px/1.6 ui-monospace,monospace;overflow-wrap:anywhere}#automation-notice{border-left:3px solid #bfff32;padding-left:16px}.warning{color:#f2cf8f}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #bfff32;outline-offset:4px}[hidden]{display:none!important}@media(max-width:580px){body{padding:0 16px}section{padding:20px}dl{grid-template-columns:1fr;gap:4px}dd{margin-bottom:12px}}
+</style><script src="/ethers.js" defer></script><script type="module" src="/app.js"></script></head>
+<body><p class="eyebrow">Your final launch review</p><h1>ROBINHOOK / ROBIN</h1>
+<p>Review the exact launch and its spending limits. The final button opens a transaction for you to approve in your wallet.</p>
+<section><h2>Launch details</h2><dl id="details"></dl></section>
+<section><h2>Project identity</h2><p id="description"></p><div id="links"></div><p class="muted">The platform stamp records provenance. It does not certify contract safety or token economics.</p></section>
+<section><h2>What happens after launch</h2><p id="automation-notice"></p><dl id="automation-details"></dl></section>
+<section><h2>Exact review</h2><p class="muted">Manifest checksum</p><p id="manifest-hash" class="hash"></p><p class="muted">Reviewed source revision</p><p id="source-revision" class="hash"></p></section>
+<div class="controls"><select id="wallet" aria-label="Wallet app"><option>Detecting wallet apps…</option></select><button id="connect" disabled>Connect wallet &amp; check</button></div>
+<p>Fresh maximum gas cost: <strong id="quote">Connect to calculate</strong></p>
+<label><input type="checkbox" id="review" disabled><span id="review-label">I reviewed the token, addresses, purchase and gas ceiling above.</span></label>
+<button id="launch" class="primary" disabled>Review launch in wallet</button>
+<button id="retry-proof" hidden>Retry platform receipt only</button>
+<p><a id="platform-history" hidden target="_blank" rel="noopener noreferrer">View this exact launch on Programmable</a></p>
+<p class="muted">Check your wallet's transaction value and maximum gas before approving. An uncertain or pending submission must be reconciled before another attempt. This page never asks for a private key.</p>
+<section id="status" role="status" aria-live="polite">Loading the exact reviewed package…</section>
+</body></html>

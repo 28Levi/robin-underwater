@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "robin.public-launch-contract-provenance.v1",
+  "checkedAt": "2026-10-10T19:41:47.899Z",
+  "manifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+  "files": [
+    {
+      "name": "manifest.json",
+      "url": "https://api.programmable.market/v4/chains/4663/custom-launch-contract/manifest.json",
+      "sha256": "sha256:1e16a3065c51e1cc89dd1303f03eaf0909cb30f265449ef869f2f46a3a2b3ba6",
+      "bytes": 141556,
+      "matchesPublishedArtifactIndex": true
+    },
+    {
+      "name": "request-packer.mjs",
+      "url": "https://api.programmable.market/v4/chains/4663/custom-launch-contract/request-packer.mjs",
+      "sha256": "sha256:419ce9aaa514f8ec57ad96ed56a97c5ab314dd55c9c6698abfe83aca1248d741",
+      "bytes": 156369,
+      "matchesPublishedArtifactIndex": true
+    },
+    {
+      "name": "guide.md",
+      "url": "https://api.programmable.market/v4/chains/4663/custom-launch-contract/guide.md",
+      "sha256": "sha256:79785336a6a8c8fc7a50cb5570693192c18065574bd91fbb2b9283d8c9e2c116",
+      "bytes": 12872,
+      "matchesPublishedArtifactIndex": true
+    },
+    {
+      "name": "reference.json",
+      "url": "https://api.programmable.market/v4/chains/4663/custom-launch-contract/reference.json",
+      "sha256": "sha256:0a373752ffa104d60b039df0723662c7450923fd74fa021e0c50a8fdfe83246f",
+      "bytes": 50579,
+      "matchesPublishedArtifactIndex": true
+    }
+  ],
+  "observedCapabilities": {
+    "file": "capabilities-observed.json",
+    "url": "https://api.programmable.market/v4/chains/4663/custom-launch-capabilities",
+    "productionAuthority": false,
+    "requiresFreshRead": true
+  },
+  "graphFactory": {
+    "file": "graph-factory.json",
+    "url": "https://sourcify.dev/server/v2/contract/4663/0x0B6b3F40f84Df25D3bd69238f937096177DD09Bd?fields=all",
+    "runtimeHashMatchesExistingPin": true
+  },
+  "credentialsRead": false,
+  "transactions": false
+}

@@ -136,7 +136,9 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
   const snapshot=await buildSnapshot(provider,c,readSnapshot(snapshotFile,c));writeSnapshot(snapshotFile,c,snapshot);
   const prepared=await preparePlan(provider,c,snapshot),ledger=LossLedger.restore(snapshot.ledger);
   if(!state.round&&BigInt(prepared.plan.allocated)>=BigInt(e.minimumBatchWei)){
-   state.round=createRound(prepared);writeJournal(file,state);
+   state.round=createRound(prepared);
+   atomicWrite(path.join(dir,'recovery-reports',`${state.round.id.slice(2)}.json`),prepared.plan);
+   writeJournal(file,state);
   }
   while(state.round){
    const batch=await nextRoundBatch(provider,c,state.round,prepared,ledger,snapshot);

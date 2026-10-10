@@ -29,7 +29,7 @@ try{
  }
  if(!online)throw Error('Local node unavailable');
  const remote={network:{provider:{send:(method,params)=>rpc.send(method,params),request:({method,params})=>rpc.send(method,params??[])}}};
- f=await native20Fixture(remote,{operatorIndex:3});
+ f=await native20Fixture(remote,{operatorIndex:3,name:'ROBINHOOK',symbol:'ROBIN',firstBuyWei:E/100n});
  const {provider,owner,alice,bob,token,hook,feeVault,reward,c,swap}=f;
  const addresses={early:await owner.getAddress(),alice:await alice.getAddress(),bob:await bob.getAddress(),recipient:await(await provider.getSigner(4)).getAddress()};
  const lateBuyer=await provider.getSigner(5);
@@ -76,14 +76,17 @@ try{
  assert.equal((await cycle()).kind,'harvest');assert.equal((await cycle()).state,'confirmed');
  assert.equal(await feeVault.creatorAccrued(),0n);assert.equal(await feeVault.platformAccrued(),platformBefore);
  const snapshot=await buildSnapshot(provider,c),expected=LossLedger.restore(snapshot.ledger).plan(await reward.available(),{...snapshot.oracle,now:snapshot.checkpoint.timestamp});
- assert.ok(expected.allocations.length>=3);
- assert.ok(expected.allocated<expected.totalLoss,'Use a scarce reward pot so proportional sharing is actually exercised.');
+ assert.ok(expected.allocations.length>0);
+ assert.equal(expected.policy,'deepest-percentage-first-v1');
+ assert.ok(expected.allocated<expected.totalLoss,'Use a scarce reward pot to exercise recovery priority.');
+ const positions=LossLedger.restore(snapshot.ledger).shortfalls({...snapshot.oracle,now:snapshot.checkpoint.timestamp});
+ const paidAccounts=new Set(expected.allocations.map(a=>a.account));
+ for(const paid of expected.allocations)for(const waiting of positions.filter(a=>!paidAccounts.has(a.account)))
+  assert.ok((paid.loss-paid.amount+1n)*waiting.basis>=waiting.loss*paid.basis,'No deeper unpaid tier may be overtaken beyond integer rounding');
  const balances=new Map(await Promise.all(expected.allocations.map(async a=>[a.account,await provider.getBalance(a.account)])));
  assert.equal((await cycle()).kind,'payout');assert.equal((await cycle()).state,'confirmed');
  for(const a of expected.allocations)assert.equal((await provider.getBalance(a.account))-balances.get(a.account),a.amount);
- const ordered=[...expected.allocations].sort((a,b)=>a.loss>b.loss?1:-1);
- for(let i=1;i<ordered.length;i++)assert.ok(ordered[i].amount>=ordered[i-1].amount);
- check('Separate bot processes harvest fees and pay every eligible holder the exact loss-weighted amount',
+ check('Separate bot processes harvest fees and pay the exact recovery-ladder entitlements',
   {recipients:expected.allocations,allocatedWei:expected.allocated,profitableEarlyBuyerPaid:false});
  const paidSnapshot=await buildSnapshot(provider,c),paidLedger=LossLedger.restore(paidSnapshot.ledger);
  for(const a of expected.allocations)assert.equal(paidLedger.get(a.account).relief,a.amount);
