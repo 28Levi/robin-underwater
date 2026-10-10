@@ -1,0 +1,19 @@
+{
+  "preserveLaunchBalanceWei": "1000000000000000",
+  "accounting": {
+    "minimumAgeSeconds": 3600,
+    "twapWindowSeconds": 1800,
+    "maxOracleAgeSeconds": 300,
+    "maxSnapshotAgeSeconds": 300,
+    "maxFinalityLagSeconds": 1800,
+    "batchSize": 100,
+    "excludedAddresses": []
+  },
+  "execution": {
+    "maxGasPerTransactionWei": "200000000000000",
+    "maxTotalGasWei": "5000000000000000",
+    "minimumHarvestWei": "10000000000000",
+    "minimumBatchWei": "10000000000000",
+    "retryIntervalSeconds": 3600
+  }
+}

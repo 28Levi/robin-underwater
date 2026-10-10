@@ -1,50 +1,57 @@
-# Production activation
+# ROBIN production setup
 
-Current launch identity (October 10): **ROBINHOOK / ROBIN**, with https://robinhook.wtf/ as the website. Use `launch-intent.json`, `config.example.json` and [current launch readiness](hood-launch-readiness.md) for new preparation. Dated HOOD identity, funding, deployment and hosting statements below are historical evidence and need fresh verification; the identity update does not alter deployed contracts, activate payouts or authorize new transactions. The recorded source revision and existing launch packages must be replaced by a validated new release before the ROBIN launch.
+This is the current guide for ROBINHOOK / ROBIN. Dated HOOD and MOSS launch files are historical. Start with [launching later](launch-later.md); use [launch bootstrap](launch-bootstrap.md) for the exact activation gates.
 
-The Render worker is live in inactive setup mode at service `srv-daj6jt95efls73foumv0`, with a verified 1 GB persistent disk and $7.25/month base hosting. Following explicit user approval, the dedicated operator's encrypted keystore and password were installed in Render secret storage. On-server decryption restored the expected operator address on 2026-09-13, and the RPC evidence survived a service restart. No token or distributor has been deployed, and no blockchain transaction has been signed or sent.
+## Installed services
 
-## Required resources
+- Public website: https://robinhook.wtf/ and https://www.robinhook.wtf/.
+- Backend source: https://github.com/28Levi/robin-underwater, branch `main`. Admission must name the exact deployed commit.
+- Render: `robin-rewards`, service `srv-daj6jt95efls73foumv0`, Node 24, 1 GB persistent disk at `/var/data/robin`.
+- Start command: `node scripts/launch-standby.mjs --loop`. No admission means `waiting-for-reviewed-package`, with no signing-file reads, operator process or transactions.
+- `ROBIN_LAUNCH_STATE_DIRECTORY=/var/data/robin/launch`; Render supplies `RENDER_GIT_COMMIT`.
+- Archive RPC: `ROBIN_RPC_URL`. Retain the approved shared provider budget; do not raise it automatically.
+- Existing custody: `ROBIN_KEYSTORE_FILE` and `ROBIN_KEYSTORE_PASSWORD_FILE`, pointing to separate Render secret files. Keep them private and unchanged during unrelated diagnosis.
 
-1. Dedicated operator `0x9C366d4E42b8f987e8398A27b3b9A02803493088`, whose address will be immutable in `UnderwaterDistributor`. Its local backup files are in ignored `.secrets/operator/`, restricted by Windows ACL to the project owner, sandbox account and SYSTEM. The password and keystore are separate files under the same protected directory; security depends on those filesystem permissions. Render mounts the approved copies at `/etc/secrets/robin-operator.keystore.json` and `/etc/secrets/robin-operator.password`, referenced by `ROBIN_KEYSTORE_FILE` and `ROBIN_KEYSTORE_PASSWORD_FILE`. The restore was verified without printing secrets or signing. Do not reuse this wallet for unrelated transactions, paste credentials in chat or commit them.
-2. An always-on Node 24 host (or the included Docker image), durable storage, and monitoring of `status.json`. The process exits when it encounters a blocked execution state. Do not configure restart behavior that repeatedly ignores a blocked journal or resets state.
-3. Alchemy is configured as `ROBIN_RPC_URL` on Render. Server-side verification on 2026-09-13 passed the production chain anchor and freshness checks, finalized state, archive code, historical calls, event logs, historical receipts and persistent disk writes. The user approved a $5/month shared account API usage cap; it is saved in Alchemy and includes the user's other apps. Do not raise it automatically. A separate latest-only public RPC failed historical reads and is not used for the reward operator. See `deploy/alchemy-setup.json` for evidence without credentials.
-4. Explicit maximum gas per transaction and total operator gas budget, plus minimum reward batch/harvest amounts. The total gas reservation is cumulative; exhaustion stops execution and requires a reconciled, deliberate policy update. The user's 0.1 ETH first purchase does not fund this ongoing service.
+The distributor is already deployed at `0x62C12ae94CcbbE470CC1857261Fae9E36074Fb36`, with immutable operator `0x9C366d4E42b8f987e8398A27b3b9A02803493088`. Deployment transaction: `0xe9e909d732221c44d4bcd96b71dc72cf87df1d11cfc4143f5ac7862b0d0c379a`. Reverify its receipt, finalized runtime, operator and empty campaign baseline. Do not redeploy it to work around an RPC failure.
 
-## Deploy and configure
+The token is unlaunched, the worker is in standby and the public wallet feed is inactive. Installed services and passing local tests do not verify production payouts.
 
-Deploy the compiled `UnderwaterDistributor` with the dedicated operator address. Its constructor accepts only that address; it does not take custody of the launch wallet. Bind the distributor address as `creatorFeeRecipient` in the reviewed Native20 launch. Keep the canonical hook, token and initializer source unchanged. Project fees are 180 bps each direction plus the platform's 20 bps, for the confirmed 2% total.
+## Identity and limits
 
-After the token launch finalizes, copy `config.example.json` to ignored `config.production.json` and fill the actual token/hook/initializer/distributor addresses, pool ID and deployment block. Add `execution` from `production.execution.example.json`. Fill the operator, actual fee vault, runtime hashes measured from finalized deployed code, and approved gas policy. Keep `broadcastEnabled: false` initially.
+Use current `launch-intent.json`: ROBINHOOK / ROBIN, chain 4663, 1 billion supply, launch wallet `0x9479ac7ED3A72866F63F37013F2c7Cc68936B519`, and a 0.01 ETH initial purchase. The unchanged canonical Native20 graph sends 180-bps project fees to the existing distributor, plus 20 bps to the platform, with zero LP fee.
 
-The production verifier checks chain 4663, the published historical chain anchor, canonical PoolManager runtime, chain freshness and historical RPC access. It also checks the deployed ROBIN name, symbol, supply, fee settings, pool key, initializer, operator and fee destination. Code hashes and configuration bind the durable execution journal. Changing a configuration is a migration, not an excuse to erase outstanding transactions or rounds.
+The contract fee is 2%; an all-in quote for every platform route is not established. Current additional route charges and any fee waiver need the actual platform review.
 
-Run a read-only deployment check with `node scripts/production-operator.mjs config.production.json --check`. Set `ROBIN_RPC_URL` securely on the host. This path does not load a keystore or sign a transaction. Verify the operator's available ETH separately against the chosen budget.
+Maximum token-launch gas cost is 0.0008 ETH. Operator ceilings are 0.0002 ETH per transaction and 0.005 ETH cumulatively, with no automatic refill. Fresh gas estimates, balances, spending reserve and reward/harvest thresholds must appear in the final review. Unused funds do not increase caps.
 
-## Start the service
+## Install the reviewed launch
 
-Mount the encrypted keystore and password as read-only secrets. Set `ROBIN_KEYSTORE_FILE`, `ROBIN_KEYSTORE_PASSWORD_FILE`, and `ROBIN_STATE_DIRECTORY` to those host paths and the writable durable state directory. The password file may end with one newline. Keep the state directory private and backed up; journals contain replayable signed transactions.
+1. Complete the current [launch plan](current-launch-plan.md), [API](launch-plan-api.md) and [handoff](launch-handoff-builder.md) flow. A generic token with the same name is not a compatible replacement.
+2. Preserve the accepted request, pack report, preparation, actual platform resource, manifest and hash. Render's running commit must equal `manifest.sourceRevision`. A source update after admission requires a new reviewed package.
+3. Through an authenticated host-management channel, atomically install `/var/data/robin/launch/admission.json` containing `{ "schemaVersion": "robinhook.launch-admission.v1", "manifestSha256": "sha256:...", "manifest": { ... } }`. Admission contains public launch evidence, never credentials. Write a temporary file on the same disk, then rename it; do not partially overwrite the active file.
+4. Preserve the separately server-recorded `launch-review.json` from wallet review and install it through the same authorized channel when required. Do not hand-author consent or infer it from token code. There is no public admission or activation endpoint.
+5. The keyless watcher waits for the exact finalized transaction and verifies nonce, source, code, pool, fees, purchase and budgets before producing production configuration.
 
-Only after deployment verification, signer custody and gas funding are complete, deliberately set `broadcastEnabled: true` and run `node scripts/production-operator.mjs config.production.json --send`. Render currently runs an idle setup command; replace it only after the read-only check passes. See `deploy/render-live.json` for actual settings and `deploy/render.proposed.yaml` for the target payout setup. The alternative Dockerfile defaults to `--check` and runs as the non-root `node` user; that Docker image has not been built here.
+The default handoff is manual and generates only `production.readonly.json`. If automatic rewards are intended, prepare the prelaunch handoff explicitly with `--activation after-reviewed-launch` and review its scope before signing. An already admitted manual manifest cannot be converted by a host flag. Do not hand-edit `broadcastEnabled` to bypass the watcher. Automatic startup separately requires the exact automatic-mode manifest, recorded review, host-approved digest and `--services` command described in [launch-bootstrap.md](launch-bootstrap.md). No automatic payout service is currently enabled.
 
-The loop attempts at most one transaction per cycle and waits for its finality before progressing. It checks deployment identity each cycle, persists exact signed bytes before broadcast, and recovers ambiguous broadcasts with the same transaction hash. Errors and status output do not print credentials. The local integration suite exercises the transaction lifecycle; production mode has additional fail-closed tests. The Render build and idle startup succeeded on Node 24.14.0; this does not verify live payouts.
+## Connect actual wallet results
 
-## Unsigned preparation
+The website does not index the chain. The exporter uses archive history and its own durable directory. Publisher credentials and live identity are not currently installed.
 
-The distributor is deployed and finalized at `0x62C12ae94CcbbE470CC1857261Fae9E36074Fb36`, from launch-wallet nonce 1. Transaction `0xe9e909d732221c44d4bcd96b71dc72cf87df1d11cfc4143f5ac7862b0d0c379a` passed receipt, creation-bytecode, runtime and operator verification. Finality was confirmed at 2026-09-13 14:11:43 UTC. Run `node scripts/verify-distributor-mainnet.mjs <transaction-hash>` for a fresh read-only check. See `deploy/distributor.mainnet.json`. Do not prepare or send a second deployment. The former nonce-zero prediction is obsolete.
+After verifying the real launch:
 
-The official Native20 example defaults to zero creator fees and sends creator fees to the launch wallet. Before final packing, `node scripts/bind-launch-fees.mjs <official-config.json> <deployed-distributor>` changes the constructor to 180 bps each way, binds the distributor recipient, recomputes the deterministic hook prediction and its child fee vault, and builds again. The reviewed Solidity source remains unchanged. Local regression tests check constructor fees, actual compiler immutable locations, child-vault derivation and rejection of wrong artifacts/pool settings. The full CLI build still requires completed official inputs, including a real X profile and a reviewed minimum output; it has not yet run for the launch.
+- Install a dedicated publisher token as Sites `WALLET_FEED_PUBLISH_TOKEN` and Render `ROBIN_WALLET_FEED_PUBLISH_TOKEN`. It must have at least 32 characters and must never enter client code, URLs, logs or source.
+- Set `ROBIN_WALLET_FEED_URL=https://robinhook.wtf/api/wallet-snapshot`.
+- Pin exact `{ chainId: 4663, token, distributor }` in the site's `LIVE_FEED_IDENTITY`, then rebuild and publish.
+- Run read-only export once, verify the stored acknowledgement and public feed, then run the loop. See [wallet-feed.md](wallet-feed.md).
+- In the website checkout, run `node scripts/verify-website.mjs --url https://robinhook.wtf/ --require-live`. Reconcile known-wallet paid/pending ETH against finalized distributor state.
 
-## Payout timing and residual limits
+The complete feed is capped at 2 MiB; roughly 5,000 fixture-sized accounts exceed it. Measure archive-RPC usage, cold replay time, host memory and feed size for the intended launch. A running process does not guarantee a current feed.
 
-Payout preparation excludes outgoing transfers after the relevant snapshot. Incoming transfers no longer invalidate a whole recipient or round. The executor uses `distributeEligible`: balances at or above the checked amount are accepted, lower balances skip only that recipient, and an all-skipped batch records zero allocated funds. Actual `RewardAllocated` events are the sole relief credits in replay.
+## Recovery and operation
 
-The guard does not detect transfers out and back after the last RPC check, nor prove an ETH loss onchain. A trusted operator and pool-derived reference price remain fundamental design assumptions. The documented two-wallet farming strategy remains possible and was accepted by the user; the original loss-weighted reward formula is retained. No model change to capped fee refunds has been made.
+Keep launch, operator and exporter state durable and private. Journals can contain replayable signed transactions. Backups must preserve pending hashes/nonces, gas reservations and round cursors together.
 
-## Launch handoff still needed
+Uncertain broadcasts are reconciled using the exact saved transaction. Never delete journals or reset cumulative gas accounting to clear a blocked state. Unexpected exits create stop markers; reconcile the process and chain before clearing markers or stale locks.
 
-The user does not want a separate website. The existing public GitHub project page is the website link in the launch metadata; the generated private Site is outside the remaining work. Programmable's current schema still requires a real X profile, alongside the already published image and exact source revision. This metadata requirement is separate from token and rewards functionality. Programmable preflight must accept the exact packed launch before the controller can sign. Both wallets are funded: after distributor deployment the launch wallet had 0.29266699428424 ETH and the operator had 0.005 ETH. The purchase remains capped at 0.1 ETH, token launch gas at 0.0008 ETH and cumulative bot gas at 0.005 ETH. Extra wallet funds and unused distributor gas allowance do not increase these caps.
-
-## Historical HOOD preparation — September 19
-
-Current token identity is HOOD / HOOD and the first purchase is 0.01 ETH. The distributor is already deployed and reverified; do not redeploy. The existing Render worker remains idle until the repaired release and exact token configuration pass checks. Use docs/hood-launch-readiness.md for current status; older statements above about no deployments, ROBIN naming, and 0.1 ETH are superseded.
+Monitor logs and `status.json` for stopped children, stale RPC history, unavailable feeds and exhausted gas budgets. Automatic alert delivery is not provisioned. A controlled real payout, hosted feed delivery, production restart recovery and capacity measurements remain launch-time verification.

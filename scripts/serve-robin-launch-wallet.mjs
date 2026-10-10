@@ -7,7 +7,10 @@ import {validateLaunchConsent} from '../src/launch-manifest.mjs';
 import {createBoundLaunchProof} from '../src/launch-plan-proof.mjs';
 import {atomicWrite} from '../src/store.mjs';
 import {ANCHOR, MANAGER} from '../signing-ui/robin-launch-guards.mjs';
+import {createLaunchRpcProvider, runLaunchCommand} from '../src/launch-rpc.mjs';
 
+let activeProvider;
+async function main() {
 const root = fileURLToPath(new URL('../', import.meta.url));
 const allowed = new Set(['manifest', 'manifest-sha256', 'request', 'accepted-package', 'consent-file', 'port', 'proof-hash']);
 const options = {};
@@ -65,7 +68,7 @@ const writeConsent = async consent => {
     validateLaunchConsent(JSON.parse(await fs.readFile(consentPath, 'utf8')), manifest, ethers);
   }
 };
-const provider = new ethers.JsonRpcProvider('https://rpc.mainnet.chain.robinhood.com');
+const provider = activeProvider = createLaunchRpcProvider();
 const rpc = (method, params = []) => provider.send(method, params);
 const proofPath = consentPath + '.proof.json';
 const submitProof = createBoundLaunchProof({manifest, expectedHash, request: JSON.parse(requestBytes), credential, ethers,
@@ -110,5 +113,7 @@ server.listen(Number(options.port ?? 8792), '127.0.0.1', () => {
   console.log(`ROBINHOOK / ROBIN wallet review: ${origin}`);
   console.log(`Manifest: ${expectedHash}. User wallet confirmation required. No transaction has been signed or broadcast.`);
 });
-server.on('error', () => { console.error('Local review server could not bind its configured loopback port.'); process.exitCode = 1; });
+server.on('error', () => { console.error('Local review server could not bind its configured loopback port.'); provider.destroy(); process.exitCode = 1; });
 server.on('close', () => provider.destroy());
+}
+if (!await runLaunchCommand(main)) { activeProvider?.destroy(); process.exitCode = 2; }

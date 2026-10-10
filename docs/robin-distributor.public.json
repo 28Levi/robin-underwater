@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "robin.distributor-deployment.verified.v1",
+  "checkedAt": "2026-09-13T14:11:43.375Z",
+  "chainId": 4663,
+  "transactionHash": "0xe9e909d732221c44d4bcd96b71dc72cf87df1d11cfc4143f5ac7862b0d0c379a",
+  "address": "0x62C12ae94CcbbE470CC1857261Fae9E36074Fb36",
+  "from": "0x9479ac7ED3A72866F63F37013F2c7Cc68936B519",
+  "operator": "0x9C366d4E42b8f987e8398A27b3b9A02803493088",
+  "blockNumber": 62007962,
+  "blockHash": "0x67e727bd78ca55b71c2622ec25fa5e5f05a749d93147bdc852b7c95d022d0d31",
+  "finalized": true,
+  "verified": true,
+  "creationBytecodeHash": "0xd4f942c982a3a81e0549c8a5d0c38c0358e5b20ff2b49bc43836a50953ebfcb0",
+  "runtimeCodeHash": "0x66185b6a0594742a3d828569800982b6f1eaab8aca8ef7b8aa14c0dc0ae7a7f8"
+}

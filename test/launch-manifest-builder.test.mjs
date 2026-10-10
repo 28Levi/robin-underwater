@@ -68,6 +68,12 @@ test('fixture-only accepted plan becomes a deterministic manual review candidate
   assert.equal(a.manifest.components.token.address, built.report.addresses.token);
   assert.equal(a.manifest.minimumTokensOut, intent.minimumTokensOut);
   for (const key of ['automationAuthorized', 'walletSigning', 'transactionBroadcast', 'platformIssuanceCreated']) assert.equal(a.report[key], false);
+  const automatic = buildLaunchHandoff({...fixture(), activationMode: 'after-reviewed-launch'});
+  assert.equal(automatic.manifest.activation.mode, 'after-reviewed-launch');
+  assert.notEqual(automatic.manifestSha256, a.manifestSha256, 'automatic policy requires its own immutable final review');
+  assert.equal(automatic.report.automationAuthorized, false, 'preparation never produces runtime consent');
+  assert.equal(automatic.report.transactionBroadcast, false);
+  assert.throws(() => buildLaunchHandoff({...fixture(), activationMode: 'automatic'}), /activation gate/);
 });
 
 test('candidate rejects binding changes, non-ready admission, stale evidence, reverted calls and budget drift', () => {

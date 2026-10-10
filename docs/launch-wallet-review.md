@@ -11,6 +11,7 @@ This is an implementation of the handoff, not evidence that a live package has b
 - The accepted response1.2 resource, either directly or under `resource`/`data` in the saved API result.
 - An explicit path for the local user-review consent. Keep that file and its `.proof.json` companion durable and private to the local operator.
 - A Programmable API credential supplied through non-echoing stdin. It is held in memory and is never sent to the browser or written to disk.
+- The optional `ROBIN_RPC_URL` environment setting for the independent archive RPC. Use the configured HTTPS provider, keep key-bearing paths private, and do not embed URL login credentials. Browser wallet checks continue through the selected wallet provider. The server uses the public Robinhood RPC only when this setting is absent.
 
 The manifest binds token identity, source revision, exact plan/request/platform digests, one wallet step and nonce, calldata, expiry, executor/factory/component runtime hashes, existing distributor deployment, operator, purchase/minimum output, fee settings, launch reserve and the operator policy. `projectMetadataHash` is keccak256 of canonical JSON `plan.publication`; `fundingPlanHash` is keccak256 of canonical JSON `plan.budgets`. These are local review hashes, not substitutions for the platform's SHA-256 digests.
 

@@ -13,10 +13,12 @@ export async function preparePlan(provider,c,snapshot,{now=Math.floor(Date.now()
  if(now-finalized.timestamp>(c.maxFinalityLagSeconds??7200))throw Error('Finality is stalled');
  const changed=new Set();
  if(head.number>cp.blockNumber){
-  const rewards=await provider.getLogs({address:c.distributor,topics:[rewardInterface.getEvent('BatchRecorded').topicHash],fromBlock:cp.blockNumber+1,toBlock:head.number});
-  if(rewards.length)throw Error('Wait for previous reward allocations to finalize before another plan');
   for(let from=cp.blockNumber+1;from<=head.number;from+=1000){
-   const transfers=await provider.getLogs({address:c.token,topics:[transferInterface.getEvent('Transfer').topicHash],fromBlock:from,toBlock:Math.min(from+999,head.number)});
+   const range={fromBlock:from,toBlock:Math.min(from+999,head.number)};
+   const [rewards,transfers]=await Promise.all([
+    provider.getLogs({...range,address:c.distributor,topics:[rewardInterface.getEvent('BatchRecorded').topicHash]}),
+    provider.getLogs({...range,address:c.token,topics:[transferInterface.getEvent('Transfer').topicHash]})]);
+   if(rewards.length)throw Error('Wait for previous reward allocations to finalize before another plan');
    for(const log of transfers){const p=transferInterface.parseLog(log);if(p.args.value===0n||p.args.from===p.args.to)continue;
     changed.add(address(p.args.from));}
   }

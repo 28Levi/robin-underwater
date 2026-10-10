@@ -1,6 +1,6 @@
 {
   "schemaVersion": "robin.source-release.v1",
-  "createdAt": "2026-10-10T20:00:36.466Z",
+  "createdAt": "2026-10-10T21:20:25.215Z",
   "status": "source-for-review; no production deployment or platform acceptance",
   "files": [
     {
@@ -22,6 +22,11 @@
       "path": "src/config.mjs",
       "bytes": 1539,
       "sha256": "c59051a925094b2ec7e64abd6c636ff578e811411bd459ac6e715c26c9deb3b0"
+    },
+    {
+      "path": "src/distributor-evidence.mjs",
+      "bytes": 4514,
+      "sha256": "c09057b3b4efe6b8b8caf331a6bd6367ca6747a013e8445714e3c3c30acdd77a"
     },
     {
       "path": "src/execution-journal.mjs",
@@ -84,6 +89,11 @@
       "sha256": "8fa670c6b066dfb6778e0f6090821b7a7e9d25c26e9f1ab6e2fb114808c5fc6b"
     },
     {
+      "path": "src/launch-rpc.mjs",
+      "bytes": 1112,
+      "sha256": "bda29805afcb20e54885ac5642c569495c6fd488d90303abd9c26088bc221fc7"
+    },
+    {
       "path": "src/launch-standby.mjs",
       "bytes": 3893,
       "sha256": "5c11a0bf9bafdbe53ae687584ee7fe7b1dd2f4fe6611193ab9d7e81432c40081"
@@ -105,8 +115,8 @@
     },
     {
       "path": "src/payout-plan.mjs",
-      "bytes": 3628,
-      "sha256": "efdc61994e50b7f6bf9cc4debabe05c624c9ad4e8e1af594b09d55dccc270718"
+      "bytes": 3630,
+      "sha256": "7efadaa43f4289e5a795a1324e67c30d1047071d5c0c31d7b083251fd45bb32d"
     },
     {
       "path": "src/production-network.mjs",
@@ -319,6 +329,11 @@
       "sha256": "893fe4be0d7830368df6eacc88aaa0dacbbe6c60b6718f97f9808380b01caa02"
     },
     {
+      "path": "test/distributor-evidence.test.mjs",
+      "bytes": 5266,
+      "sha256": "30993b089de5ecb70d19e9182e9b73306347a5ef3622c3ea4874a1fc35ddf0dd"
+    },
+    {
       "path": "test/distributor-wallet.test.mjs",
       "bytes": 2864,
       "sha256": "31840daff020638ec744eab5729624c98c745d510c6c0b8b362ccbe0b3a2a368"
@@ -354,14 +369,19 @@
       "sha256": "35dd0b27afa517de3e8a531f74fdefc01d9a7f2badac5e55e4061a5f40d748ca"
     },
     {
+      "path": "test/launch-handoff-cli.test.mjs",
+      "bytes": 4205,
+      "sha256": "de6cdae776bfe3bd4c544741b8a4b59893c3ea38a15abe5ad61a0892a1de7707"
+    },
+    {
       "path": "test/launch-intent.test.mjs",
       "bytes": 2490,
       "sha256": "1da4d975f3fe1af8acba4df756a95be497a3ca313e4bcba2c12683ba53c3e558"
     },
     {
       "path": "test/launch-manifest-builder.test.mjs",
-      "bytes": 10499,
-      "sha256": "27041a828e243d9787dcd7bcdd4715a02091e092d6248f12427dae7c9c8417c0"
+      "bytes": 11073,
+      "sha256": "4c92af3392cb79435f0b6eeee2dd9722658fd75a1a19dbd119cf55391b793911"
     },
     {
       "path": "test/launch-plan-api.test.mjs",
@@ -372,6 +392,11 @@
       "path": "test/launch-plan.test.mjs",
       "bytes": 8900,
       "sha256": "88e8bd1bcec22bd42205929bc11a3af93800f29c99e5127f21e676fd675c6958"
+    },
+    {
+      "path": "test/launch-rpc.test.mjs",
+      "bytes": 1371,
+      "sha256": "d2c2071b0adc5651ba7961c5c6600b1d82f02b7a66e4c33dda88810c988d95c5"
     },
     {
       "path": "test/ledger.test.mjs",
@@ -387,6 +412,11 @@
       "path": "test/native20.test.mjs",
       "bytes": 24417,
       "sha256": "5650e306fc155fa241b39958c9bbeea421d63ff067f0f3d5a1ad737365e02b33"
+    },
+    {
+      "path": "test/payout-plan.test.mjs",
+      "bytes": 3227,
+      "sha256": "d094f5c45e2a4b9b18b0f6c7c73ee09455bdd16c4a13237c2caed74754734bf4"
     },
     {
       "path": "test/production-network.test.mjs",
@@ -442,6 +472,11 @@
       "path": "test/wallet-feed.test.mjs",
       "bytes": 30397,
       "sha256": "6f8067dbb83796d94bcba69513153889a612fd155dcaf82fa65730a3e5baac25"
+    },
+    {
+      "path": "integration/wallet-feed-site.test.mjs",
+      "bytes": 13899,
+      "sha256": "f0042565a1206f3bef9b9458eeab0a154fa7469f14fd6c24919333763407ea23"
     },
     {
       "path": "vendor/programmable-launch-plan-v1/artifact-index.json",
@@ -520,8 +555,8 @@
     },
     {
       "path": "docs/current-launch-plan.md",
-      "bytes": 9044,
-      "sha256": "703ad5bf13d6785a0c5f08f02748a9345189e9b57bfe915aa26c5128de0b6efe"
+      "bytes": 9381,
+      "sha256": "a9608b403d1686a74ba2dbb6312d5ae6296e76201f9ae9c7d1ee5013a1ff62a5"
     },
     {
       "path": "docs/funding-and-signing.md",
@@ -534,14 +569,24 @@
       "sha256": "e210c069c0de2f2a600df2b92205cabdb6440f3c6ab0130289e6bff21de42d81"
     },
     {
+      "path": "docs/integration-tests.md",
+      "bytes": 2594,
+      "sha256": "1745e621fa5074750247312a981463d83a17c1b73c356743b547aa38e1ed6975"
+    },
+    {
       "path": "docs/launch-bootstrap.md",
       "bytes": 7899,
       "sha256": "7273606d320d0c2cde98e865282c39f0283b6840a9d62396a28673ac1124d195"
     },
     {
       "path": "docs/launch-handoff-builder.md",
-      "bytes": 2166,
-      "sha256": "48bdf7cbaa13bf33d669e3c741649cf9e478c984954a7ddae65030889230de71"
+      "bytes": 5693,
+      "sha256": "a7767fd39dfd2dca1695be8af036122d3911af73f72177324b8aeb525c51072e"
+    },
+    {
+      "path": "docs/launch-later.md",
+      "bytes": 4546,
+      "sha256": "157c99f560e2beb42284e21cb98a6f7943e3375dc59a1743a84f6df061ba7ff2"
     },
     {
       "path": "docs/launch-plan-api.md",
@@ -549,9 +594,14 @@
       "sha256": "dd716018e4d31217549aedd403abfab037ce5ae3e7a1295bfb22a77aec5cb3f8"
     },
     {
+      "path": "docs/launch-policy.example.json",
+      "bytes": 520,
+      "sha256": "7477ccb08d5cd91d95932291843d979b66770c6d2fc2b8e6c5c23fce768361cb"
+    },
+    {
       "path": "docs/launch-wallet-review.md",
-      "bytes": 6305,
-      "sha256": "5ffd2583c1ee60c5d0f2ca762ea018cfbc0bac02ac69b95e8648746953eb117d"
+      "bytes": 6640,
+      "sha256": "8d0d9f91f6dc15142c8c8cdf8626826ea770401a6d2de3c69b67f9dcbfa17b89"
     },
     {
       "path": "docs/local-rehearsal.md",
@@ -575,8 +625,13 @@
     },
     {
       "path": "docs/production-setup.md",
-      "bytes": 9483,
-      "sha256": "59a32b972f5ce294fd34b43f80e8f48afda0e5fc820a2fca60095e6e71ad7915"
+      "bytes": 6394,
+      "sha256": "68d1754b0267ed3256894460226c0bd784915f1bd63ba91cbbe8416bafec5a27"
+    },
+    {
+      "path": "docs/robin-distributor.public.json",
+      "bytes": 734,
+      "sha256": "dd447e06801cdb72ba1a6fffd04d35f9a8f6da7e2fb840ea0ac86d187c5793f4"
     },
     {
       "path": "docs/router-and-economic-validation.md",
@@ -590,8 +645,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 1449,
-      "sha256": "08f206699da1d78769e72703e403eb842ae52721bfeb29ab8f744413a5e942c8"
+      "bytes": 1711,
+      "sha256": "8117200043d0ecbc50087e7cfb930bd968a2ff090c7b99f120141ef86c0ca89a"
     },
     {
       "path": "package-lock.json",
@@ -600,8 +655,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 20741,
-      "sha256": "44e915dfaa4b0f5d00760a68670dcd273e1fbb6b8aacf44b3bdecff469f4ce97"
+      "bytes": 6724,
+      "sha256": "6228b5209c172f24fb8c2aef387a6c6805185773d1d13d5ee1d6fcc1edd81351"
     },
     {
       "path": ".gitignore",
@@ -720,8 +775,8 @@
     },
     {
       "path": "scripts/build-release.mjs",
-      "bytes": 2880,
-      "sha256": "f6130dd6a908c7a331fde9746df7c310aa34caf1d28f83f1ea0bf41923bb944b"
+      "bytes": 2934,
+      "sha256": "b6c0b4c27fccf5630b5c19ea3d5f7fe7586c048e0836c8fae276cc78d3104c5f"
     },
     {
       "path": "scripts/rehearse-local.mjs",
@@ -745,13 +800,18 @@
     },
     {
       "path": "scripts/serve-robin-launch-wallet.mjs",
-      "bytes": 7064,
-      "sha256": "2feb5818dff20f9bb44e3dc8bc224299cd43f5acfd3e5e680a2a20f25da11a87"
+      "bytes": 7272,
+      "sha256": "999ae8c7ae4626411bbe0bbe13e3c5548080d2f69a6eaf785e9e6b5462559c53"
     },
     {
       "path": "scripts/prepare-launch-handoff.mjs",
-      "bytes": 2408,
-      "sha256": "7fa0fccb562dfa3ca7f5fa072f04dea3ed4c237268fea299fbc26fc5001157dd"
+      "bytes": 3386,
+      "sha256": "bc5c48eb101c4ae505a76290c75902f8cddd140ae414b9a516a90ee5a9053a81"
+    },
+    {
+      "path": "scripts/refresh-robin-distributor.mjs",
+      "bytes": 1268,
+      "sha256": "f238680b9616ffc019371ee58f21f6387d7f2548a6f5a363db5938e2dbc26808"
     },
     {
       "path": "scripts/watch-launch.mjs",

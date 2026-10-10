@@ -12,6 +12,8 @@ The output contains four exact source/runtime components: initializer, ROBIN tok
 
 The three adjacent deployment declarations contain one identical GraphFactory call. The current Atomic contract coalesces those declarations into one project call, followed by the platform's provenance stamp. The official offline packer validates the canonical request. It does not compile on the server, approve a launch, sign a permit or produce a wallet transaction.
 
+First refresh the shipped public distributor evidence with `npm run launch:distributor -- --out output/distributor-deployment.verified.json`. Use a new filename for each refresh; the builder rejects checks older than one hour. See [handoff inputs](launch-handoff-builder.md) for archive-RPC configuration and the manual policy example.
+
 Example, after publishing and verifying the exact new source revision:
 
 ```sh
