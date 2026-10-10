@@ -1,6 +1,6 @@
 {
   "schemaVersion": "robin.source-release.v1",
-  "createdAt": "2026-10-10T21:20:25.215Z",
+  "createdAt": "2026-10-10T21:43:37.319Z",
   "status": "source-for-review; no production deployment or platform acceptance",
   "files": [
     {
@@ -37,6 +37,11 @@
       "path": "src/executor.mjs",
       "bytes": 12281,
       "sha256": "3a40eae3d7d47f1e16d7694f4994d7974244c77976bd07cd01aa46340529955a"
+    },
+    {
+      "path": "src/launch-admission-install.mjs",
+      "bytes": 7229,
+      "sha256": "f007ef3d2b2162e4deda4c9b92f7a95f852412dee55a034a37dc90c7bb47d3e7"
     },
     {
       "path": "src/launch-bootstrap.mjs",
@@ -157,6 +162,11 @@
       "path": "src/store.mjs",
       "bytes": 1913,
       "sha256": "b529e585467579bea7d85da59c835992f9caacfbfd4daeda8687f3313057c135"
+    },
+    {
+      "path": "src/wallet-feed-check.mjs",
+      "bytes": 3825,
+      "sha256": "3d5df2e09deb6aaaec0131a91ae2c21317bd1a69efa3fb2252ce9494f9cff580"
     },
     {
       "path": "src/wallet-feed.mjs",
@@ -354,6 +364,11 @@
       "sha256": "e1f46fcc98b39617dd901fcc3cf0f953a0dee5e5d0f2a8f1ae350043f6fc1800"
     },
     {
+      "path": "test/launch-admission-install.test.mjs",
+      "bytes": 9997,
+      "sha256": "aa8c296b733262ce91954416f3a5b46aab80f3af226d524a1f263c3ded6a4b55"
+    },
+    {
       "path": "test/launch-bootstrap.test.mjs",
       "bytes": 20028,
       "sha256": "d7a8d29914af461711e68eb3fc0910280e7f3e73c0fab17f56125e5dc4e54995"
@@ -469,6 +484,11 @@
       "sha256": "c8770bb5cafd618e4df16d71be231f88894d7cf35bf8be22aae09e24474459f4"
     },
     {
+      "path": "test/wallet-feed-check.test.mjs",
+      "bytes": 7795,
+      "sha256": "db33e7b02649a9b649d085c2576bbf7f50933c46b588a93d5d4ae82e8227f775"
+    },
+    {
       "path": "test/wallet-feed.test.mjs",
       "bytes": 30397,
       "sha256": "6f8067dbb83796d94bcba69513153889a612fd155dcaf82fa65730a3e5baac25"
@@ -574,6 +594,11 @@
       "sha256": "1745e621fa5074750247312a981463d83a17c1b73c356743b547aa38e1ed6975"
     },
     {
+      "path": "docs/launch-admission-install.md",
+      "bytes": 3498,
+      "sha256": "366f239775db5d6ba59c456de36759b3e3e50ad4385cf89c8762c86e14f78a3f"
+    },
+    {
       "path": "docs/launch-bootstrap.md",
       "bytes": 7899,
       "sha256": "7273606d320d0c2cde98e865282c39f0283b6840a9d62396a28673ac1124d195"
@@ -625,8 +650,8 @@
     },
     {
       "path": "docs/production-setup.md",
-      "bytes": 6394,
-      "sha256": "68d1754b0267ed3256894460226c0bd784915f1bd63ba91cbbe8416bafec5a27"
+      "bytes": 6669,
+      "sha256": "8e3e8e3e1a8afa64d95e68a24d10d7733ed38646b48db6481abc767c6c45bead"
     },
     {
       "path": "docs/robin-distributor.public.json",
@@ -639,14 +664,19 @@
       "sha256": "6a7027f151babb4f6da402ce644061080d77426c863caed4ea5b63d0e1eb20de"
     },
     {
+      "path": "docs/wallet-feed-check.md",
+      "bytes": 1533,
+      "sha256": "944afd2c6b1f4bb361a9cbf31dd05d6d4e39b744404f19332848cf5be985d998"
+    },
+    {
       "path": "docs/wallet-feed.md",
-      "bytes": 6200,
-      "sha256": "9e91823e20b7d8cbe6f6dff73118993b27d793d38b4a1fa03611505075b11dbe"
+      "bytes": 7613,
+      "sha256": "a40887f88e02a911b0a37e57b16e8eb416bcc92f229096a38835bdf5864bbc4e"
     },
     {
       "path": "package.json",
-      "bytes": 1711,
-      "sha256": "8117200043d0ecbc50087e7cfb930bd968a2ff090c7b99f120141ef86c0ca89a"
+      "bytes": 1841,
+      "sha256": "7c36efea5711264b22f985e15c2dfd6474347ca89298c048a6e7bee38600d169"
     },
     {
       "path": "package-lock.json",
@@ -764,6 +794,11 @@
       "sha256": "6dd73481a7e925a6769b5cb9f0c2620ab5902183256aed0b8f1d8a6cf70611d9"
     },
     {
+      "path": "scripts/check-wallet-feed.mjs",
+      "bytes": 872,
+      "sha256": "222a56f5ec56afcc1665f8751857b7f9b680e5a30f4d41b7276236aea8d548d9"
+    },
+    {
       "path": "scripts/estimate-launch-gas.mjs",
       "bytes": 1428,
       "sha256": "901e5d2e560658f157f6f9f5a5f075b71d23153132836d1cbe7f30b77bf20d13"
@@ -775,8 +810,8 @@
     },
     {
       "path": "scripts/build-release.mjs",
-      "bytes": 2934,
-      "sha256": "b6c0b4c27fccf5630b5c19ea3d5f7fe7586c048e0836c8fae276cc78d3104c5f"
+      "bytes": 3005,
+      "sha256": "c0f8cb71d79938275eef7566f32beb0d9c50a73bd3c7c77ab9196935967d9461"
     },
     {
       "path": "scripts/rehearse-local.mjs",
@@ -812,6 +847,11 @@
       "path": "scripts/refresh-robin-distributor.mjs",
       "bytes": 1268,
       "sha256": "f238680b9616ffc019371ee58f21f6387d7f2548a6f5a363db5938e2dbc26808"
+    },
+    {
+      "path": "scripts/install-launch-admission.mjs",
+      "bytes": 1859,
+      "sha256": "7480e92fddd6b552888d8c2520e9baa9eae0ff646d23c957e1fd782740c10964"
     },
     {
       "path": "scripts/watch-launch.mjs",

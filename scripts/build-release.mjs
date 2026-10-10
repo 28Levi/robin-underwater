@@ -5,9 +5,9 @@ fs.mkdirSync(destination,{recursive:true});
 const roots=['src','lib','contracts','test','integration','vendor','assets','docs','package.json','package-lock.json','README.md','.gitignore','.gitattributes','.dockerignore','Dockerfile',
  'config.example.json','execution.example.json','production.execution.example.json','hardhat.config.cjs','hardhat.native20.config.cjs','hardhat.rehearsal.config.cjs','launch-intent.json',
  'scripts/compile.mjs','scripts/compile-native20.mjs','scripts/demo.mjs','scripts/check-platform.mjs','scripts/snapshot.mjs','scripts/prepare-payout.mjs',
- 'scripts/operator.mjs','scripts/executor.mjs','scripts/production-operator.mjs','scripts/export-wallet-feed.mjs','scripts/estimate-launch-gas.mjs','scripts/refresh-platform.mjs','scripts/build-release.mjs',
+ 'scripts/operator.mjs','scripts/executor.mjs','scripts/production-operator.mjs','scripts/export-wallet-feed.mjs','scripts/check-wallet-feed.mjs','scripts/estimate-launch-gas.mjs','scripts/refresh-platform.mjs','scripts/build-release.mjs',
  'scripts/rehearse-local.mjs','scripts/verify-recovery-report.mjs','scripts/prepare-robin-launch-plan.mjs','scripts/robin-launch-api.mjs',
- 'scripts/serve-robin-launch-wallet.mjs','scripts/prepare-launch-handoff.mjs','scripts/refresh-robin-distributor.mjs','scripts/watch-launch.mjs','scripts/launch-standby.mjs','signing-ui/guards.mjs','signing-ui/moss-launch-guards.mjs',
+ 'scripts/serve-robin-launch-wallet.mjs','scripts/prepare-launch-handoff.mjs','scripts/refresh-robin-distributor.mjs','scripts/install-launch-admission.mjs','scripts/watch-launch.mjs','scripts/launch-standby.mjs','signing-ui/guards.mjs','signing-ui/moss-launch-guards.mjs',
  'signing-ui/robin-launch-guards.mjs','signing-ui/robin-launch-app.js','signing-ui/robin-launch.html',
  'research/coverage.json','research/capabilities.json','research/readiness.json','research/router-test-provenance.json','research/permit2-sourcify.json','research/current'];
 const files=[];

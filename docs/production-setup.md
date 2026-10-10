@@ -28,7 +28,7 @@ Maximum token-launch gas cost is 0.0008 ETH. Operator ceilings are 0.0002 ETH pe
 
 1. Complete the current [launch plan](current-launch-plan.md), [API](launch-plan-api.md) and [handoff](launch-handoff-builder.md) flow. A generic token with the same name is not a compatible replacement.
 2. Preserve the accepted request, pack report, preparation, actual platform resource, manifest and hash. Render's running commit must equal `manifest.sourceRevision`. A source update after admission requires a new reviewed package.
-3. Through an authenticated host-management channel, atomically install `/var/data/robin/launch/admission.json` containing `{ "schemaVersion": "robinhook.launch-admission.v1", "manifestSha256": "sha256:...", "manifest": { ... } }`. Admission contains public launch evidence, never credentials. Write a temporary file on the same disk, then rename it; do not partially overwrite the active file.
+3. Transfer the actual reviewed public manifest through an authenticated host-management channel and run the [admission installer](launch-admission-install.md) on the host. It checks the digest and running revision, then atomically publishes `/var/data/robin/launch/admission.json` without replacing existing state. Admission contains public launch evidence, never credentials.
 4. Preserve the separately server-recorded `launch-review.json` from wallet review and install it through the same authorized channel when required. Do not hand-author consent or infer it from token code. There is no public admission or activation endpoint.
 5. The keyless watcher waits for the exact finalized transaction and verifies nonce, source, code, pool, fees, purchase and budgets before producing production configuration.
 
@@ -36,11 +36,11 @@ The default handoff is manual and generates only `production.readonly.json`. If 
 
 ## Connect actual wallet results
 
-The website does not index the chain. The exporter uses archive history and its own durable directory. Publisher credentials and live identity are not currently installed.
+The website does not index the chain. The exporter uses archive history and its own durable directory. A dedicated publisher credential is configured in Sites and Render; the public token identity remains unset. Verify the running host with `npm run wallet-feed:check` after applying its environment. A successful diagnostic proves authentication and storage, not a launched token or live wallet results.
 
 After verifying the real launch:
 
-- Install a dedicated publisher token as Sites `WALLET_FEED_PUBLISH_TOKEN` and Render `ROBIN_WALLET_FEED_PUBLISH_TOKEN`. It must have at least 32 characters and must never enter client code, URLs, logs or source.
+- Preserve the matching dedicated publisher token in Sites `WALLET_FEED_PUBLISH_TOKEN` and Render `ROBIN_WALLET_FEED_PUBLISH_TOKEN`. It must have at least 32 characters and must never enter client code, URLs, logs or source. Replacing it requires coordinating both hosts.
 - Set `ROBIN_WALLET_FEED_URL=https://robinhook.wtf/api/wallet-snapshot`.
 - Pin exact `{ chainId: 4663, token, distributor }` in the site's `LIVE_FEED_IDENTITY`, then rebuild and publish.
 - Run read-only export once, verify the stored acknowledgement and public feed, then run the loop. See [wallet-feed.md](wallet-feed.md).

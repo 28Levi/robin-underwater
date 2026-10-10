@@ -19,10 +19,12 @@
     "executor:local": "node scripts/executor.mjs",
     "operator:production": "node scripts/production-operator.mjs",
     "wallet-feed": "node scripts/export-wallet-feed.mjs",
+    "wallet-feed:check": "node scripts/check-wallet-feed.mjs",
     "launch:prepare": "node scripts/prepare-robin-launch-plan.mjs",
     "launch:distributor": "node scripts/refresh-robin-distributor.mjs",
     "launch:api": "node scripts/robin-launch-api.mjs",
     "launch:handoff": "node scripts/prepare-launch-handoff.mjs",
+    "launch:install": "node scripts/install-launch-admission.mjs",
     "launch:review": "node scripts/serve-robin-launch-wallet.mjs",
     "launch:watch": "node scripts/watch-launch.mjs",
     "launch:standby": "node scripts/launch-standby.mjs --loop"
