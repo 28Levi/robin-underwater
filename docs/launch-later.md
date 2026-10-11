@@ -13,7 +13,7 @@ The website is public. The token and rewards require this exact custom launch. C
 | Operator | `0x9C366d4E42b8f987e8398A27b3b9A02803493088` |
 | First purchase | 0.01 ETH |
 | Launch gas ceiling | 0.0008 ETH |
-| Contract fees | 180 bps rewards + 20 bps platform; zero LP fee |
+| Contract fees | 170 bps rewards + 30 bps platform; zero LP fee |
 
 Do not redeploy the distributor or reuse HOOD/MOSS packages. Current route fees are separate from fixed contract fees and need the actual platform quote/review.
 

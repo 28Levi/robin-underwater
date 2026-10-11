@@ -18,7 +18,7 @@ The token is unlaunched, the worker is in standby and the public wallet feed is 
 
 ## Identity and limits
 
-Use current `launch-intent.json`: ROBINHOOK / ROBIN, chain 4663, 1 billion supply, launch wallet `0x9479ac7ED3A72866F63F37013F2c7Cc68936B519`, and a 0.01 ETH initial purchase. The unchanged canonical Native20 graph sends 180-bps project fees to the existing distributor, plus 20 bps to the platform, with zero LP fee.
+Use current `launch-intent.json`: ROBINHOOK / ROBIN, chain 4663, 1 billion supply, launch wallet `0x9479ac7ED3A72866F63F37013F2c7Cc68936B519`, and a 0.01 ETH initial purchase. The custom ROBIN fee graph sends 170-bps project fees to the existing distributor, plus 30 bps to the platform, with zero LP fee.
 
 The contract fee is 2%; an all-in quote for every platform route is not established. Current additional route charges and any fee waiver need the actual platform review.
 

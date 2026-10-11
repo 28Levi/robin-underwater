@@ -3,6 +3,7 @@ import {Contract,JsonRpcSigner,Interface,keccak256,toBeHex,MaxUint256} from 'eth
 import {compileRobinLaunchContracts,buildRobinLaunchPlan,assertCurrentPlanCapabilities,ATOMIC,GRAPH,MANAGER,PLAN_MANIFEST,PROJECT_GAS_LIMIT,TOTAL_GAS_LIMIT,MAX_ORDER_LIFETIME_SECONDS} from '../src/launch-plan.mjs';
 import {runCustomLaunchPlanPackerCliV1} from '../vendor/programmable-launch-plan-v1/request-packer.mjs';
 import {parseRobinLaunchPlanOptions} from '../scripts/prepare-robin-launch-plan.mjs';
+import {loadNative30Recipe,assertNative30CompiledRuntime,assertNative30MaterializedRuntime,NATIVE30_SOURCE_ARTIFACT} from '../src/native30-runtime.mjs';
 import {native20Fixture,E,artifact} from './helpers/native20-fixture.mjs';
 process.env.HARDHAT_CONFIG=path.resolve('hardhat.native20.config.cjs');const {default:hre}=await import('hardhat');
 const read=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,'')),intent=read('launch-intent.json'),capabilities=read('vendor/programmable-launch-plan-v1/capabilities-observed.json'),factory=read('vendor/programmable-launch-plan-v1/graph-factory.json');
@@ -11,24 +12,58 @@ const compiled=compileRobinLaunchContracts(process.cwd(),solc);
 const input={intent,compiled,capabilities,factory,distributor,sourceRevision:'1'.repeat(40),nonce:'0x'+'31'.repeat(32),now};
 const built=buildRobinLaunchPlan(input);
 
-test('current Atomic source plan packs exact unchanged Native20 economics and all four runtime bindings',async()=>{
+test('current Atomic source plan packs custom ROBIN 170/30 economics and all four runtime bindings',async()=>{
  const dir=fs.mkdtempSync(path.resolve('output/launch-plan-test-'));fs.writeFileSync(path.join(dir,'plan.json'),JSON.stringify(built.plan));
  assert.equal(await runCustomLaunchPlanPackerCliV1(['--input',path.join(dir,'plan.json'),'--out',path.join(dir,'request.json'),'--report',path.join(dir,'report.json')]),0);
  const report=read(path.join(dir,'report.json'));assert.equal(report.status,'packed');assert.equal(report.productionAuthority,false);assert.equal(report.walletSigning,false);
  assert.equal(built.plan.manifestDigest,PLAN_MANIFEST);assert.equal(built.plan.publication.symbol,'ROBIN');assert.deepEqual(built.plan.feeObligations,[]);assert.equal(built.plan.executor,'atomic_execute_and_stamp_v2');
  assert.equal(built.plan.components.length,4);assert.equal(built.plan.actions.length,3);assert.equal(new Set(built.plan.actions.map(a=>a.execution.data)).size,1);
  assert.equal(built.plan.budgets.maxTotalGas,TOTAL_GAS_LIMIT);assert.equal(built.report.totalGasLimit,TOTAL_GAS_LIMIT);assert.ok(built.plan.actions.every(a=>a.execution.gasLimit===PROJECT_GAS_LIMIT));
- // Captured from the previous official helper for this fixed source/nonce; the
- // published implementation has no dependency on that unshipped toolchain.
- assert.equal(built.authorization.graphCommitment,'0x9ddc8c7f7c56a6e6cc6829bc658465a722781bf22075b37358b2a5347496e17f');
+ // The exact deployed factory independently checks the graph commitment in the EVM test below.
  assert.equal(BigInt(built.plan.budgets.deadline)-BigInt(built.plan.budgets.validAfter),BigInt(MAX_ORDER_LIFETIME_SECONDS));assert.ok(BigInt(built.plan.budgets.deadline)>BigInt(now));
- assert.equal(built.report.hookFees.projectBuyBps,180);assert.equal(built.report.hookFees.platformBps,20);assert.equal(built.report.routedTradingFee.waiverVerified,false);
+ assert.equal(built.report.hookFees.projectBuyBps,170);assert.equal(built.report.hookFees.platformBps,30);assert.equal(built.report.routedTradingFee.waiverVerified,false);
+ assert.equal(built.report.hookImplementation.recipe,'robin-native30-no-module');assert.equal(built.report.hookImplementation.canonicalUpstreamReproduced,true);
+ assert.equal(built.report.hookImplementation.native30Runtime.normalizedRuntimeAndImmutableOffsetsVerified,true);
+ assert.equal(built.report.native30Runtime.localRuntimeBindingsVerified,true);assert.equal(built.report.native30Runtime.platformWaiverVerified,false);
+ assert.equal(built.report.native30Runtime.sourceArtifactHash,NATIVE30_SOURCE_ARTIFACT);
+ const hookBinding=built.plan.verificationBundle.components.find(c=>c.targetId==='hook');
+ assert.equal(hookBinding.contractName,'RobinhookNativeFeeHookV1');assert.equal(hookBinding.compilationUnitId,'robin-native30');
+ assert.equal('0x'+compiled.contracts.RobinhoodNativeFeeHookV1.evm.bytecode.object,compiled.reviewed.kernel.creationBytecode);
+ assert.notEqual(compiled.contracts.RobinhookNativeFeeHookV1.evm.bytecode.object,compiled.contracts.RobinhoodNativeFeeHookV1.evm.bytecode.object);
  const decoded=new Interface(factory.abi).decodeFunctionData('deployGraph',built.factoryCall);assert.equal(decoded.authorization.authorizedLauncher,ATOMIC);assert.equal(decoded.authorization.totalValue,E/100n);
  assert.ok(built.plan.expectedEffects.some(e=>e.effectId==='feeVault-child'));assert.ok(built.plan.expectedEffects.some(e=>e.effectId==='initial-buyer-output'));
 });
 
+test('Native30 compiler and materialization checks reject recipe, complete runtime, immutable positions and custody drift',()=>{
+ const recipe=compiled.native30Recipe;
+ assertNative30CompiledRuntime(compiled.contracts,recipe);
+ for(const mutate of [
+  c=>c.RobinhookNativeFeeHookV1.evm.deployedBytecode.object='61'+c.RobinhookNativeFeeHookV1.evm.deployedBytecode.object.slice(2),
+  c=>c.RobinhoodNativeFeeVaultV1.evm.deployedBytecode.object='61'+c.RobinhoodNativeFeeVaultV1.evm.deployedBytecode.object.slice(2),
+  c=>Object.values(c.RobinhookNativeFeeHookV1.evm.deployedBytecode.immutableReferences)[0][0].start++,
+  c=>Object.values(c.RobinhoodNativeFeeVaultV1.evm.deployedBytecode.immutableReferences)[0][0].length=31,
+  c=>{const hook=c.RobinhookNativeFeeHookV1,id=Object.keys(hook.evm.deployedBytecode.immutableReferences)[0];hook.names.set(id,'unbound');},
+ ]){const contracts=structuredClone(compiled.contracts);mutate(contracts);assert.throws(()=>assertNative30CompiledRuntime(contracts,recipe),/Native30 runtime recipe/);}
+ for(const mutate of [r=>r.sourceArtifactHash='sha256:'+'0'.repeat(64),r=>r.hook.immutableWords[0].byteOffsets[0]++,r=>r.vault.runtimeTemplateHex='0x61'+r.vault.runtimeTemplateHex.slice(4)]){
+  const changed=structuredClone(recipe);mutate(changed);assert.throws(()=>assertNative30CompiledRuntime(compiled.contracts,changed),/Native30 runtime recipe/);
+ }
+ const args={recipe,runtimeCodes:built.runtimeCodes,addresses:built.report.addresses,creatorRecipient:intent.creatorFeeRecipient,poolManager:MANAGER,initialSqrtPriceX96:'1747735933952748037356115466503453'};
+ assertNative30MaterializedRuntime(args);
+ const changedWord=(code,entry,value)=>{for(const offset of entry.byteOffsets){const start=offset*2+2;code=code.slice(0,start)+BigInt(value).toString(16).padStart(64,'0')+code.slice(start+64);}return code;};
+ for(const [role,name,value]of [['hook','creatorBuyFeeBps',180],['hook','module',1],['vault','creatorRecipient',1],['vault','kernel',1]]){
+  const key=role==='hook'?'hook':'feeVault',runtimeCodes={...built.runtimeCodes};
+  runtimeCodes[key]=changedWord(runtimeCodes[key],recipe[role].immutableWords.find(w=>w.name===name),value);
+  assert.throws(()=>assertNative30MaterializedRuntime({...args,runtimeCodes}),/parameter differs/);
+ }
+ const root=fs.mkdtempSync(path.resolve('output/native30-recipe-pin-test-'));
+ fs.mkdirSync(path.join(root,'vendor/programmable-native30'),{recursive:true});
+ const original=fs.readFileSync('vendor/programmable-native30/runtime-recipes-v2.ts');
+ fs.writeFileSync(path.join(root,'vendor/programmable-native30/runtime-recipes-v2.ts'),Buffer.concat([original,Buffer.from('\n')]));
+ assert.throws(()=>loadNative30Recipe(root),/pinned published recipe bytes changed/);
+});
+
 test('plan rejects retired/unbound capabilities, altered economics, stale custody evidence and missing source identity',()=>{
- for(const mutate of [x=>x.intent.symbol='HOOD',x=>x.intent.projectBuyFeeBps=170,x=>x.intent.platformFeeBps=30,x=>x.intent.maxGasCostWei='900000000000000',x=>x.distributor.verified=false,x=>x.distributor.checkedAt=new Date((now-3601)*1000).toISOString(),x=>x.distributor.operator=x.intent.launchWallet,x=>x.distributor.runtimeCodeHash='0x'+'0'.repeat(64),x=>x.sourceRevision='',x=>x.capabilities.availability.operations.create.state='unavailable',x=>x.capabilities.availability.bindings.execution.atomic.address=GRAPH,x=>x.capabilities.manifestDigest='sha256:'+'0'.repeat(64)]){
+ for(const mutate of [x=>x.intent.symbol='HOOD',x=>x.intent.projectBuyFeeBps=180,x=>x.intent.platformFeeBps=20,x=>x.intent.maxGasCostWei='900000000000000',x=>x.distributor.verified=false,x=>x.distributor.checkedAt=new Date((now-3601)*1000).toISOString(),x=>x.distributor.operator=x.intent.launchWallet,x=>x.distributor.runtimeCodeHash='0x'+'0'.repeat(64),x=>x.sourceRevision='',x=>x.capabilities.availability.operations.create.state='unavailable',x=>x.capabilities.availability.bindings.execution.atomic.address=GRAPH,x=>x.capabilities.manifestDigest='sha256:'+'0'.repeat(64)]){
   const x={...input,intent:structuredClone(intent),distributor:structuredClone(distributor),capabilities:structuredClone(capabilities)};mutate(x);assert.throws(()=>buildRobinLaunchPlan(x));
  }
  assert.throws(()=>assertCurrentPlanCapabilities({schemaVersion:'programmable.custom-launch-capabilities.v2'}));
@@ -86,7 +121,7 @@ test('preflight-only CLI flag is standalone, explicit and cannot swallow or dupl
   [...base,'--out','other-output'],[...base,'--enable-create'],['--preflight-only']])assert.throws(()=>parseRobinLaunchPlanOptions(args));
 });
 
-test('exact factory runtime executes the graph from Atomic caller, preserving buyer, fees, runtime and buy/sell behavior',async()=>{
+test('exact factory runtime executes the graph from Atomic caller, preserving buyer, fees, runtime and buy/sell behavior',async t=>{
  const f=await native20Fixture(hre,{name:'fixture',symbol:'FIXTURE',firstBuyWei:E/100n});
  try{
   const {provider,owner,alice,swapper}=f;
@@ -98,14 +133,15 @@ test('exact factory runtime executes the graph from Atomic caller, preserving bu
   const atomic=new JsonRpcSigner(provider,ATOMIC);
   const [commitment,total]=await graph.computeGraphCommitment(built.authorization,built.targets);assert.equal(commitment,built.authorization.graphCommitment);assert.equal(total,E/100n);
   const receipt=await(await atomic.sendTransaction({to:GRAPH,data:built.factoryCall,value:E/100n,gasLimit:PROJECT_GAS_LIMIT})).wait();assert.equal(receipt.status,1);assert.ok(receipt.gasUsed<=BigInt(PROJECT_GAS_LIMIT));
+  t.diagnostic('Custom ROBIN 170/30 exact factory project gas: '+receipt.gasUsed.toString()+'; Atomic wrapper excluded.');
   for(const [id,code]of Object.entries(built.runtimeCodes))assert.equal(await provider.getCode(built.report.addresses[id]),code,id+' exact runtime');
-  const addresses=built.report.addresses,token=new Contract(addresses.token,compiled.contracts.RobinhoodNative20Token.abi,alice),hook=new Contract(addresses.hook,compiled.contracts.RobinhoodNativeFeeHookV1.abi,provider),initializer=new Contract(addresses.initializer,compiled.contracts.RobinhoodNative20Initializer.abi,provider),vault=new Contract(addresses.feeVault,compiled.contracts.RobinhoodNativeFeeVaultV1.abi,provider);
+  const addresses=built.report.addresses,token=new Contract(addresses.token,compiled.contracts.RobinhoodNative20Token.abi,alice),hook=new Contract(addresses.hook,compiled.contracts.RobinhookNativeFeeHookV1.abi,provider),initializer=new Contract(addresses.initializer,compiled.contracts.RobinhoodNative20Initializer.abi,provider),vault=new Contract(addresses.feeVault,compiled.contracts.RobinhoodNativeFeeVaultV1.abi,provider);
   assert.equal(await token.name(),'ROBINHOOK');assert.equal(await token.symbol(),'ROBIN');assert.equal(await token.totalSupply(),10n**27n);assert.equal(await initializer.initialBuyer(),intent.launchWallet);assert.equal(await initializer.initialBuyWei(),E/100n);assert.ok(await token.balanceOf(intent.launchWallet)>=BigInt(intent.minimumTokensOut));
-  assert.equal(await hook.creatorBuyFeeBps(),180n);assert.equal(await hook.creatorSellFeeBps(),180n);assert.equal(await vault.creatorRecipient(),intent.creatorFeeRecipient);
+  assert.equal(await hook.creatorBuyFeeBps(),170n);assert.equal(await hook.creatorSellFeeBps(),170n);assert.equal(await hook.PLATFORM_FEE_BPS(),30n);assert.equal(await vault.creatorRecipient(),intent.creatorFeeRecipient);
   const key={currency0:'0x'+'0'.repeat(40),currency1:addresses.token,fee:0,tickSpacing:60,hooks:addresses.hook};
   const buy=await(await swapper.connect(alice).swap(key,{zeroForOne:true,amountSpecified:-E/100n,sqrtPriceLimitX96:4295128740n},{takeClaims:false,settleUsingBurn:false},'0x',{value:E/100n})).wait();
   const fees=buy.logs.map(l=>{try{return hook.interface.parseLog(l);}catch{return null;}}).find(e=>e?.name==='NativeFeesAccrued').args;
-  assert.equal(fees.platformFee,E/100n*20n/10000n);assert.equal(fees.creatorFee,E/100n*180n/10000n);
+  assert.equal(fees.platformFee,E/100n*30n/10000n);assert.equal(fees.creatorFee,E/100n*170n/10000n);
   await(await token.approve(await swapper.getAddress(),MaxUint256)).wait();const held=await token.balanceOf(await alice.getAddress());assert.ok(held>0n);
   await(await swapper.connect(alice).swap(key,{zeroForOne:false,amountSpecified:-held,sqrtPriceLimitX96:1461446703485210103287273052203988822378723970341n},{takeClaims:false,settleUsingBurn:false},'0x')).wait();assert.equal(await token.balanceOf(await alice.getAddress()),0n);
   await assert.rejects(atomic.sendTransaction({to:GRAPH,data:built.factoryCall,value:E/100n,gasLimit:PROJECT_GAS_LIMIT}),/revert/i);

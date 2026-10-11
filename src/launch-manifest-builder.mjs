@@ -31,7 +31,7 @@ export function acceptedLaunchResource(value) {
 }
 
 function exactComponents(plan, preparation) {
-  require(Array.isArray(plan.components) && plan.components.length === 4, 'Exactly the four reviewed Native20 components are required.');
+  require(Array.isArray(plan.components) && plan.components.length === 4, 'Exactly the four reviewed ROBIN components are required.');
   const result = {};
   for (const id of componentIds) {
     const matches = plan.components.filter(c => c.componentId === id), materials = plan.verificationBundle?.components?.filter(c => c.targetId === id);
@@ -41,6 +41,10 @@ function exactComponents(plan, preparation) {
       && material?.deployedRuntimeCodeHash === c.runtimeCodeHash
       && ethers.keccak256(Buffer.from(material.deployedRuntimeCodeBase64, 'base64')) === c.runtimeCodeHash,
     `${id} prediction differs from final source preparation.`);
+    if (id === 'hook') require(materials[0].contractName === 'RobinhookNativeFeeHookV1'
+      && materials[0].compilationUnitId === 'robin-native30'
+      && materials[0].sourcePath === 'src/robinhook-fee-v1/RobinhookNativeFeeHookV1.sol',
+    'The current ROBIN 30 bps custom hook source binding is required.');
     result[id] = {address: ethers.getAddress(c.expectedAddress), runtimeCodeHash: c.runtimeCodeHash};
   }
   return result;
@@ -122,9 +126,9 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
     && preparation.initialBuyWei === intent.initialBuyWei && preparation.minimumTokensOut === intent.minimumTokensOut
     && preparation.maximumLaunchGasCostWei === intent.maxGasCostWei && intent.maxGasCostWei === '800000000000000'
     && same(preparation.authorizedLauncher, ATOMIC) && same(preparation.factory, GRAPH)
-    && canonicalLaunchJson(preparation.hookFees) === canonicalLaunchJson({projectBuyBps: 180, projectSellBps: 180, platformBps: 20, lpFeePips: 0}),
+    && canonicalLaunchJson(preparation.hookFees) === canonicalLaunchJson({projectBuyBps: 170, projectSellBps: 170, platformBps: 30, lpFeePips: 0}),
   'Final preparation, source revision, fees or purchase budget changed.');
-  require(intent.projectBuyFeeBps === 180 && intent.projectSellFeeBps === 180 && intent.platformFeeBps === 20 && intent.lpFeePips === 0
+  require(intent.projectBuyFeeBps === 170 && intent.projectSellFeeBps === 170 && intent.platformFeeBps === 30 && intent.lpFeePips === 0
     && policy.execution.maxTotalGasWei === intent.operatorGasBudgetWei && policy.execution.maxGasPerTransactionWei === intent.operatorMaxGasPerTransactionWei,
   'The current explicit operator or fee budget changed.');
   const cap = capabilities?.availability?.bindings?.execution?.atomic;
@@ -171,7 +175,7 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
     watchFrom: {blockNumber: Number(BigInt(facts.state.finalized.number)), blockHash: facts.state.finalized.hash},
     distributorDeployment: {blockNumber: distributor.blockNumber, blockHash: distributor.blockHash, transactionHash: distributor.transactionHash},
     preserveLaunchBalanceWei: policy.preserveLaunchBalanceWei,
-    fees: {projectBuyFeeBps: 180, projectSellFeeBps: 180, platformFeeBps: 20, lpFeePips: 0},
+    fees: {projectBuyFeeBps: 170, projectSellFeeBps: 170, platformFeeBps: 30, lpFeePips: 0},
     minimumTokensOut: intent.minimumTokensOut, maxLaunchGasWei: intent.maxGasCostWei,
     accounting: structuredClone(policy.accounting), execution: structuredClone(policy.execution), activation: {mode: activationMode, approvalReference}};
   validateLaunchManifest(manifest);

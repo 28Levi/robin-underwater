@@ -36,7 +36,7 @@ function fixture(mode = 'manual') {
       apiVersion: 'custom-launch-plan-v1.2', stepId: 'atomic_launch', gasLimit: '5000000'}, components,
     infrastructure: {graphDeployer: {address: addr(3), runtimeCodeHash: ethers.keccak256(code)}}, operator: addr(4), platformRecipient: addr(5),
     watchFrom: {blockNumber: first, blockHash: hash(first)}, distributorDeployment: {blockNumber: first - 1, blockHash: hash(first - 1), transactionHash: hash(998)},
-    preserveLaunchBalanceWei: '1000000000000000', fees: {projectBuyFeeBps: 180, projectSellFeeBps: 180, platformFeeBps: 20, lpFeePips: 0},
+    preserveLaunchBalanceWei: '1000000000000000', fees: {projectBuyFeeBps: 170, projectSellFeeBps: 170, platformFeeBps: 30, lpFeePips: 0},
     minimumTokensOut: '100', maxLaunchGasWei: '800000000000000', accounting: {minimumAgeSeconds: 3600, twapWindowSeconds: 1800,
       maxOracleAgeSeconds: 300, maxSnapshotAgeSeconds: 300, maxFinalityLagSeconds: 1800, batchSize: 100, excludedAddresses: []},
     execution: {maxGasPerTransactionWei: '200000000000000', maxTotalGasWei: '5000000000000000', minimumHarvestWei: '10000000000000',
@@ -49,7 +49,7 @@ function fixture(mode = 'manual') {
     gasLimit: 5000000n, maxFeePerGas: 100000000n, chainId: 4663n, blockNumber: launched, blockHash: hash(launched)};
   const receipt = {hash: tx.hash, from: tx.from, to: tx.to, status: 1, blockNumber: launched, blockHash: hash(launched), gasUsed: 2000000n,
     gasPrice: 50000000n, logs: [mint, log(components.initializer.address, tx.from, 200n, 1)]};
-  const values = {creatorBuyFeeBps: 180n, creatorSellFeeBps: 180n, PLATFORM_FEE_BPS: 20n, lpFee: 0n, module: ethers.ZeroAddress,
+  const values = {creatorBuyFeeBps: 170n, creatorSellFeeBps: 170n, PLATFORM_FEE_BPS: 30n, lpFee: 0n, module: ethers.ZeroAddress,
     initialized: true, token: components.token.address, initializer: components.initializer.address, poolManager: POOL_MANAGER, tickSpacing: 60,
     name: 'ROBINHOOK', symbol: 'ROBIN', totalSupply: 10n ** 27n, initialBuyer: tx.from, initialBuyWei: tx.value, initialTokensOut: 200n,
     minimumInitialTokensOut: 100n, hook: components.hook.address, lockedLiquidity: 100n, seededTokenAmount: 10n ** 27n,
@@ -99,6 +99,20 @@ test('exact finalized receipt becomes a read-only production config without sign
   const c = productionConfigFromLaunch(m, result.proof); assert.equal(c.symbol, 'ROBIN'); assert.equal(c.execution.broadcastEnabled, false);
   assert.equal(c.deploymentBlock, launched); assert.ok(c.excludedAddresses.includes(m.components.initializer.address));
   assert.ok(state.calls.every(call => [launched, launched - 1].includes(call.blockTag)));
+});
+
+test('the old 1.8% / 0.2% split is rejected in admission and finalized contract readback', async () => {
+  const oldManifest = structuredClone(fixture().m);
+  Object.assign(oldManifest.fees, {projectBuyFeeBps: 180, projectSellFeeBps: 180, platformFeeBps: 20});
+  assert.throws(() => validateLaunchManifest(oldManifest), /Launch fees changed/);
+  for (const oldReadback of [
+    {creatorBuyFeeBps: 180n}, {creatorSellFeeBps: 180n}, {PLATFORM_FEE_BPS: 20n},
+    {creatorBuyFeeBps: 180n, creatorSellFeeBps: 180n, PLATFORM_FEE_BPS: 20n},
+  ]) {
+    const f = fixture(); Object.assign(f.state.values, oldReadback);
+    await assert.rejects(verifyLaunchReceipt(f.provider, f.m, hash(999), {now}), /fixed fee settings/);
+    assert.equal(f.state.calls.length > 0, true);
+  }
 });
 
 test('automation needs separate exact consent, approved host digest and finalized proof', async () => {

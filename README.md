@@ -6,14 +6,14 @@ ROBINHOOK is a transferable token whose project trading fees fund ETH rewards fo
 
 ## Launch later
 
-Start with [the current launch guide](docs/launch-later.md). Use the exact custom Native20 graph and existing fee distributor. A generic token with the same ticker does not connect to this reward service automatically. Historical HOOD and MOSS packages must not be submitted.
+Start with [the current launch guide](docs/launch-later.md). Use the exact custom ROBIN fee graph and existing fee distributor. A generic token with the same ticker does not connect to this reward service automatically. Historical HOOD and MOSS packages must not be submitted.
 
 - Website: https://robinhook.wtf/ and https://www.robinhook.wtf/.
 - Source: https://github.com/28Levi/robin-underwater. Launch preparation and Render must bind the same exact commit.
 - Launch wallet: `0x9479ac7ED3A72866F63F37013F2c7Cc68936B519`.
 - Existing distributor: `0x62C12ae94CcbbE470CC1857261Fae9E36074Fb36`; immutable operator `0x9C366d4E42b8f987e8398A27b3b9A02803493088`. Reverify, do not redeploy it.
 - First purchase: 0.01 ETH, buyer-funded liquidity with no ETH seed principal.
-- Contract fees: 180 bps project rewards + 20 bps platform on buys/sells, zero LP fee. Current platform routing charges are separate; a 2% all-in route fee is not confirmed.
+- Contract fees: 170 bps project rewards + 30 bps platform on buys/sells, zero LP fee. Current platform routing charges are separate; a 2% all-in route fee is not confirmed.
 - Caps: 0.0008 ETH token-launch gas; 0.0002 ETH per operator transaction and 0.005 ETH cumulative operator gas. No automatic refill.
 
 The current integration uses Custom Launch Plan V1, response contract 1.2 and `atomic_execute_and_stamp_v2`. The old Robinhood `/custom-launches` creation path is retired. Refresh current first-party capabilities; local packages never establish platform approval.
@@ -27,7 +27,7 @@ npm ci --ignore-scripts
 npm test
 ```
 
-Tests compile Solidity 0.8.26, reproduce the pinned Native20 hook creation bytecode and execute real Uniswap v4 PoolManager contracts on a local EVM. They cover trading fees, ledger/recovery arithmetic, transfers, payout contracts, finality, retries, durable journals, API recovery, launch manifests and wallet feed export. They do not send mainnet transactions.
+Tests compile Solidity 0.8.26, reproduce the original pinned Native20 reference bytecode, compile the separate ROBIN 30-bps hook fork and execute real Uniswap v4 PoolManager contracts on a local EVM. They cover trading fees, ledger/recovery arithmetic, transfers, payout contracts, finality, retries, durable journals, API recovery, launch manifests and wallet feed export. They do not send mainnet transactions.
 
 For the maintained local EVM → exporter → website Worker → browser-model test, provide the website checkout and run:
 

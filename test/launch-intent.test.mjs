@@ -32,7 +32,7 @@ test('ticker update preserves purchase, supply, approval and social-identity gua
   assert.throws(() => assertRobinLaunchIntent(null), /intent required/);
 });
 
-test('local canonical token deployment verifies ROBIN and rejects stale HOOD configuration', async () => {
+test('local ROBIN fee deployment verifies ROBIN and rejects stale HOOD configuration', async () => {
   process.env.HARDHAT_CONFIG = path.resolve('hardhat.native20.config.cjs');
   const [{default: hre}, {native20Fixture}, {verifyProductionToken}] = await Promise.all([
     import('hardhat'),
@@ -40,7 +40,7 @@ test('local canonical token deployment verifies ROBIN and rejects stale HOOD con
     import('../src/production-network.mjs'),
   ]);
   const fixture = await native20Fixture(hre, {
-    operatorIndex: 3, name: intent.name, symbol: intent.symbol, firstBuyWei: BigInt(intent.initialBuyWei),
+    operatorIndex: 3, name: intent.name, symbol: intent.symbol, firstBuyWei: BigInt(intent.initialBuyWei), feeProfile: 'robin-native30',
   });
   try {
     assert.equal(await fixture.token.name(), 'ROBINHOOK');

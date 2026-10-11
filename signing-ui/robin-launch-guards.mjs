@@ -58,7 +58,7 @@ export function validateLaunchPackage(pkg, manifest, expectedHash, ethers, now =
   'The current wallet transaction differs from the reviewed Atomic transaction.');
   const review = r.manualReview, admission = r.admission, preflight = r.preflight;
   assert(review?.state === 'approved' && review.chainId === '4663' && same(review.controller, pin.from)
-    && review.requiresRepack !== true && review.supersededBy === undefined,
+    && review.requiresRepack !== true && (review.supersededBy === undefined || review.supersededBy === null),
   'Platform review is not currently approved. No wallet action can open.');
   assert(admission?.planHash === manifest.planHash && admission.rawRequestSha256 === manifest.requestSha256
     && admission.manifestDigest === manifest.platformManifestDigest && admission.chainId === '4663'

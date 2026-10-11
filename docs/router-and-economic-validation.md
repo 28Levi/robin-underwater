@@ -1,5 +1,7 @@
 # Router and economic validation — 2026-09-13
 
+Historical evidence: fee assertions below describe the former 180/20-bps split. The current ROBIN proposal uses 170/30 bps; see [current launch preparation](current-launch-plan.md). These dated results are preserved, not evidence for the new bytecode.
+
 **User decision after review: retain the original loss-weighted rewards and accept the documented two-wallet farming risk. Capped fee refunds were rejected.** This does not mean the risk was fixed or that production deployment is ready. Local router compatibility passed, but testing reproduced profitable two-wallet reward farming and a separate eligibility-griefing issue. No reward rule, fee or token parameter was changed to hide these results. Nothing was deployed or broadcast on a live chain.
 
 ## Router results

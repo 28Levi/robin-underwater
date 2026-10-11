@@ -56,7 +56,17 @@ export function createPlanApi(key, { fetchImpl = fetch } = {}) {
     const raw = Buffer.concat(chunks).toString('utf8').replaceAll(key, '[redacted]');
     let data;
     try { data = JSON.parse(raw); } catch { throw Error(`Platform returned non-JSON (HTTP ${response.status})`); }
-    return { httpStatus: response.status, ok: response.ok, data };
+    const readHeader = name => {
+      const value = response.headers.get(name);
+      return typeof value === 'string' && value.length <= 2048 && !/[\r\n]/.test(value) ? value.replaceAll(key, '[redacted]') : null;
+    };
+    const retryAfter = readHeader('retry-after');
+    const validRetryAfter = retryAfter !== null && (/^\d+$/.test(retryAfter)
+      ? Number.isSafeInteger(Number(retryAfter))
+      : /^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4} \d{2}:\d{2}:\d{2} GMT$/.test(retryAfter) && Number.isFinite(Date.parse(retryAfter)));
+    let location = null;
+    try { const value = readHeader('location'); if (value !== null) location = safePlanPath(value); } catch { /* Untrusted destinations are not followed or persisted. */ }
+    return { httpStatus: response.status, ok: response.ok, data, headers: { retryAfter: validRetryAfter ? retryAfter : null, location } };
   };
 }
 
@@ -64,7 +74,8 @@ export function verifyCredential(credential, packed, { currentManifest = true } 
   if (credential?.schemaVersion !== 'programmable.custom-launch-credential.v1' || credential.chainId !== '4663' ||
       credential.controller?.toLowerCase() !== packed.plan.controller.address.toLowerCase() ||
       (currentManifest && credential.manifestDigest !== packed.plan.manifestDigest) ||
-      !['custom-launch:create', 'custom-launch:read'].every(scope => credential.scopes?.includes(scope))) throw Error('Credential does not authorize this controller, chain and manifest');
+      !['custom-launch:create', 'custom-launch:read'].every(scope => credential.scopes?.includes(scope)) ||
+      typeof credential.credentialId !== 'string' || !credential.credentialId.trim()) throw Error('Credential does not authorize this controller, chain and manifest');
   return credential.credentialId;
 }
 
@@ -78,7 +89,23 @@ export function verifyPlanResource(resource, packed) {
   return resource;
 }
 
-export async function runPlanOperation({ action, bytes, report, api, stateDirectory, now = Date.now() }) {
+function hasOnlyPendingAtomicPermit(data) {
+  if (data?.launchEligibility?.status !== 'analysis_pending' || !Array.isArray(data.findings) || data.findings.length !== 1) return false;
+  const finding = data.findings[0];
+  return finding?.code === 'PLAN_ADMISSION_PENDING' && finding.actual === 'atomic_permit_pending' &&
+    finding.blockingAxis === 'lifecycle' && finding.stage === 'execution' && finding.jsonPointer === '/executor' &&
+    finding.constraint?.required === 'source_bound_pre_execution_order_then_signed_call_simulation';
+}
+
+function requestWindowIsOpen(plan, now) {
+  const { validAfter, deadline } = plan.budgets ?? {};
+  if (!Number.isSafeInteger(now) || !/^\d+$/.test(validAfter ?? '') || !/^\d+$/.test(deadline ?? '')) return false;
+  const current = BigInt(Math.floor(now / 1000));
+  return BigInt(validAfter) <= current && current < BigInt(deadline);
+}
+
+export async function runPlanOperation({ action, bytes, report, api, stateDirectory, now = Date.now(), allowPendingAtomicReview = false }) {
+  if (typeof allowPendingAtomicReview !== 'boolean') throw Error('Pending Atomic review opt-in must be boolean');
   const packed = inspectPackedRequest(bytes, report), directory = path.resolve(stateDirectory);
   fs.mkdirSync(directory, { recursive: true });
   const release = acquireLock(path.join(directory, 'platform.lock'));
@@ -114,9 +141,18 @@ export async function runPlanOperation({ action, bytes, report, api, stateDirect
       return result;
     }
     const checked = fs.existsSync(preflightFile) ? JSON.parse(fs.readFileSync(preflightFile, 'utf8')) : null;
-    if (!recovering && (!checked?.ok || checked.rawRequestSha256 !== packed.hash || checked.credentialId !== credentialId ||
-        checked.data?.launchEligibility?.status !== 'ready' || checked.data.launchEligibility.hardBlockers?.length !== 0 ||
-        !Number.isFinite(Date.parse(checked.checkedAt)) || now - Date.parse(checked.checkedAt) < 0 || now - Date.parse(checked.checkedAt) > 600000)) throw Error('Fresh successful preflight for these exact bytes required');
+    if (!recovering) {
+      const age = now - Date.parse(checked?.checkedAt);
+      const exactEvidence = checked?.ok === true && Object.entries(identity).every(([key, value]) => checked[key] === value) &&
+        checked.data?.planHash === packed.planHash && checked.data.manifestDigest === packed.plan.manifestDigest &&
+        Array.isArray(checked.data.launchEligibility?.hardBlockers) && checked.data.launchEligibility.hardBlockers.length === 0 &&
+        Number.isFinite(age) && age >= 0;
+      const ready = checked?.data?.launchEligibility?.status === 'ready' && age <= 600000;
+      // Platform review precedes permit issuance. This explicit exception admits only that
+      // lifecycle finding; it does not relax wallet readiness or transaction simulation.
+      const pendingReview = allowPendingAtomicReview && hasOnlyPendingAtomicPermit(checked?.data) && requestWindowIsOpen(packed.plan, now);
+      if (!exactEvidence || !(ready || pendingReview)) throw Error('Fresh successful preflight for these exact bytes required, or explicit pending Atomic review with exact lifecycle-only evidence and an open request window');
+    }
     // Persist binding BEFORE the first network mutation. An ambiguous response retains the same identity.
     atomicWrite(journalFile, { ...existing, ...identity, createdAt: existing?.createdAt ?? new Date(now).toISOString(), state: 'submission-outcome-pending' });
     const result = await api(base + 'custom-launch-plans', { bytes, idempotencyKey: packed.idempotencyKey });

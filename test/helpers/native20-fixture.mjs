@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import {BrowserProvider,JsonRpcSigner,ContractFactory,Contract,ZeroAddress,MaxUint256,keccak256,getCreate2Address,toBeHex,AbiCoder} from 'ethers';
 export const E=10n**18n,MANAGER='0x8366a39CC670B4001A1121B8F6A443A643e40951',GRAPH='0x0B6b3F40f84Df25D3bd69238f937096177DD09Bd';
 export const artifact=name=>JSON.parse(fs.readFileSync(`artifacts/${name}.json`));
-export async function native20Fixture(hre,{operatorIndex=0,name='ROBINHOOD',symbol='ROBIN',firstBuyWei=E/10n}={}){
+export async function native20Fixture(hre,{operatorIndex=0,name='ROBINHOOD',symbol='ROBIN',firstBuyWei=E/10n,feeProfile='canonical-native20'}={}){
+ if(!['canonical-native20','robin-native30'].includes(feeProfile))throw Error('Unknown fixture fee profile');
+ const hookName=feeProfile==='robin-native30'?'RobinhookNativeFeeHookV1':'RobinhoodNativeFeeHookV1',projectFeeBps=feeProfile==='robin-native30'?170:180;
  await hre.network.provider.send('hardhat_reset');
  const provider=new BrowserProvider(hre.network.provider,undefined,{cacheTimeout:-1});provider.pollingInterval=10;
  const owner=await provider.getSigner(0),alice=await provider.getSigner(1),bob=await provider.getSigner(2),ownerAddress=await owner.getAddress();
@@ -14,13 +16,13 @@ export async function native20Fixture(hre,{operatorIndex=0,name='ROBINHOOD',symb
  const reward=await deploy('UnderwaterDistributor',[await keeper.getAddress()]),initializer=await deploy('RobinhoodNative20Initializer',[MANAGER,GRAPH]);
  const token=await deploy('RobinhoodNative20Token',[await initializer.getAddress(),name,symbol]),factory=await deploy('Create2Deployer');
  const config={token:await token.getAddress(),lpFee:0,tickSpacing:60,initialSqrtPriceX96:1747735933952748037356115466503453n,
-  initializer:await initializer.getAddress(),creatorFeeRecipient:await reward.getAddress(),creatorBuyFeeBps:180,creatorSellFeeBps:180,module:ZeroAddress,maxModuleLpFeePips:0};
- const code=(await new ContractFactory(artifact('RobinhoodNativeFeeHookV1').abi,artifact('RobinhoodNativeFeeHookV1').bytecode,owner).getDeployTransaction(MANAGER,config)).data;
+  initializer:await initializer.getAddress(),creatorFeeRecipient:await reward.getAddress(),creatorBuyFeeBps:projectFeeBps,creatorSellFeeBps:projectFeeBps,module:ZeroAddress,maxModuleLpFeePips:0};
+ const code=(await new ContractFactory(artifact(hookName).abi,artifact(hookName).bytecode,owner).getDeployTransaction(MANAGER,config)).data;
  const codeHash=keccak256(code),factoryAddress=await factory.getAddress();let salt,hookAddress;
  for(let i=0;i<1_000_000;i++){salt=toBeHex(i,32);hookAddress=getCreate2Address(factoryAddress,salt,codeHash);if((BigInt(hookAddress)&0x3fffn)===0x20ccn)break;}
  if((BigInt(hookAddress)&0x3fffn)!==0x20ccn)throw Error('Hook salt search exhausted');
  await(await factory.deploy(salt,code)).wait();
- const hook=new Contract(hookAddress,artifact('RobinhoodNativeFeeHookV1').abi,owner),feeVault=new Contract(await hook.feeVault(),artifact('RobinhoodNativeFeeVaultV1').abi,owner);
+ const hook=new Contract(hookAddress,artifact(hookName).abi,owner),feeVault=new Contract(await hook.feeVault(),artifact('RobinhoodNativeFeeVaultV1').abi,owner);
  const key={currency0:ZeroAddress,currency1:await token.getAddress(),fee:0,tickSpacing:60,hooks:hookAddress};
  const poolId=keccak256(AbiCoder.defaultAbiCoder().encode(['address','address','uint24','int24','address'],[ZeroAddress,key.currency1,0,60,hookAddress]));
  const swapper=await deploy('PoolSwapTest',[MANAGER]);

@@ -52,7 +52,7 @@ function showPackage() {
     ['Initial purchase', `${ethers.formatEther(t.valueWei)} ETH`],
     ['Minimum received', `${ethers.formatUnits(manifest.minimumTokensOut, 18)} ROBIN`],
     ['Total supply', '1,000,000,000 ROBIN'],
-    ['Contract buy / sell fees', '2% each: 1.8% for rewards + 0.2% platform. Trading-route fees require their separate quote.'],
+    ['Contract buy / sell fees', '2% each: 1.7% for rewards + 0.3% Programmable. Trading-route fees require their separate quote.'],
     ['Maximum launch gas', `${ethers.formatEther(manifest.maxLaunchGasWei)} ETH`],
     ['Wallet reserve preserved', `${ethers.formatEther(manifest.preserveLaunchBalanceWei)} ETH`],
     ['Authorization expires', new Date(t.expiresAt).toLocaleString()], ['Wallet nonce', t.nonce],

@@ -27,7 +27,7 @@ test('immutable manifest, exact request bytes and accepted plan are independent 
   const changed = copy(f.acceptedResource); changed.plan.publication.description = 'changed';
   assert.throws(() => verifyLaunchReviewInputs({...f, acceptedResource: changed, now: NOW}), /not the exact packed plan/);
   for (const change of [m => m.name = 'Moss Circuit', m => m.symbol = 'HOOD', m => m.transaction.valueWei = '100000000000000000',
-    m => m.maxLaunchGasWei = '800000000000001', m => m.fees.platformFeeBps = 30,
+    m => m.maxLaunchGasWei = '800000000000001', m => m.fees.platformFeeBps = 20,
     m => m.execution.maxTotalGasWei = '5000000000000001']) {
     const m = copy(f.manifest); change(m); assert.throws(() => launchManifestHash(m, f.ethers));
   }
@@ -54,6 +54,22 @@ test('changed platform identity, metadata, prediction, step, calldata or review 
   for (const change of changes) {
     const pkg = copy(f.pkg); change(pkg.resource);
     assert.throws(() => validateLaunchPackage(pkg, f.manifest, f.expectedHash, f.ethers, NOW));
+  }
+});
+
+test('absent or null replacement allows an approved review; any successor still blocks signing', () => {
+  const f = launchReviewFixture();
+  for (const absent of [undefined, null]) {
+    const pkg = copy(f.pkg);
+    if (absent === undefined) delete pkg.resource.manualReview.supersededBy;
+    else pkg.resource.manualReview.supersededBy = absent;
+    validateLaunchPackage(pkg, f.manifest, f.expectedHash, f.ethers, NOW);
+    pkg.resource.manualReview.state = 'pending';
+    assert.throws(() => validateLaunchPackage(pkg, f.manifest, f.expectedHash, f.ethers, NOW), /review is not currently approved/);
+  }
+  for (const successor of [{launchId: 'replacement-plan', reviewId: 'replacement-review'}, {}, '', false, 0]) {
+    const pkg = copy(f.pkg); pkg.resource.manualReview.supersededBy = successor;
+    assert.throws(() => validateLaunchPackage(pkg, f.manifest, f.expectedHash, f.ethers, NOW), /review is not currently approved/);
   }
 });
 

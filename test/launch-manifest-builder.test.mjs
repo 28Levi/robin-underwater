@@ -67,6 +67,7 @@ test('fixture-only accepted plan becomes a deterministic manual review candidate
   assert.equal(a.manifest.symbol, 'ROBIN'); assert.equal(a.manifest.transaction.nonce, '7');
   assert.equal(a.manifest.components.token.address, built.report.addresses.token);
   assert.equal(a.manifest.minimumTokensOut, intent.minimumTokensOut);
+  assert.deepEqual(a.manifest.fees, {projectBuyFeeBps: 170, projectSellFeeBps: 170, platformFeeBps: 30, lpFeePips: 0});
   for (const key of ['automationAuthorized', 'walletSigning', 'transactionBroadcast', 'platformIssuanceCreated']) assert.equal(a.report[key], false);
   const automatic = buildLaunchHandoff({...fixture(), activationMode: 'after-reviewed-launch'});
   assert.equal(automatic.manifest.activation.mode, 'after-reviewed-launch');
@@ -86,6 +87,15 @@ test('candidate rejects binding changes, non-ready admission, stale evidence, re
   for (const mutate of mutations) { const x = fixture(); mutate(x); assert.throws(() => buildLaunchHandoff(x)); }
 });
 
+test('a stale 1.8% / 0.2% preparation or fee intent cannot produce a current handoff', () => {
+  for (const field of ['preparation', 'intent']) {
+    const x = fixture();
+    if (field === 'preparation') x.preparation.hookFees = {projectBuyBps: 180, projectSellBps: 180, platformBps: 20, lpFeePips: 0};
+    else Object.assign(x.intent, {projectBuyFeeBps: 180, projectSellFeeBps: 180, platformFeeBps: 20});
+    assert.throws(() => buildLaunchHandoff(x), /fees|fee budget|intent required/);
+  }
+});
+
 test('exact Atomic envelope rejects changed project destination and absent issuer signature', () => {
   for (const mutate of [args => args[1][0][0] = MANAGER, args => args[4] = '0x']) {
     const x = fixture(), args = atomic.decodeFunctionData('executeAndStampV2', x.accepted.steps[0].transaction.data).toArray(true);
@@ -94,6 +104,14 @@ test('exact Atomic envelope rejects changed project destination and absent issue
   }
   const x = fixture(); x.accepted.steps[0].transaction.gasLimit = x.preparation.graphGasLimit;
   assert.throws(() => inspectAtomicLaunchEnvelope(x.accepted, x.accepted.plan, x.preparation, x.intent), /project call/);
+});
+
+test('the canonical 20 bps source label cannot be used as the new custom fee hook', () => {
+  const x = fixture(), hook = x.accepted.plan.verificationBundle.components.find(c => c.targetId === 'hook');
+  hook.contractName = 'RobinhoodNativeFeeHookV1';
+  hook.compilationUnitId = 'kernel';
+  hook.sourcePath = 'src/robinhood-fee-v1/RobinhoodNativeFeeHookV1.sol';
+  assert.throws(() => inspectAtomicLaunchEnvelope(x.accepted, x.accepted.plan, x.preparation, x.intent), /custom hook source binding/);
 });
 
 test('chain collector uses only reads and the complete admitted call without state overrides', async () => {

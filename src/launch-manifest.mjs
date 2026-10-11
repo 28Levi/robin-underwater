@@ -53,8 +53,8 @@ export function validateLaunchManifest(m) {
   const d = m.distributorDeployment;
   if (!keys(d, ['blockNumber', 'blockHash', 'transactionHash']) || !integer(d.blockNumber) || d.blockNumber > m.watchFrom.blockNumber
     || !HASH.test(d.blockHash) || !HASH.test(d.transactionHash)) throw Error('Invalid distributor deployment proof');
-  if (!keys(m.fees, ['projectBuyFeeBps', 'projectSellFeeBps', 'platformFeeBps', 'lpFeePips']) || m.fees.projectBuyFeeBps !== 180
-    || m.fees.projectSellFeeBps !== 180 || m.fees.platformFeeBps !== 20 || m.fees.lpFeePips !== 0) throw Error('Launch fees changed');
+  if (!keys(m.fees, ['projectBuyFeeBps', 'projectSellFeeBps', 'platformFeeBps', 'lpFeePips']) || m.fees.projectBuyFeeBps !== 170
+    || m.fees.projectSellFeeBps !== 170 || m.fees.platformFeeBps !== 30 || m.fees.lpFeePips !== 0) throw Error('Launch fees changed');
   const a = m.accounting;
   if (!keys(a, ['minimumAgeSeconds', 'twapWindowSeconds', 'maxOracleAgeSeconds', 'maxSnapshotAgeSeconds', 'maxFinalityLagSeconds', 'batchSize', 'excludedAddresses'])
     || a.minimumAgeSeconds !== 3600 || a.twapWindowSeconds !== 1800 || a.maxOracleAgeSeconds !== 300

@@ -27,7 +27,7 @@ Open the printed loopback URL in the browser containing the launch wallet. Conne
 
 The manual activation mode is the default: launching does not enable automatic payouts. `after-reviewed-launch` requires the standard exact launch review to include the displayed automatic-payout policy and gas limits, producing a manifest-bound consent record. The user has directed that the current reward rules remain in place; the accepted-policy flag records that choice without asking for another separate risk approval. A manifest flag or old approval note alone does not authorize the signer. The configured watcher/host still must receive and validate the exact consent and pass every activation gate.
 
-Contract fees are 180 bps for rewards plus 20 bps for the platform. The current open-provenance routed-trading policy may add a route fee unless its existing-pool waiver is actually verified. The review page does not claim a verified aggregate trading fee. Related-wallet loss farming and out-and-back holding-delay limitations remain documented properties of the unchanged policy; the user has chosen to proceed with those rules.
+Contract fees are 170 bps for rewards plus 30 bps for the platform. The current open-provenance routed-trading policy may add a route fee unless its existing-pool waiver is actually verified. The review page does not claim a verified aggregate trading fee. Related-wallet loss farming and out-and-back holding-delay limitations remain documented properties of the unchanged policy; the user has chosen to proceed with those rules.
 
 ## Submission, proof and recovery
 

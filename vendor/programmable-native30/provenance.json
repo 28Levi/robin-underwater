@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "robin.native30-runtime-recipe-provenance.v1",
+  "repository": "https://github.com/programmablehq/PROGRAMMABLE",
+  "commit": "1ecc3bad8b3a147ea00ae86aa0c47990def1f313",
+  "path": "lib/custom-launch/immutable-pool-fee-recipes-custom-launch-plan-v2.ts",
+  "url": "https://raw.githubusercontent.com/programmablehq/PROGRAMMABLE/1ecc3bad8b3a147ea00ae86aa0c47990def1f313/lib/custom-launch/immutable-pool-fee-recipes-custom-launch-plan-v2.ts",
+  "gitBlobSha": "5146d09228730b3e143dc065359514d29509f9e0",
+  "sha256": "71c1a1f78656e7b50ce74fc15de2762bec727a580582b061b250d62d5e3eec20",
+  "sourceArtifactHash": "sha256:402e473c66ff65813e61f7fdf370600b3552e9499b54c4d19b7e592632495841",
+  "scope": "Exact published runtime property recipe. ROBIN source remains a disclosed local derivation; this is not a downloaded official Native30 source bundle, deployed-chain observation, or platform waiver confirmation."
+}

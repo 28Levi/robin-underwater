@@ -46,6 +46,7 @@ export function productionConfigFromLaunch(manifest, proof, {broadcastEnabled = 
     throw Error('A verified exact launch proof is required');
   const component = name => address(m.components[name].address);
   const config = {name: m.name, symbol: m.symbol, chainId: m.chainId, rpcUrlEnvironment: 'ROBIN_RPC_URL',
+    // This selects the compatible receipt ABI; exact runtime and 170/30 fees are checked separately.
     token: component('token'), hook: component('hook'), initializer: component('initializer'), hookFlavor: 'native20',
     distributor: component('distributor'), poolManager: address(POOL_MANAGER),
     poolId: ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address', 'address', 'uint24', 'int24', 'address'],

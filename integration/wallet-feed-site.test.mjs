@@ -63,7 +63,7 @@ class MemoryR2 {
 
 test('local finalized rewards cross exporter, authenticated Worker, R2 and browser view', async t => {
   for (const source of testedSources) t.diagnostic(JSON.stringify(source));
-  const f = await native20Fixture(hre, {operatorIndex: 3, name: 'ROBINHOOK', symbol: 'ROBIN', firstBuyWei: E / 100n});
+  const f = await native20Fixture(hre, {operatorIndex: 3, name: 'ROBINHOOK', symbol: 'ROBIN', firstBuyWei: E / 100n, feeProfile: 'robin-native30'});
   try {
     const {provider, alice, bob, keeper, token, reward, feeVault, swap, c} = f;
     const aliceAddress = (await alice.getAddress()).toLowerCase();
