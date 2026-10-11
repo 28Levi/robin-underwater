@@ -26,6 +26,15 @@ export function verifyLaunchReviewInputs({manifest, expectedHash, requestBytes, 
   return request;
 }
 
+/** Stored evidence pins identity; only a fresh authenticated read establishes
+ * current admission on server restart. Proof-only recovery never calls this. */
+export async function refreshLaunchReviewInputs({readCurrentResource, ...inputs}) {
+  verifyLaunchProofInputs(inputs);
+  const current = await readCurrentResource();
+  verifyLaunchReviewInputs({...inputs, acceptedResource: current});
+  return current;
+}
+
 /** Read only the exact owned plan. The credential never reaches the browser or a redirect. */
 export function createPlatformPlanReader({planId, resumeUrl, credential, fetchImpl = fetch}) {
   const base = 'https://api.programmable.market';
@@ -62,13 +71,28 @@ async function readLimited(stream, limit) {
 
 /** The only mutation is a local, manifest-bound consent file after the user's explicit review click. */
 export function createLaunchReviewServer({manifest, expectedHash, requestBytes, acceptedResource, readCurrentResource,
-  writeConsent, submitProof, assets, ethers, now = () => Date.now(), port = 8792, sessionToken = randomBytes(32).toString('hex')}) {
+  writeConsent, readRecordedConsent, readHostReadiness, submitProof, assets, ethers, now = () => Date.now(), port = 8792, sessionToken = randomBytes(32).toString('hex')}) {
   if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) throw Error('Invalid local review port.');
   const request = verifyLaunchReviewInputs({manifest, expectedHash, requestBytes, acceptedResource, ethers, now: now()});
   // Clone inputs so external callers cannot mutate an approved manifest during a request.
   manifest = JSON.parse(canonicalLaunchJson(manifest));
   const origin = `http://127.0.0.1:${port}`;
-  let loading = false;
+  let loading = false, recordedConsent = null;
+  async function reviewReadiness() {
+    let validatedReview = false;
+    try {
+      const consent = readRecordedConsent ? await readRecordedConsent() : recordedConsent;
+      if (!consent) return {reviewRecorded: false, hostReady: false};
+      validateLaunchConsent(consent, manifest, ethers);
+      validatedReview = true;
+      if (manifest.activation.mode === 'manual') return {reviewRecorded: true, hostReady: true, expiresAt: manifest.transaction.expiresAt};
+      const host = readHostReadiness ? await readHostReadiness() : null;
+      if (host?.ready !== true || host.manifestSha256 !== expectedHash || !Number.isFinite(Date.parse(host.expiresAt)) || Date.parse(host.expiresAt) <= now()) {
+        return {reviewRecorded: true, hostReady: false};
+      }
+      return {reviewRecorded: true, hostReady: true, expiresAt: host.expiresAt};
+    } catch { return {reviewRecorded: validatedReview, hostReady: false}; }
+  }
   async function freshPackage() {
     const resource = await readCurrentResource();
     if (canonicalLaunchJson(resource.plan) !== canonicalLaunchJson(request)) throw Error('Current platform plan changed.');
@@ -85,7 +109,7 @@ export function createLaunchReviewServer({manifest, expectedHash, requestBytes, 
       || (req.headers['sec-fetch-site'] && !['same-origin', 'none'].includes(req.headers['sec-fetch-site']))) {
       send(403, {error: 'Forbidden'}); return;
     }
-    if (req.method === 'POST' && ['/review', '/launch-proof'].includes(req.url)) {
+    if (req.method === 'POST' && ['/review', '/signing-ready', '/launch-proof'].includes(req.url)) {
       if (req.headers.origin !== origin || req.headers['sec-fetch-site'] !== 'same-origin'
         || !fixedEqual(req.headers['x-robin-review-token'], sessionToken)
         || req.headers['content-type'] !== 'application/json' || req.headers['content-encoding']) {
@@ -95,6 +119,15 @@ export function createLaunchReviewServer({manifest, expectedHash, requestBytes, 
       loading = true;
       try {
         const body = JSON.parse((await readLimited(req, 2048)).toString('utf8'));
+        if (req.url === '/signing-ready') {
+          if (canonicalLaunchJson(Object.keys(body)) !== canonicalLaunchJson(['manifestSha256']) || body.manifestSha256 !== expectedHash) {
+            throw Error('Exact signing readiness binding required.');
+          }
+          await freshPackage();
+          const readiness = await reviewReadiness();
+          if (!readiness.reviewRecorded || !readiness.hostReady) throw Error('Rewards host is not ready.');
+          send(200, {status: 'signing-ready', manifestSha256: expectedHash, expiresAt: readiness.expiresAt}); return;
+        }
         if (req.url === '/launch-proof') {
           if (!submitProof || canonicalLaunchJson(Object.keys(body).sort()) !== canonicalLaunchJson(['manifestSha256', 'transactionHash'])
             || body.manifestSha256 !== expectedHash || typeof body.transactionHash !== 'string' || !/^0x[0-9a-f]{64}$/.test(body.transactionHash)) {
@@ -112,10 +145,12 @@ export function createLaunchReviewServer({manifest, expectedHash, requestBytes, 
           account: manifest.transaction.from, nonce: manifest.transaction.nonce, reviewedAt: Math.floor(now() / 1000),
           automationAccepted: body.automationAccepted, economicRiskAccepted: body.economicRiskAccepted, execution: manifest.execution};
         validateLaunchConsent(consent, manifest, ethers);
-        await writeConsent(consent);
+        const preserved = await writeConsent(consent);
+        recordedConsent = validateLaunchConsent(preserved ?? consent, manifest, ethers);
         send(200, {status: 'review-recorded', manifestSha256: expectedHash});
       } catch { send(503, {error: req.url === '/launch-proof'
         ? 'Platform proof is pending or unavailable. Preserve the original transaction hash and retry only its proof; never launch again.'
+        : req.url === '/signing-ready' ? 'Rewards host is not ready for this exact review. No wallet action opened.'
         : 'Review was not recorded. Refresh the exact platform handoff before opening your wallet.'}); }
       finally { loading = false; }
       return;
@@ -123,6 +158,9 @@ export function createLaunchReviewServer({manifest, expectedHash, requestBytes, 
     if (req.method !== 'GET') { send(403, {error: 'Forbidden'}); return; }
     if (req.url === '/session.json') {
       send(200, {manifest, manifestSha256: expectedHash, reviewToken: sessionToken, publication: acceptedResource.plan.publication}); return;
+    }
+    if (req.url === '/readiness.json') {
+      send(200, {...await reviewReadiness(), manifestSha256: expectedHash}); return;
     }
     if (req.url === '/package.json') {
       if (loading) { send(429, {error: 'Validation is already in progress.'}); return; }

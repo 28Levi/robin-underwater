@@ -8,6 +8,7 @@ import {executionBinding,readJournal,writeJournal} from './execution-journal.mjs
 import {createRound,nextRoundBatch} from './reward-round.mjs';
 import {verifyProductionNetwork,verifyProductionToken} from './production-network.mjs';
 import {verifyCandidateState} from './candidate-state.mjs';
+import {payoutSchedulePolicy,openPayoutCycle,completeScheduledHarvest,bindScheduledRound,finishPayoutCycle} from './payout-schedule.mjs';
 
 const rewardAbi=['function operator() view returns(address)','function available() view returns(uint256)',
  'function pending(address) view returns(uint256)','function pay(address)',
@@ -15,6 +16,40 @@ const rewardAbi=['function operator() view returns(address)','function available
 const feeAbi=['function creatorRecipient() view returns(address)','function creatorAccrued() view returns(uint256)','function claimCreator()'];
 const rewards=new Interface(rewardAbi),fees=new Interface(feeAbi);
 const amount=(x,name)=>{if(typeof x!=='string'||! /^[1-9][0-9]*$/.test(x))throw Error(`Missing positive execution ${name}`);return BigInt(x);};
+class GasBudgetError extends Error {
+ constructor(scope,maxFeePerGas){
+  const details={transaction:['PER_TRANSACTION_GAS_CAP','per-transaction cap'],cumulative:['CUMULATIVE_GAS_CAP','cumulative cap'],
+   batch:['PAYOUT_GAS_MINIMUM_CONFLICT','no payout slice fits both the per-transaction cap and minimum batch value']}[scope];
+  super(`Execution gas budget exceeded: ${details[1]}`);
+  this.code=details[0];this.maxFeePerGas=maxFeePerGas;
+ }
+}
+const bufferedGas=units=>(units*120n+99n)/100n;
+function payoutCandidate(c,prepared,batch){
+ return {kind:'payout',to:c.distributor,deadline:prepared.expiresAt,headHash:prepared.checkedHead.hash,headNumber:prepared.checkedHead.number,roundEnd:batch.end,
+  data:rewards.encodeFunctionData('distributeEligible',[batch.batchId,batch.auditHash,c.token,prepared.expiresAt,
+   batch.entries.map(a=>a.account),batch.entries.map(a=>a.amount),batch.entries.map(a=>a.balance)])};
+}
+
+/** Reduce only the contiguous slice, never the round's original entitlements.
+ * Quotes do not sign or reserve gas. submit() repeats state, fee, total-budget and
+ * balance checks for the selected slice immediately before signing.
+ */
+async function smallerPayoutBatch(provider,c,e,operator,round,prepared,ledger,snapshot,batch,maxFeePerGas){
+ let low=1,high=batch.end-round.nextIndex-1,best=null;
+ while(low<=high){
+  const size=Math.floor((low+high)/2);
+  const candidateBatch=await nextRoundBatch(provider,{...c,batchSize:size},round,prepared,ledger,snapshot);
+  if(candidateBatch.total<BigInt(e.minimumBatchWei)){low=size+1;continue;}
+  const candidate=payoutCandidate(c,prepared,candidateBatch);
+  const units=await provider.estimateGas({from:operator,to:candidate.to,data:candidate.data,value:0n});
+  if(units<=0n)throw Error('Execution gas estimate unavailable');
+  if(bufferedGas(units)*maxFeePerGas<=BigInt(e.maxGasPerTransactionWei)){best=candidateBatch;low=size+1;}
+  else high=size-1;
+ }
+ if(!best)throw new GasBudgetError('batch',maxFeePerGas);
+ return best;
+}
 
 export function executionPolicy(c){
  const e=c.execution;if(!e||!['local-only','production'].includes(e.mode))throw Error('Choose local EVM or production execution mode');
@@ -26,6 +61,7 @@ export function executionPolicy(c){
  if(!Number.isSafeInteger(c.batchSize)||c.batchSize<1||c.batchSize>100)throw Error('Invalid execution batch size');
  for(const n of ['maxGasPerTransactionWei','maxTotalGasWei','minimumHarvestWei','minimumBatchWei'])amount(e[n],n);
  if(!Number.isSafeInteger(e.retryIntervalSeconds)||e.retryIntervalSeconds<1)throw Error('Invalid retry interval');
+ payoutSchedulePolicy(c);
  for(const n of ['token','hook','distributor','feeVault'])if(!/^0x[0-9a-f]{64}$/.test(e.codeHashes?.[n]??''))throw Error('Missing pinned runtime hash');
  address(e.feeVault);return e;
 }
@@ -68,7 +104,12 @@ async function recover(provider,state,file,now){
    state.round.nextIndex=p.roundEnd;
    if(state.round.nextIndex>=state.round.allocations.length)state.round=null;
   }
-  state.pending=null;writeJournal(file,state);
+  state.pending=null;
+  if(!state.fault&&state.schedule){
+   if(p.kind==='harvest')completeScheduledHarvest(state);
+   else if(p.kind==='payout'&&!state.round)finishPayoutCycle(state,(await provider.getBlock('latest')).timestamp);
+  }
+  writeJournal(file,state);
   return {state:state.fault?'blocked':'confirmed',kind:p.kind,hash:p.hash,reason:state.fault};
  }
  const nonce=await provider.getTransactionCount(Transaction.from(p.raw).from,'latest');
@@ -89,9 +130,9 @@ async function submit(provider,signer,c,e,state,file,candidate){
  const [units,feeData]=await Promise.all([provider.estimateGas(request),provider.getFeeData()]);
  if(units<=0n)throw Error('Execution gas estimate unavailable');
  if(!feeData.maxFeePerGas||feeData.maxPriorityFeePerGas===null)throw Error('EIP-1559 fee data unavailable');
- const gasLimit=(units*120n+99n)/100n,reservation=gasLimit*feeData.maxFeePerGas;
- if(reservation>BigInt(e.maxGasPerTransactionWei)||BigInt(state.reservedGasWei)+reservation>BigInt(e.maxTotalGasWei))
-  throw Error('Execution gas budget exceeded');
+ const gasLimit=bufferedGas(units),reservation=gasLimit*feeData.maxFeePerGas;
+ if(reservation>BigInt(e.maxGasPerTransactionWei))throw new GasBudgetError('transaction',feeData.maxFeePerGas);
+ if(BigInt(state.reservedGasWei)+reservation>BigInt(e.maxTotalGasWei))throw new GasBudgetError('cumulative',feeData.maxFeePerGas);
  if(candidate.kind==='retry'&&BigInt(state.retryGasWei)+reservation>BigInt(e.maxTotalGasWei)/10n)
   return {state:'idle',reason:'Automatic retry gas allowance exhausted; recipient can call pay directly'};
  if(await provider.getBalance(from)<reservation)throw Error('Operator lacks gas funding');
@@ -132,33 +173,56 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
     throw Error('Finalized execution history changed; reconciliation required');}
   const now=(await provider.getBlock('latest')).timestamp;
   const recovered=await recover(provider,state,file,now);if(recovered)return recovered;
+  const schedulePolicy=payoutSchedulePolicy(c);
+  if(schedulePolicy){
+   const before=JSON.stringify(state.schedule);
+   openPayoutCycle(state,schedulePolicy,now);
+   if(JSON.stringify(state.schedule)!==before)writeJournal(file,state);
+   if(state.schedule.active?.phase==='harvest'){
+    const head=await provider.getBlock('latest');
+    if(await feeVault.creatorAccrued({blockTag:head.number})>=BigInt(e.minimumHarvestWei))
+     return await submit(provider,signer,c,e,state,file,{kind:'harvest',to:e.feeVault,data:fees.encodeFunctionData('claimCreator'),deadline:null,headHash:head.hash,headNumber:head.number});
+    completeScheduledHarvest(state);writeJournal(file,state);
+   }
+  }
   const snapshotFile=path.join(dir,'snapshot.json');
   const snapshot=await buildSnapshot(provider,c,readSnapshot(snapshotFile,c));writeSnapshot(snapshotFile,c,snapshot);
-  const prepared=await preparePlan(provider,c,snapshot),ledger=LossLedger.restore(snapshot.ledger);
-  if(!state.round&&BigInt(prepared.plan.allocated)>=BigInt(e.minimumBatchWei)){
+  const allocationDue=!schedulePolicy||state.schedule.active?.phase==='allocation';
+  const prepared=allocationDue?await preparePlan(provider,c,snapshot):null,ledger=LossLedger.restore(snapshot.ledger);
+  if(allocationDue&&!state.round&&BigInt(prepared.plan.allocated)>=BigInt(e.minimumBatchWei)){
    state.round=createRound(prepared);
+   bindScheduledRound(state);
    atomicWrite(path.join(dir,'recovery-reports',`${state.round.id.slice(2)}.json`),prepared.plan);
    writeJournal(file,state);
   }
   while(state.round){
-   const batch=await nextRoundBatch(provider,c,state.round,prepared,ledger,snapshot);
-   if(batch.total>=BigInt(e.minimumBatchWei)){
-    const candidate={kind:'payout',to:c.distributor,deadline:prepared.expiresAt,headHash:prepared.checkedHead.hash,headNumber:prepared.checkedHead.number,roundEnd:batch.end,
-     data:rewards.encodeFunctionData('distributeEligible',[batch.batchId,batch.auditHash,c.token,prepared.expiresAt,
-      batch.entries.map(a=>a.account),batch.entries.map(a=>a.amount),batch.entries.map(a=>a.balance)])};
+   let batch=await nextRoundBatch(provider,c,state.round,prepared,ledger,snapshot),deferred=false;
+   while(batch.total>=BigInt(e.minimumBatchWei)){
+    const candidate=payoutCandidate(c,prepared,batch);
     atomicWrite(path.join(dir,'plans',`${batch.batchId.slice(2)}.json`),{...batch.audit,auditHash:batch.auditHash,guardedTransaction:candidate});
     try{return await submit(provider,signer,c,e,state,file,candidate);}
     catch(error){
+     if(error.code==='PER_TRANSACTION_GAS_CAP'&&batch.end-state.round.nextIndex>1){
+      batch=await smallerPayoutBatch(provider,c,e,operator,state.round,prepared,ledger,snapshot,batch,error.maxFeePerGas);
+      continue;
+     }
      if(!/^Head changed during (preparation|estimation); rebuild next cycle$/.test(error.message))throw error;
-     break; // Leave the round intact, but permit independent harvest/retry work.
+     deferred=true;break;
     }
    }
+   if(deferred)break; // Leave the round intact, but permit independent harvest/retry work.
    state.round.nextIndex=batch.end;
-   if(batch.end>=state.round.allocations.length)state.round=null;
+   if(batch.end>=state.round.allocations.length){
+    state.round=null;
+    if(schedulePolicy)finishPayoutCycle(state,(await provider.getBlock('latest')).timestamp);
+   }
    writeJournal(file,state);
   }
+  if(schedulePolicy&&state.schedule.active?.phase==='allocation'&&!state.round){
+   finishPayoutCycle(state,(await provider.getBlock('latest')).timestamp);writeJournal(file,state);
+  }
   const head=await provider.getBlock('latest');
-  if(await feeVault.creatorAccrued({blockTag:head.number})>=BigInt(e.minimumHarvestWei))
+  if(!schedulePolicy&&await feeVault.creatorAccrued({blockTag:head.number})>=BigInt(e.minimumHarvestWei))
    return await submit(provider,signer,c,e,state,file,{kind:'harvest',to:e.feeVault,data:fees.encodeFunctionData('claimCreator'),deadline:null,headHash:head.hash,headNumber:head.number});
   for(const account of snapshot.pendingRecipients){
    if((state.retryAttempts[account]??0)>=3)continue;
@@ -166,6 +230,7 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
    if(await vault.pending(account,{blockTag:head.number})>0n)
     return await submit(provider,signer,c,e,state,file,{kind:'retry',recipient:account,to:c.distributor,data:rewards.encodeFunctionData('pay',[account]),deadline:null,headHash:head.hash,headNumber:head.number});
   }
-  return {state:'idle',reason:'No eligible funded batch, harvest or due payment retry'};
+  return {state:'idle',reason:schedulePolicy&&!state.schedule.active?'Waiting for next scheduled payout interval or due payment retry':'No eligible funded batch, harvest or due payment retry',
+   ...(schedulePolicy?{nextPayoutAt:state.schedule.nextDueAt,payoutCycle:state.schedule.active?.phase??null}:{})};
  }finally{release();}
 }

@@ -2,7 +2,7 @@
 
 The full regression suite passes **87 tests**. A separate-process rehearsal exercises the canonical Native20 token, real Uniswap v4 PoolManager implementation, fixed fee hook, fee vault, distributor and the actual executor command on a disposable local chain. It uses only Hardhat's public test accounts and spends no real ETH.
 
-Run `node scripts/rehearse-local.mjs` after compiling the contracts. The runner starts a loopback Hardhat node, executes buys and sells, moves tokens between holders, advances the local clock through the real one-hour maturity rule, and launches a new executor process for each cycle. Each process reads the same durable journal. Reports are written to `output/local-rehearsal.json`; each run's config, journal and plans remain under `output/rehearsal/`.
+Run `node scripts/rehearse-local.mjs` after compiling the contracts. The runner starts a loopback Hardhat node, executes buys and sells, moves tokens between holders, advances a disposable clock through five-minute maturity and 15-minute payout rounds, and launches a new executor process for each cycle. Each process reads the same durable journal. The local clock simulation does not alter production timing or finality guards. Reports and each run's config, journal and plans remain under `output/rehearsal/`.
 
 The scenario checks fee separation, conserved cost basis, loss-proportional funded rewards, exclusion of the profitable initial holder, restart idempotence and proportional transfer of already-credited relief. Existing integration tests also cover failed ETH receivers, lost RPC responses before and after mining, finality waits, batch continuation, changed recipient balances and gas-budget limits.
 

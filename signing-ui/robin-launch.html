@@ -9,11 +9,14 @@
 <section><h2>Launch details</h2><dl id="details"></dl></section>
 <section><h2>Project identity</h2><p id="description"></p><div id="links"></div><p class="muted">The platform stamp records provenance. It does not certify contract safety or token economics.</p></section>
 <section><h2>What happens after launch</h2><p id="automation-notice"></p><dl id="automation-details"></dl></section>
-<section><h2>Exact review</h2><p class="muted">Manifest checksum</p><p id="manifest-hash" class="hash"></p><p class="muted">Reviewed source revision</p><p id="source-revision" class="hash"></p></section>
-<div class="controls"><select id="wallet" aria-label="Wallet app"><option>Detecting wallet apps…</option></select><button id="connect" disabled>Connect wallet &amp; check</button></div>
+<section><h2>Exact review</h2><p class="muted">Manifest checksum</p><p id="manifest-hash" class="hash"></p><p class="muted">Contract source revision</p><p id="source-revision" class="hash"></p><p class="muted">Rewards worker source revision</p><p id="worker-source-revision" class="hash"></p></section>
+<div class="controls"><select id="wallet" aria-label="Wallet app"><option>Detecting wallet apps…</option></select><button id="connect" disabled>Connect wallet &amp; check</button><button id="cancel-connect" hidden>Cancel connection wait</button></div>
+<p class="muted">If the wallet prompt does not open in Codex, open this same page in your normal browser where Rabby or your other wallet is installed.</p>
 <p>Fresh maximum gas cost: <strong id="quote">Connect to calculate</strong></p>
 <label><input type="checkbox" id="review" disabled><span id="review-label">I reviewed the token, addresses, purchase and gas ceiling above.</span></label>
-<button id="launch" class="primary" disabled>Review launch in wallet</button>
+<button id="record-review" class="primary" disabled>Confirm launch review</button>
+<button id="launch" class="primary" disabled>Open launch in wallet</button>
+<p id="host-status" role="status" aria-live="polite">Confirm your review first. Your wallet opens only after the rewards host is ready.</p>
 <button id="retry-proof" hidden>Retry platform receipt only</button>
 <p><a id="platform-history" hidden target="_blank" rel="noopener noreferrer">View this exact launch on Programmable</a></p>
 <p class="muted">Check your wallet's transaction value and maximum gas before approving. An uncertain or pending submission must be reconciled before another attempt. This page never asks for a private key.</p>

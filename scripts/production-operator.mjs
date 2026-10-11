@@ -2,6 +2,7 @@ import fs from 'node:fs';import path from 'node:path';
 import {JsonRpcProvider,Wallet} from 'ethers';import {setTimeout as delay} from 'node:timers/promises';
 import {loadConfig} from '../src/config.mjs';import {executionPolicy,verifyExecution,executeCycle} from '../src/executor.mjs';
 import {atomicWrite} from '../src/store.mjs';
+import {operatorFailureStatus} from '../src/operator-status.mjs';
 
 const c=loadConfig(process.argv[2]),check=process.argv.includes('--check'),send=process.argv.includes('--send');
 if(check===send||c.execution?.mode!=='production')throw Error('Use a production config and exactly one of --check or --send');
@@ -23,9 +24,7 @@ try{
   do{
    let status;
    try{status=await executeCycle(provider,signer,c,dir);}catch(error){
-    const deferred=['Head changed during preparation; rebuild next cycle','Head changed during estimation; rebuild next cycle'].includes(error.message);
-    const waiting=['Missing window history','Deployment is not finalized','Wait for previous reward allocations to finalize before another plan'].includes(error.message);
-    status=deferred||waiting?{state:'waiting',reason:'Waiting for stable finalized history'}:{state:'blocked',reason:'Operator stopped; reconcile deployment, RPC, funding and durable journal before restart'};
+    status=operatorFailureStatus(error);
    }
    atomicWrite(path.join(dir,'status.json'),{...status,checkedAt:new Date().toISOString()});console.log(JSON.stringify(status));
    if(status.state==='blocked'){process.exitCode=2;break;}

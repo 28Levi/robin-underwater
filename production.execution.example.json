@@ -8,5 +8,6 @@
   "maxTotalGasWei":null,
   "minimumHarvestWei":null,
   "minimumBatchWei":null,
-  "retryIntervalSeconds":3600
+  "retryIntervalSeconds":3600,
+  "payoutIntervalSeconds":900
 }

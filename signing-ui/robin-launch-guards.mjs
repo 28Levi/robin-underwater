@@ -9,6 +9,65 @@ const hex = n => `0x${BigInt(n).toString(16)}`;
 const digest = (value, ethers) => ethers.keccak256(ethers.toUtf8Bytes(canonicalLaunchJson(value)));
 const seconds = value => Number(BigInt(value));
 const assert = (condition, message) => { if (!condition) throw Error(message); };
+const framedSha = (domain, value, ethers) => `sha256:${ethers.sha256(ethers.concat([
+  ethers.toUtf8Bytes(domain + '\0'), ethers.toUtf8Bytes(canonicalLaunchJson(value)),
+])).slice(2)}`;
+const ATOMIC_ABI = ['function executeAndStampV2((uint256 chainId,address executor,bytes32 executorRuntimeCodeHash,address controller,bytes32 controllerRuntimeCodeHash,bytes32 launchId,bytes32 planHash,bytes32 manifestDigest,bytes32 callsHash,uint256 totalValue,bytes32 componentsHash,bytes32 marketsHash,bytes32 effectsHash,bytes32 feeObligationsHash,bytes32 nonce,uint64 validAfter,uint64 deadline) order,(address target,bytes32 targetRuntimeCodeHash,uint256 value,uint256 gasLimit,bytes data)[] calls,(bytes32 componentId,address account,bytes32 runtimeCodeHash)[] components,(bytes32 marketId,address poolManager,address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks)[] markets,bytes platformSignature) payable returns(bytes32 stampHash)'];
+
+/** The published V1.2 resource explicitly permits preflight:null. In that case,
+ * require the issued evidence for this exact signed Atomic transaction instead. */
+export function validateAdmittedAtomicEvidence(r, manifest, ethers) {
+  const e = r.admissionEvidence, a = r.admission, p = r.plan, pin = manifest.transaction;
+  const wa = r.walletAuthorization, prep = wa?.atomicPreparation, order = wa?.executionOrder;
+  assert(e?.schemaVersion === 'programmable.custom-launch-plan-evidence.v1'
+    && a?.schemaVersion === 'programmable.custom-launch-plan-admission.v1'
+    && e.planHash === manifest.planHash && e.manifestDigest === manifest.platformManifestDigest
+    && a.evidenceDigest === framedSha(e.schemaVersion, e, ethers)
+    && canonicalLaunchJson(e.walletAuthorization) === canonicalLaunchJson(wa)
+    && canonicalLaunchJson(e.assuranceClaims) === canonicalLaunchJson(a.assuranceClaims),
+  'Issued Atomic evidence is missing or differs from the admission receipt.');
+  assert(Array.isArray(e.transactionDigests) && e.transactionDigests.length === 1 && e.transactionDigests[0] === pin.transactionDigest
+    && e.simulation?.chainId === '4663' && e.simulation.planHash === manifest.planHash
+    && Array.isArray(e.simulation.violations) && e.simulation.violations.length === 0
+    && e.simulation.steps?.length === 1 && e.simulation.steps[0].stepId === pin.stepId
+    && e.simulation.steps[0].transactionDigest === pin.transactionDigest && e.simulation.steps[0].outcome === 'success'
+    && e.inspection?.chainId === '4663' && e.simulation.blockHash === e.inspection.blockHash
+    && e.simulation.blockNumber === e.inspection.blockNumber && same(e.inspection.controller?.address, pin.from)
+    && e.inspection.controller?.nonce === pin.nonce,
+  'Issued Atomic evidence does not establish this exact successful wallet transaction.');
+  assert(prep && order && canonicalLaunchJson(prep.order) === canonicalLaunchJson(order)
+    && prep.sourceEvidenceDigest === e.compilationDigest && /^sha256:[0-9a-f]{64}$/.test(e.compilationDigest)
+    && prep.binding?.policyBindingHash === e.policyBindingHash && /^sha256:[0-9a-f]{64}$/.test(e.policyBindingHash)
+    && prep.binding.chainId === '4663' && prep.binding.manifestDigest === manifest.platformManifestDigest
+    && same(prep.binding.address, pin.to) && prep.binding.runtimeCodeHash === pin.routerRuntimeCodeHash
+    && same(prep.binding.poolManager, MANAGER) && prep.binding.poolManagerRuntimeCodeHash === MANAGER_HASH
+    && same(prep.binding.permitAuthority, '0xeD617CE7f82e2AB589aDeFFD319D1D872Bc8De06')
+    && prep.binding.permitAuthorityRuntimeCodeHash === '0xd7d408ebcd99b2b70be43e20253d6d92a8ea8fab29bd3be7f55b10032331fb4c'
+    && order.chainId === '4663' && same(order.controller, pin.from) && order.controllerRuntimeCodeHash === ethers.ZeroHash
+    && same(order.executor, pin.to) && order.executorRuntimeCodeHash === pin.routerRuntimeCodeHash
+    && order.planHash === '0x' + manifest.planHash.slice(7) && order.manifestDigest === '0x' + manifest.platformManifestDigest.slice(7)
+    && order.totalValue === pin.valueWei && order.validAfter === p.budgets.validAfter && order.deadline === p.budgets.deadline
+    && seconds(order.deadline) * 1000 === Date.parse(pin.expiresAt),
+  'Issued Atomic preparation is not bound to the reviewed source, controller, runtime, value and window.');
+  const policy = a.assuranceClaims.filter(c => c.claimType === 'launch_admission_policy');
+  assert(policy.length === 1 && policy[0].status === 'verified' && policy[0].subject === manifest.planHash
+    && policy[0].observedValue === p.admissionPolicy, 'Verified launch admission policy claim is missing.');
+  for (const component of p.components) {
+    const claims = a.assuranceClaims.filter(c => c.claimType === 'source_matches_creation_and_runtime' && c.subject === component.componentId);
+    assert(claims.length === 1 && claims[0].status === 'verified' && claims[0].observedValue === component.runtimeCodeHash
+      && claims[0].witness?.details?.compilationDigest === e.compilationDigest,
+    'Issued Atomic source/runtime evidence differs from the reviewed components.');
+  }
+  if (r.replan) assert(canonicalLaunchJson(e.replan) === canonicalLaunchJson(r.replan), 'Issued Atomic evidence belongs to a different replan.');
+  const atomic = new ethers.Interface(ATOMIC_ABI), data = r.steps[0].transaction.data;
+  let decoded;
+  try { decoded = atomic.decodeFunctionData('executeAndStampV2', data); }
+  catch { throw Error('Issued Atomic calldata cannot be decoded.'); }
+  assert(decoded.platformSignature !== '0x' && ethers.getBytes(decoded.platformSignature).length <= 16384
+    && atomic.encodeFunctionData('executeAndStampV2', [order, prep.calls, prep.components, prep.markets, decoded.platformSignature]) === data,
+  'Issued Atomic order and snapshots do not match the exact signed calldata.');
+  return true;
+}
 
 export function validateReviewManifest(manifest, expectedHash, ethers) {
   validateLaunchManifest(manifest);
@@ -63,18 +122,24 @@ export function validateLaunchPackage(pkg, manifest, expectedHash, ethers, now =
   assert(admission?.planHash === manifest.planHash && admission.rawRequestSha256 === manifest.requestSha256
     && admission.manifestDigest === manifest.platformManifestDigest && admission.chainId === '4663'
     && same(admission.controller, pin.from), 'Current platform admission does not match the reviewed plan.');
-  assert(preflight?.planHash === manifest.planHash && preflight.manifestDigest === manifest.platformManifestDigest
-    && preflight.launchEligibility?.status === 'ready' && Array.isArray(preflight.launchEligibility.hardBlockers)
-    && preflight.launchEligibility.hardBlockers.length === 0
-    && r.walletAuthorization?.atomicPreparation && r.walletAuthorization?.executionOrder,
-  'Current Atomic preparation or platform preflight is unavailable.');
+  assert(r.walletAuthorization?.atomicPreparation && r.walletAuthorization?.executionOrder,
+    'Current Atomic preparation is unavailable.');
+  const admissionExpiry = Date.parse(admission.expiresAt);
+  if (preflight === null) validateAdmittedAtomicEvidence(r, manifest, ethers);
+  else {
+    assert(preflight?.planHash === manifest.planHash && preflight.manifestDigest === manifest.platformManifestDigest
+      && preflight.launchEligibility?.status === 'ready' && Array.isArray(preflight.launchEligibility.hardBlockers)
+      && preflight.launchEligibility.hardBlockers.length === 0, 'Current platform preflight is unavailable or not ready.');
+    if (Date.parse(pin.expiresAt) > admissionExpiry) validateAdmittedAtomicEvidence(r, manifest, ethers);
+  }
   const age = now - Date.parse(pkg.checkedAt), expiry = Date.parse(pin.expiresAt);
   const approvedAt = Date.parse(review.approvedAt), reviewExpiry = Date.parse(review.expiresAt);
   assert(Number.isFinite(age) && age >= -30000 && age <= 60000, 'Fresh platform validation is required.');
   assert(Number.isFinite(approvedAt) && approvedAt <= now + 30000 && Number.isFinite(reviewExpiry)
     && reviewExpiry > approvedAt && reviewExpiry - approvedAt <= 86400000
     && Number.isFinite(expiry) && expiry - now >= 90000 && expiry <= reviewExpiry
-    && expiry <= Date.parse(admission.expiresAt) && Date.parse(admission.issuedAt) <= now + 30000
+    && Number.isFinite(admissionExpiry) && admissionExpiry > now && Date.parse(admission.issuedAt) <= now + 30000
+    && Date.parse(admission.issuedAt) < admissionExpiry
     && seconds(p.budgets.validAfter) * 1000 <= now && seconds(p.budgets.deadline) * 1000 >= expiry,
   'The launch authorization is stale, expired or about to expire. Prepare a fresh reviewed handoff.');
   return r;

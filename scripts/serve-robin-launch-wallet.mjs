@@ -2,17 +2,18 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import * as ethers from 'ethers';
-import {createLaunchReviewServer, createPlatformPlanReader, verifyLaunchReviewInputs, verifyLaunchProofInputs} from '../src/launch-review-server.mjs';
+import {createLaunchReviewServer, createPlatformPlanReader, refreshLaunchReviewInputs, verifyLaunchProofInputs} from '../src/launch-review-server.mjs';
 import {validateLaunchConsent} from '../src/launch-manifest.mjs';
 import {createBoundLaunchProof} from '../src/launch-plan-proof.mjs';
 import {atomicWrite} from '../src/store.mjs';
 import {ANCHOR, MANAGER} from '../signing-ui/robin-launch-guards.mjs';
 import {createLaunchRpcProvider, runLaunchCommand} from '../src/launch-rpc.mjs';
+import {validateLaunchHostReady} from '../src/launch-host-ready.mjs';
 
 let activeProvider;
 async function main() {
 const root = fileURLToPath(new URL('../', import.meta.url));
-const allowed = new Set(['manifest', 'manifest-sha256', 'request', 'accepted-package', 'consent-file', 'port', 'proof-hash']);
+const allowed = new Set(['manifest', 'manifest-sha256', 'request', 'accepted-package', 'consent-file', 'host-ready-file', 'port', 'proof-hash']);
 const options = {};
 for (let i = 2; i < process.argv.length; i += 2) {
   const name = process.argv[i]?.replace(/^--/, ''), value = process.argv[i + 1];
@@ -27,12 +28,17 @@ for (const name of ['manifest', 'manifest-sha256', 'request', 'accepted-package'
 const read = name => fs.readFile(path.resolve(options[name]));
 const [manifestBytes, requestBytes, acceptedBytes] = await Promise.all([read('manifest'), read('request'), read('accepted-package')]);
 const manifest = JSON.parse(manifestBytes), accepted = JSON.parse(acceptedBytes);
-const acceptedResource = accepted.resource ?? accepted.data ?? accepted;
+let acceptedResource = accepted.resource ?? accepted.data ?? accepted;
 const expectedHash = options['manifest-sha256'];
+if (!options['proof-hash'] && manifest.activation.mode === 'after-reviewed-launch' && !options['host-ready-file']) {
+  throw Error('Automatic launch review requires --host-ready-file for the independently verified host acknowledgement.');
+}
 if (options['proof-hash']) {
   if (!/^0x[0-9a-f]{64}$/.test(options['proof-hash'])) throw Error('Use the exact original lowercase transaction hash.');
-  verifyLaunchProofInputs({manifest, expectedHash, requestBytes, acceptedResource, ethers});
-} else verifyLaunchReviewInputs({manifest, expectedHash, requestBytes, acceptedResource, ethers});
+}
+// A saved short-lived admission may be stale while the reviewed order is still
+// valid. Check immutable evidence now; fetch and validate live admission below.
+verifyLaunchProofInputs({manifest, expectedHash, requestBytes, acceptedResource, ethers});
 
 async function credentialFromStdin() {
   console.log('Waiting for the Programmable credential on non-echoing stdin. Read-only platform validation; no server signer.');
@@ -58,7 +64,19 @@ async function credentialFromStdin() {
 }
 const credential = await credentialFromStdin();
 const readCurrentResource = createPlatformPlanReader({planId: manifest.planId, resumeUrl: acceptedResource.resumeUrl, credential});
+if (!options['proof-hash']) {
+  acceptedResource = await refreshLaunchReviewInputs({manifest, expectedHash, requestBytes, acceptedResource, ethers, readCurrentResource});
+}
 const consentPath = path.resolve(options['consent-file']);
+const hostReadyPath = options['host-ready-file'] ? path.resolve(options['host-ready-file']) : null;
+if (hostReadyPath === consentPath) throw Error('Consent and host acknowledgement require separate files.');
+const readRecordedConsent = async () => {
+  try { return JSON.parse(await fs.readFile(consentPath, 'utf8')); }
+  catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+};
+const readHostReadiness = async () => validateLaunchHostReady(JSON.parse(await fs.readFile(hostReadyPath, 'utf8')), {
+  manifest, expectedHash, consentBytes: await fs.readFile(consentPath), ethers,
+});
 const writeConsent = async consent => {
   await fs.mkdir(path.dirname(consentPath), {recursive: true});
   try { await fs.writeFile(consentPath, JSON.stringify(consent, null, 2) + '\n', {flag: 'wx', mode: 0o600}); }
@@ -67,6 +85,7 @@ const writeConsent = async consent => {
     // Never overwrite a prior review or an unresolved wallet attempt with a different manifest.
     validateLaunchConsent(JSON.parse(await fs.readFile(consentPath, 'utf8')), manifest, ethers);
   }
+  return await readRecordedConsent();
 };
 const provider = activeProvider = createLaunchRpcProvider();
 const rpc = (method, params = []) => provider.send(method, params);
@@ -102,12 +121,13 @@ const descriptions = [
   ['/app.js', 'signing-ui/robin-launch-app.js', 'text/javascript; charset=utf-8'],
   ['/signing-ui/robin-launch-guards.mjs', 'signing-ui/robin-launch-guards.mjs', 'text/javascript; charset=utf-8'],
   ['/signing-ui/guards.mjs', 'signing-ui/guards.mjs', 'text/javascript; charset=utf-8'],
+  ['/signing-ui/wallet-connection.mjs', 'signing-ui/wallet-connection.mjs', 'text/javascript; charset=utf-8'],
   ['/src/launch-manifest.mjs', 'src/launch-manifest.mjs', 'text/javascript; charset=utf-8'],
   ['/ethers.js', 'node_modules/ethers/dist/ethers.umd.min.js', 'text/javascript; charset=utf-8'],
 ];
 const assets = new Map(await Promise.all(descriptions.map(async ([url, file, type]) => [url, {bytes: await fs.readFile(path.join(root, file)), type}])));
 const {server, origin, freshPackage} = createLaunchReviewServer({manifest, expectedHash, requestBytes, acceptedResource,
-  readCurrentResource, writeConsent, submitProof, assets, ethers, port: Number(options.port ?? 8792)});
+  readCurrentResource, writeConsent, readRecordedConsent, readHostReadiness, submitProof, assets, ethers, port: Number(options.port ?? 8792)});
 await freshPackage();
 server.listen(Number(options.port ?? 8792), '127.0.0.1', () => {
   console.log(`ROBINHOOK / ROBIN wallet review: ${origin}`);

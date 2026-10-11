@@ -40,6 +40,16 @@ test('automatic payout preparation is an explicit CLI choice and invalid activat
   for (const mode of ['automatic', 'true', 'now']) assert.throws(() => parseHandoffOptions([...args, '--activation', mode]), /Activation must/);
 });
 
+test('worker revision is a separate explicit CLI binding, leaving original contract revision and request bytes intact', t => {
+  const {args} = fixture(t), original = readHandoffInputs(parseHandoffOptions(args));
+  const revised = readHandoffInputs(parseHandoffOptions([...args, '--worker-source-revision', '2'.repeat(40)]));
+  assert.equal(Object.hasOwn(original, 'workerSourceRevision'), false);
+  assert.equal(revised.workerSourceRevision, '2'.repeat(40)); assert.equal(revised.sourceRevision, original.sourceRevision);
+  assert.deepEqual(revised.requestBytes, original.requestBytes);
+  for (const revision of ['main', 'abc', 'G'.repeat(40)]) assert.throws(() => parseHandoffOptions([...args, '--worker-source-revision', revision]), /Worker source revision/);
+  assert.throws(() => parseHandoffOptions([...args, '--worker-source-revision', '2'.repeat(40), '--worker-source-revision', '3'.repeat(40)]), /repeated/);
+});
+
 test('missing distributor and malformed inputs fail before any network or output creation', async t => {
   const {args} = fixture(t), missing = args.filter((_, i) => args[i] !== '--distributor' && args[i - 1] !== '--distributor');
   assert.throws(() => parseHandoffOptions(missing), /Required: --distributor/);
@@ -59,10 +69,14 @@ test('handoff CLI preserves previous output evidence instead of overwriting it',
 test('shipped policy example is a valid bounded manual review draft, not automatic payout consent', () => {
   const policy = JSON.parse(fs.readFileSync('docs/launch-policy.example.json', 'utf8'));
   const {manifest} = launchReviewFixture(); Object.assign(manifest, policy);
+  assert.throws(() => validateLaunchManifest(manifest), /accounting policy/);
+  Object.assign(manifest, {schemaVersion: 'robinhook.launch-bootstrap.v3', workerSourceRevision: '2'.repeat(40)});
   validateLaunchManifest(manifest);
   assert.equal(manifest.activation.mode, 'manual');
   assert.deepEqual(Object.keys(policy).sort(), ['accounting', 'execution', 'preserveLaunchBalanceWei']);
   assert.equal(policy.preserveLaunchBalanceWei, '1000000000000000');
   assert.equal(policy.execution.minimumHarvestWei, '10000000000000');
   assert.equal(policy.execution.minimumBatchWei, '10000000000000');
+  assert.equal(policy.accounting.minimumAgeSeconds, 300);
+  assert.equal(policy.execution.payoutIntervalSeconds, 900);
 });

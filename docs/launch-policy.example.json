@@ -1,7 +1,7 @@
 {
   "preserveLaunchBalanceWei": "1000000000000000",
   "accounting": {
-    "minimumAgeSeconds": 3600,
+    "minimumAgeSeconds": 300,
     "twapWindowSeconds": 1800,
     "maxOracleAgeSeconds": 300,
     "maxSnapshotAgeSeconds": 300,
@@ -14,6 +14,7 @@
     "maxTotalGasWei": "5000000000000000",
     "minimumHarvestWei": "10000000000000",
     "minimumBatchWei": "10000000000000",
-    "retryIntervalSeconds": 3600
+    "retryIntervalSeconds": 3600,
+    "payoutIntervalSeconds": 900
   }
 }

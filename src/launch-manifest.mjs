@@ -1,5 +1,7 @@
 // Browser-safe shared launch boundary. This module never accesses a wallet, filesystem or network.
 export const LAUNCH_MANIFEST_SCHEMA = 'robinhook.launch-bootstrap.v1';
+export const LAUNCH_MANIFEST_SCHEMA_V2 = 'robinhook.launch-bootstrap.v2';
+export const LAUNCH_MANIFEST_SCHEMA_V3 = 'robinhook.launch-bootstrap.v3';
 const HASH = /^0x[0-9a-f]{64}$/;
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
@@ -21,10 +23,15 @@ export function canonicalLaunchJson(value) {
 
 /** An exact release/transaction/automation policy, prepared before the final user wallet action. */
 export function validateLaunchManifest(m) {
+  const scheduledPayouts = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V3;
+  const separateWorker = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V2 || scheduledPayouts;
   if (!keys(m, ['schemaVersion', 'chainId', 'name', 'symbol', 'sourceRevision', 'planId', 'planHash', 'platformManifestDigest', 'requestSha256',
     'projectMetadataHash', 'fundingPlanHash', 'transaction', 'components', 'infrastructure', 'operator', 'platformRecipient', 'watchFrom',
-    'distributorDeployment', 'preserveLaunchBalanceWei', 'fees', 'minimumTokensOut', 'maxLaunchGasWei', 'accounting', 'execution', 'activation'])
-    || m.schemaVersion !== LAUNCH_MANIFEST_SCHEMA || m.chainId !== 4663 || m.name !== 'ROBINHOOK' || m.symbol !== 'ROBIN'
+    'distributorDeployment', 'preserveLaunchBalanceWei', 'fees', 'minimumTokensOut', 'maxLaunchGasWei', 'accounting', 'execution', 'activation',
+    ...(separateWorker ? ['workerSourceRevision'] : [])])
+    || ![LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3].includes(m.schemaVersion)
+    || separateWorker && !/^[0-9a-f]{40}$/.test(m.workerSourceRevision)
+    || m.chainId !== 4663 || m.name !== 'ROBINHOOK' || m.symbol !== 'ROBIN'
     || !/^[0-9a-f]{40}$/.test(m.sourceRevision) || typeof m.planId !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:@/+\-]{0,255}$/.test(m.planId)
     || !SHA256.test(m.planHash) || !SHA256.test(m.platformManifestDigest)
     || !SHA256.test(m.requestSha256) || !HASH.test(m.projectMetadataHash) || !HASH.test(m.fundingPlanHash)
@@ -57,22 +64,30 @@ export function validateLaunchManifest(m) {
     || m.fees.projectSellFeeBps !== 170 || m.fees.platformFeeBps !== 30 || m.fees.lpFeePips !== 0) throw Error('Launch fees changed');
   const a = m.accounting;
   if (!keys(a, ['minimumAgeSeconds', 'twapWindowSeconds', 'maxOracleAgeSeconds', 'maxSnapshotAgeSeconds', 'maxFinalityLagSeconds', 'batchSize', 'excludedAddresses'])
-    || a.minimumAgeSeconds !== 3600 || a.twapWindowSeconds !== 1800 || a.maxOracleAgeSeconds !== 300
+    || a.minimumAgeSeconds !== (scheduledPayouts ? 300 : 3600) || a.twapWindowSeconds !== 1800 || a.maxOracleAgeSeconds !== 300
     || a.maxSnapshotAgeSeconds !== 300 || a.maxFinalityLagSeconds !== 1800 || a.batchSize !== 100
     || !Array.isArray(a.excludedAddresses) || a.excludedAddresses.some(value => !account(value))
     || new Set(a.excludedAddresses.map(value => value.toLowerCase())).size !== a.excludedAddresses.length)
     throw Error('Launch manifest changes reviewed accounting policy');
   const e = m.execution;
-  if (!keys(e, ['maxGasPerTransactionWei', 'maxTotalGasWei', 'minimumHarvestWei', 'minimumBatchWei', 'retryIntervalSeconds'])
+  if (!keys(e, ['maxGasPerTransactionWei', 'maxTotalGasWei', 'minimumHarvestWei', 'minimumBatchWei', 'retryIntervalSeconds',
+    ...(scheduledPayouts ? ['payoutIntervalSeconds'] : [])])
     || !positive(e.maxGasPerTransactionWei) || BigInt(e.maxGasPerTransactionWei) > 200000000000000n
     || !positive(e.maxTotalGasWei) || BigInt(e.maxTotalGasWei) > 5000000000000000n
     || BigInt(e.maxGasPerTransactionWei) > BigInt(e.maxTotalGasWei) || !positive(e.minimumHarvestWei) || !positive(e.minimumBatchWei)
-    || e.retryIntervalSeconds !== 3600) throw Error('Launch manifest exceeds approved operator policy');
+    || e.retryIntervalSeconds !== 3600 || scheduledPayouts && e.payoutIntervalSeconds !== 900)
+    throw Error('Launch manifest exceeds approved operator policy');
   if (!keys(m.activation, ['mode', 'approvalReference']) || !['manual', 'after-reviewed-launch'].includes(m.activation.mode)
     || typeof m.activation.approvalReference !== 'string' || m.activation.approvalReference.length < 1
     || m.activation.approvalReference.length > 240 || /[\r\n\x00-\x1f]/.test(m.activation.approvalReference))
     throw Error('Missing explicit launch activation gate');
   return m;
+}
+
+/** V1 binds one revision; V2/V3 separate immutable contract provenance from worker code. */
+export function effectiveWorkerSourceRevision(manifest) {
+  validateLaunchManifest(manifest);
+  return manifest.schemaVersion === LAUNCH_MANIFEST_SCHEMA ? manifest.sourceRevision : manifest.workerSourceRevision;
 }
 
 export function launchManifestHash(manifest, ethers) {
