@@ -3,7 +3,7 @@ import * as ethers from 'ethers';
 import graphArtifact from '../vendor/programmable-launch-plan-v1/graph-factory.json' with {type: 'json'};
 import {inspectPackedRequest, verifyPlanResource} from './launch-plan-api.mjs';
 import {assertRobinLaunchIntent} from './launch-intent.mjs';
-import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2} from './launch-manifest.mjs';
+import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3} from './launch-manifest.mjs';
 import {validateLaunchPackage, boundedLaunchTransaction, ANCHOR, MANAGER, DISTRIBUTOR, DISTRIBUTOR_HASH} from '../signing-ui/robin-launch-guards.mjs';
 import {ATOMIC, ATOMIC_HASH, GRAPH, GRAPH_HASH, PLAN_MANIFEST, PERMIT_AUTHORITY, PERMIT_AUTHORITY_HASH} from './launch-plan.mjs';
 
@@ -115,6 +115,8 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
   require(keys(policy, ['preserveLaunchBalanceWei', 'accounting', 'execution']), 'Explicit reviewed launch reserve/accounting/operator policy required.');
   require(/^[0-9a-f]{40}$/.test(sourceRevision ?? ''), 'Exact final published source revision required.');
   require(workerSourceRevision === undefined || /^[0-9a-f]{40}$/.test(workerSourceRevision), 'Exact worker source revision required when specified.');
+  const scheduledPayouts = Object.hasOwn(policy.execution ?? {}, 'payoutIntervalSeconds');
+  require(!scheduledPayouts || workerSourceRevision !== undefined, 'Scheduled payout policy requires an explicit worker source revision.');
   const packed = inspectPackedRequest(Buffer.from(requestBytes), packReport), resource = acceptedLaunchResource(accepted);
   verifyPlanResource(resource, packed);
   const plan = packed.plan;
@@ -165,7 +167,8 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
     && receipt.blockHash === distributor.blockHash && facts.state.distributorBlock?.hash === distributor.blockHash,
   'Existing distributor receipt is not canonical and successful.');
   const workerBinding = workerSourceRevision === undefined ? {} : {workerSourceRevision};
-  const manifest = {schemaVersion: workerSourceRevision === undefined ? LAUNCH_MANIFEST_SCHEMA : LAUNCH_MANIFEST_SCHEMA_V2,
+  const manifest = {schemaVersion: scheduledPayouts ? LAUNCH_MANIFEST_SCHEMA_V3
+    : workerSourceRevision === undefined ? LAUNCH_MANIFEST_SCHEMA : LAUNCH_MANIFEST_SCHEMA_V2,
     chainId: 4663, name: 'ROBINHOOK', symbol: 'ROBIN', sourceRevision, ...workerBinding,
     planId: resource.planId, planHash: resource.planHash, platformManifestDigest: resource.manifestDigest, requestSha256: packed.hash,
     projectMetadataHash: hashJson(plan.publication), fundingPlanHash: hashJson(plan.budgets),

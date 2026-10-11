@@ -8,6 +8,7 @@ import {ROBINHOOD_ANCHOR, POOL_MANAGER} from '../src/production-network.mjs';
 import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, validateLaunchConsent} from '../src/launch-manifest.mjs';
 import {productionConfigFromLaunch, verifyLaunchReceipt, operatorStartupAllowed, runLaunchBootstrapCycle} from '../src/launch-bootstrap.mjs';
 import {standbySettings, inspectLaunchAdmission} from '../src/launch-standby.mjs';
+import {loadConfig} from '../src/config.mjs';
 
 const now = 1800000000, first = ROBINHOOD_ANCHOR.blockNumber + 10, launched = first + 2;
 const addr = n => `0x${n.toString(16).padStart(40, '0')}`;
@@ -98,6 +99,8 @@ test('exact finalized receipt becomes a read-only production config without sign
   assert.equal(result.proof.initialTokensReceivedWei, '200'); assert.equal(result.proof.signing, false);
   const c = productionConfigFromLaunch(m, result.proof); assert.equal(c.symbol, 'ROBIN'); assert.equal(c.execution.broadcastEnabled, false);
   assert.equal(c.deploymentBlock, launched); assert.ok(c.excludedAddresses.includes(m.components.initializer.address));
+  assert.equal(Object.hasOwn(c, 'payoutStartTimestamp'), false);
+  assert.equal(Object.hasOwn(c.execution, 'payoutIntervalSeconds'), false);
   assert.ok(state.calls.every(call => [launched, launched - 1].includes(call.blockTag)));
 });
 
@@ -199,6 +202,43 @@ test('v2 bootstrap requires reviewed worker revision and fresh consent while con
     consent: consent(f.m), approvedManifestSha256: launchManifestHash(f.m, ethers)});
   assert.equal(result.state, 'ready-for-approved-services'); assert.equal(result.signing, false);
   assert.equal(f.m.sourceRevision, originalRevision);
+});
+
+test('v3 bootstrap anchors the reviewed schedule to finalized launch time only after fresh consent', async t => {
+  const f = fixture('after-reviewed-launch');
+  Object.assign(f.m, {schemaVersion: 'robinhook.launch-bootstrap.v2', workerSourceRevision: 'b'.repeat(40)});
+  const oldConsent = consent(f.m), originalTransaction = structuredClone(f.m.transaction);
+  f.m.schemaVersion = 'robinhook.launch-bootstrap.v3';
+  f.m.accounting.minimumAgeSeconds = 300; f.m.execution.payoutIntervalSeconds = 900;
+  const target = dir(t), workerOptions = {...options(f.m), sourceRevision: f.m.workerSourceRevision};
+  await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, target, options(f.m)), /revision/);
+  await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, target, {...workerOptions, consent: oldConsent}), /consent/);
+  const waiting = await runLaunchBootstrapCycle(f.provider, f.m, target, workerOptions);
+  assert.equal(waiting.state, 'verified-awaiting-review-gate');
+  assert.equal(fs.existsSync(path.join(target, 'production.operator.json')), false);
+  const readonly = loadConfig(path.join(target, 'production.readonly.json'));
+  assert.equal(readonly.execution.broadcastEnabled, false);
+  assert.equal(readonly.minimumAgeSeconds, 300); assert.equal(readonly.execution.payoutIntervalSeconds, 900);
+  const proof = JSON.parse(fs.readFileSync(path.join(target, 'launch-proof.json'), 'utf8'));
+  assert.equal(readonly.payoutStartTimestamp, proof.checkpoint.timestamp);
+  assert.equal(readonly.payoutStartTimestamp, now - 60, 'schedule is anchored to launch, not watcher start or current time');
+  const active = await runLaunchBootstrapCycle(f.provider, f.m, target, {...workerOptions,
+    consent: consent(f.m), approvedManifestSha256: launchManifestHash(f.m, ethers)});
+  const config = loadConfig(active.operatorConfig);
+  assert.equal(active.signing, false); assert.equal(active.state, 'ready-for-approved-services');
+  assert.equal(config.execution.broadcastEnabled, true);
+  assert.equal(config.payoutStartTimestamp, readonly.payoutStartTimestamp);
+  assert.equal(config.execution.payoutIntervalSeconds, 900);
+  assert.deepEqual(f.m.transaction, originalTransaction);
+  for (const timestamp of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, undefined])
+    assert.throws(() => productionConfigFromLaunch(f.m, {...proof, checkpoint: {...proof.checkpoint, timestamp}}), /verified exact launch proof/);
+  const configFile = path.join(target, 'invalid-config.json');
+  for (const mutate of [c => delete c.payoutStartTimestamp, c => c.payoutStartTimestamp = 0,
+    c => c.payoutStartTimestamp = 1.5, c => c.payoutStartTimestamp = Number.MAX_SAFE_INTEGER + 1,
+    c => c.execution.payoutIntervalSeconds = 0, c => delete c.execution.payoutIntervalSeconds]) {
+    const changed = structuredClone(config); mutate(changed); fs.writeFileSync(configFile, JSON.stringify(changed));
+    assert.throws(() => loadConfig(configFile), /payout/);
+  }
 });
 
 test('missing mint proof and consumed launch nonce cannot be mistaken for a launch', async t => {

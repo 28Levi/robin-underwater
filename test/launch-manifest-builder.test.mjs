@@ -103,6 +103,29 @@ test('explicit worker revision changes only local review identity while exact ap
   assert.throws(() => buildLaunchHandoff({...input, sourceRevision: workerSourceRevision, workerSourceRevision: sourceRevision}), /source revision/);
 });
 
+test('explicit scheduled policy emits v3 with fresh review identity and unchanged platform deployment bytes', () => {
+  const input = fixture(), original = buildLaunchHandoff(input);
+  const requestBefore = Buffer.from(input.requestBytes), resourceBefore = canonicalLaunchJson(input.accepted);
+  const policy = read('docs/launch-policy.example.json'), workerSourceRevision = '2'.repeat(40);
+  const revised = buildLaunchHandoff({...input, policy, workerSourceRevision});
+  assert.equal(revised.manifest.schemaVersion, 'robinhook.launch-bootstrap.v3');
+  assert.equal(revised.manifest.accounting.minimumAgeSeconds, 300);
+  assert.equal(revised.manifest.execution.payoutIntervalSeconds, 900);
+  assert.equal(revised.manifest.workerSourceRevision, workerSourceRevision);
+  assert.equal(revised.manifest.sourceRevision, original.manifest.sourceRevision);
+  assert.notEqual(revised.manifestSha256, original.manifestSha256);
+  for (const key of ['transaction', 'components', 'infrastructure', 'planId', 'planHash', 'requestSha256', 'projectMetadataHash', 'fundingPlanHash'])
+    assert.deepEqual(revised.manifest[key], original.manifest[key], `${key} must retain the approved contract package binding`);
+  assert.deepEqual(input.requestBytes, requestBefore); assert.equal(canonicalLaunchJson(input.accepted), resourceBefore);
+  assert.equal(revised.report.automationAuthorized, false); assert.equal(revised.report.transactionBroadcast, false);
+  assert.throws(() => buildLaunchHandoff({...input, policy}), /explicit worker source revision/);
+  for (const mutate of [p => p.accounting.minimumAgeSeconds = 3600, p => p.execution.payoutIntervalSeconds = 300,
+    p => delete p.execution.payoutIntervalSeconds]) {
+    const changed = structuredClone(policy); mutate(changed);
+    assert.throws(() => buildLaunchHandoff({...input, policy: changed, workerSourceRevision}), /policy/);
+  }
+});
+
 test('a stale 1.8% / 0.2% preparation or fee intent cannot produce a current handoff', () => {
   for (const field of ['preparation', 'intent']) {
     const x = fixture();

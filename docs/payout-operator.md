@@ -1,5 +1,7 @@
 # Automatic payouts: local execution and production handoff
 
+Current prelaunch timing: five-minute amount-specific eligibility and scheduled 15-minute reward rounds, anchored to the verified launch timestamp. See [reward timing](reward-timing.md) for durable scheduling and launch-review requirements. The historical implementation notes below do not override that current policy.
+
 The local executor now performs the complete cycle with actual EVM transactions: claim project fees from the canonical Native20 vault, replay finalized trades, calculate proportional loss relief, sign guarded payments, and reconcile their finalized receipts. It also retries failed ETH receivers without allocating their rewards twice.
 
 ## Run the verification

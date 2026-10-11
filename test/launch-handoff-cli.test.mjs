@@ -69,10 +69,14 @@ test('handoff CLI preserves previous output evidence instead of overwriting it',
 test('shipped policy example is a valid bounded manual review draft, not automatic payout consent', () => {
   const policy = JSON.parse(fs.readFileSync('docs/launch-policy.example.json', 'utf8'));
   const {manifest} = launchReviewFixture(); Object.assign(manifest, policy);
+  assert.throws(() => validateLaunchManifest(manifest), /accounting policy/);
+  Object.assign(manifest, {schemaVersion: 'robinhook.launch-bootstrap.v3', workerSourceRevision: '2'.repeat(40)});
   validateLaunchManifest(manifest);
   assert.equal(manifest.activation.mode, 'manual');
   assert.deepEqual(Object.keys(policy).sort(), ['accounting', 'execution', 'preserveLaunchBalanceWei']);
   assert.equal(policy.preserveLaunchBalanceWei, '1000000000000000');
   assert.equal(policy.execution.minimumHarvestWei, '10000000000000');
   assert.equal(policy.execution.minimumBatchWei, '10000000000000');
+  assert.equal(policy.accounting.minimumAgeSeconds, 300);
+  assert.equal(policy.execution.payoutIntervalSeconds, 900);
 });

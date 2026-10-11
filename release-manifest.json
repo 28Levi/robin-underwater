@@ -1,6 +1,6 @@
 {
   "schemaVersion": "robin.source-release.v1",
-  "createdAt": "2026-10-11T20:17:45.473Z",
+  "createdAt": "2026-10-11T20:59:55.642Z",
   "status": "source-for-review; no production deployment or platform acceptance",
   "files": [
     {
@@ -20,8 +20,8 @@
     },
     {
       "path": "src/config.mjs",
-      "bytes": 1539,
-      "sha256": "c59051a925094b2ec7e64abd6c636ff578e811411bd459ac6e715c26c9deb3b0"
+      "bytes": 1972,
+      "sha256": "f9a60bac2cd7557a157fcb08040b3f8977b0c3dbee51ee7a7a7da7885d4cedd1"
     },
     {
       "path": "src/distributor-evidence.mjs",
@@ -30,13 +30,13 @@
     },
     {
       "path": "src/execution-journal.mjs",
-      "bytes": 1421,
-      "sha256": "ed822274d5fec59d289a53cc20edf59764481bf69b779450a75c7c87044e3f81"
+      "bytes": 1627,
+      "sha256": "1d7155a689377429893de9495e1f1a032caad51e68b0593065b87396bba5f9ca"
     },
     {
       "path": "src/executor.mjs",
-      "bytes": 14289,
-      "sha256": "6d0eaf5df2dc7169b4608981637c2511ce2563fdca4c495e53bae4fa31b5fe69"
+      "bytes": 16030,
+      "sha256": "f2e28261d4defb8abbf6ac36b8cf95598330495bc10a2e519149212ae40cff35"
     },
     {
       "path": "src/launch-admission-install.mjs",
@@ -45,8 +45,8 @@
     },
     {
       "path": "src/launch-bootstrap.mjs",
-      "bytes": 19114,
-      "sha256": "7b4cc5c3133d8884e6e759d28b8cc2fa257f2c34e60a956fcdaed3fab1a17612"
+      "bytes": 19321,
+      "sha256": "f28cdb3358a28acc29738e315a462ede55e6590c2611833f0c09568535486914"
     },
     {
       "path": "src/launch-fees.mjs",
@@ -70,13 +70,13 @@
     },
     {
       "path": "src/launch-manifest-builder.mjs",
-      "bytes": 21026,
-      "sha256": "f60c76138107c04082f683b1b6d3f6aecff826ae80651148298a688c6175fbec"
+      "bytes": 21335,
+      "sha256": "5aace560ae02a04608b51a709402534a2203b07dd41fa313bc0f2b6251e80321"
     },
     {
       "path": "src/launch-manifest.mjs",
-      "bytes": 8786,
-      "sha256": "251796fd081c433b3110e067203d34f5ada1b9bad4bf95062966cc9f870b2772"
+      "bytes": 9122,
+      "sha256": "bd740ca2ea25f5d8d014f22a264576189896b65dd6700081682df923857a42af"
     },
     {
       "path": "src/launch-plan-api.mjs",
@@ -147,6 +147,11 @@
       "path": "src/payout-plan.mjs",
       "bytes": 3630,
       "sha256": "7efadaa43f4289e5a795a1324e67c30d1047071d5c0c31d7b083251fd45bb32d"
+    },
+    {
+      "path": "src/payout-schedule.mjs",
+      "bytes": 3727,
+      "sha256": "0d1ca41ca3b8fea72d9a9a2d5ecebd5bc7986f85fd48de4fe8422a1557ab7c4e"
     },
     {
       "path": "src/production-network.mjs",
@@ -399,6 +404,11 @@
       "sha256": "3464136878c601605fb051eaaaf9e9ae9597876fee0b802bcb8213647447d28f"
     },
     {
+      "path": "test/executor-schedule.test.mjs",
+      "bytes": 8115,
+      "sha256": "047f280bb3b4f680ddc85bb2ce8012bbbe8544020fcbb3ec0c20043ac6df6b29"
+    },
+    {
       "path": "test/fixtures/native30-execution-limits.json",
       "bytes": 392,
       "sha256": "1b03a2aa8f4f79eee1157ae909cc7eda1f1bb79eae0fd63485948fd409ca999e"
@@ -420,8 +430,8 @@
     },
     {
       "path": "test/launch-bootstrap.test.mjs",
-      "bytes": 21812,
-      "sha256": "12072e4bddd1ba0681e51073cb365f25dbba3f8d85ce0663230ee2e0662cf221"
+      "bytes": 24951,
+      "sha256": "4dc04b21c8cd0d41ac8f4632a810f0a1a9a368c5eaf32389eb0db2d90c663ae1"
     },
     {
       "path": "test/launch-fees.test.mjs",
@@ -435,8 +445,8 @@
     },
     {
       "path": "test/launch-handoff-cli.test.mjs",
-      "bytes": 5128,
-      "sha256": "42d249d35de800cca1d2c23a59f1571c9de6ebd5c4af6d50bb2f0237876a331c"
+      "bytes": 5440,
+      "sha256": "cd12c988806b90ff0ca63d375903e550340515e34cd27a7d674630b7a5460e3e"
     },
     {
       "path": "test/launch-intent.test.mjs",
@@ -445,8 +455,8 @@
     },
     {
       "path": "test/launch-manifest-builder.test.mjs",
-      "bytes": 13634,
-      "sha256": "493adeba03efb21300805dc1d82474e4b1cb3c13b4ae4da3239f92018d3ffe27"
+      "bytes": 15515,
+      "sha256": "13623745d56ea609769c6c9b46e636fc6aaafd17d0e26f5cfcd9d179857990eb"
     },
     {
       "path": "test/launch-plan-api.test.mjs",
@@ -499,9 +509,19 @@
       "sha256": "d094f5c45e2a4b9b18b0f6c7c73ee09455bdd16c4a13237c2caed74754734bf4"
     },
     {
+      "path": "test/payout-schedule.test.mjs",
+      "bytes": 4994,
+      "sha256": "13feeda7a45c091358cbb1b865cea497f7feb2861a827d52676631f9c36436eb"
+    },
+    {
       "path": "test/production-network.test.mjs",
       "bytes": 2454,
       "sha256": "351611841d02299a629b96b4ca248bdceb99b79e890392fd48f768b9b0d368a6"
+    },
+    {
+      "path": "test/readiness-launch-policy.test.mjs",
+      "bytes": 7330,
+      "sha256": "7f6a513aa5e6d2cfc5765c5d8b850dc6130517fda1380377fd501278d2497bfd"
     },
     {
       "path": "test/readiness-worker-revision.test.mjs",
@@ -715,13 +735,13 @@
     },
     {
       "path": "docs/launch-bootstrap.md",
-      "bytes": 8798,
-      "sha256": "80b562d8d34a1142d2556e1f3c096991892c6e15fddf1bdfcb6f0cdd0cd05499"
+      "bytes": 9199,
+      "sha256": "20a6d5e2c1fa6c42dae544f33ac74e71ba0f9aa4c3bbd186235f7db0f0017c7e"
     },
     {
       "path": "docs/launch-handoff-builder.md",
-      "bytes": 5693,
-      "sha256": "a7767fd39dfd2dca1695be8af036122d3911af73f72177324b8aeb525c51072e"
+      "bytes": 5857,
+      "sha256": "5211145eaf62e10264641c9fa2e1eb0cb24119e38c71519171ce06aac66220b0"
     },
     {
       "path": "docs/launch-later.md",
@@ -735,8 +755,8 @@
     },
     {
       "path": "docs/launch-policy.example.json",
-      "bytes": 520,
-      "sha256": "7477ccb08d5cd91d95932291843d979b66770c6d2fc2b8e6c5c23fce768361cb"
+      "bytes": 553,
+      "sha256": "91dca875e78b836c0922979f6d1c46e6381a71803c154d5a8d632de94a303bd5"
     },
     {
       "path": "docs/launch-review-api.md",
@@ -755,8 +775,8 @@
     },
     {
       "path": "docs/local-rehearsal.md",
-      "bytes": 3134,
-      "sha256": "0ac76999a2201411caed7c94a62820e1cae55bc864a792d56d8afd2bce62f5a6"
+      "bytes": 3192,
+      "sha256": "2720a5511b97035f83476c2cb5ba3b83a63a457884bc0bd6bbb8a544e0aa99c0"
     },
     {
       "path": "docs/moss-live-test-handoff.md",
@@ -770,8 +790,8 @@
     },
     {
       "path": "docs/payout-operator.md",
-      "bytes": 7832,
-      "sha256": "c40a7bd829eddf303a3c2b1bbca1ef9f541bbf7f84580c50df38120383ac4c3f"
+      "bytes": 8153,
+      "sha256": "154d6c55cbb1be4cc178860dc99a1e7602bcba179667425ba8e04cd82812ce0c"
     },
     {
       "path": "docs/payout-readiness-fixes-20261011.md",
@@ -782,6 +802,11 @@
       "path": "docs/production-setup.md",
       "bytes": 6657,
       "sha256": "52458019668d962170cd4eb5fe84fd826695038ea92355dc4652213b420f903b"
+    },
+    {
+      "path": "docs/reward-timing.md",
+      "bytes": 2251,
+      "sha256": "6f55e3cb42cd56ed69fb3df119256f011103214ac828dcd16c3ebf434a3893fe"
     },
     {
       "path": "docs/robin-distributor.public.json",
@@ -840,18 +865,18 @@
     },
     {
       "path": "config.example.json",
-      "bytes": 600,
-      "sha256": "20927d070599251237c2bf0424388f60a2d28b4120186390a058c1d394dd1c65"
+      "bytes": 609,
+      "sha256": "1515cda2893667d87e131968cbe3be9a94b583b62bb0e2ef842c18913cd1fde2"
     },
     {
       "path": "execution.example.json",
-      "bytes": 282,
-      "sha256": "5fb38926d294df10f130d6799efff67451e857f8072fcb7e6f02bb14bdaf3f5f"
+      "bytes": 314,
+      "sha256": "d78223fc23e2b072d56afb3d3708d660161439930eefb6819c7613ba246dd4e5"
     },
     {
       "path": "production.execution.example.json",
-      "bytes": 314,
-      "sha256": "1feeff65ac407651b8a8813dffbfe29373142e6c32f9bfe353c4658f16e421ea"
+      "bytes": 345,
+      "sha256": "6ca5d4b8b81b3ef9e6f909073e0212998c1775844c814443a0f70cb11d763499"
     },
     {
       "path": "hardhat.config.cjs",
@@ -945,8 +970,8 @@
     },
     {
       "path": "scripts/rehearse-local.mjs",
-      "bytes": 13694,
-      "sha256": "b94031550779d029acb5d048f634714d825caf378e335d5d38e867b072db022d"
+      "bytes": 19624,
+      "sha256": "454f024cc5201504484cd6eae32e93ec0ff3e639b34a865a25c04ce54ebefc59"
     },
     {
       "path": "scripts/verify-recovery-report.mjs",
@@ -1025,8 +1050,8 @@
     },
     {
       "path": "signing-ui/robin-launch-app.js",
-      "bytes": 22256,
-      "sha256": "b47e0a31361f53c9671ddaff67058975c3b2a2853b7447ead72773f2382ea1c9"
+      "bytes": 22489,
+      "sha256": "b64d5f92157837d82edfb71ecc41382cc387ecefd1abe2e8868b51477f69731c"
     },
     {
       "path": "signing-ui/robin-launch.html",

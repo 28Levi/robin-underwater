@@ -42,6 +42,7 @@ export function productionConfigFromLaunch(manifest, proof, {broadcastEnabled = 
   if (proof?.schemaVersion !== 'robinhook.launch-proof.v1' || proof.manifestSha256 !== manifestSha256 || proof.verified !== true
     || proof.finalized !== true || !HASH.test(proof.transactionHash) || !Number.isSafeInteger(proof.checkpoint?.blockNumber)
     || !HASH.test(proof.checkpoint?.blockHash) || !Number.isSafeInteger(proof.checkpoint?.timestamp) || proof.checkpoint.timestamp < 0
+    || m.execution.payoutIntervalSeconds !== undefined && proof.checkpoint.timestamp === 0
     || proof.checkpoint.blockNumber <= m.watchFrom.blockNumber || typeof broadcastEnabled !== 'boolean')
     throw Error('A verified exact launch proof is required');
   const component = name => address(m.components[name].address);
@@ -51,6 +52,7 @@ export function productionConfigFromLaunch(manifest, proof, {broadcastEnabled = 
     distributor: component('distributor'), poolManager: address(POOL_MANAGER),
     poolId: ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['address', 'address', 'uint24', 'int24', 'address'],
       [ZERO, component('token'), 0, 60, component('hook')])), deploymentBlock: proof.checkpoint.blockNumber,
+    ...(m.execution.payoutIntervalSeconds === undefined ? {} : {payoutStartTimestamp: proof.checkpoint.timestamp}),
     ...m.accounting, excludedAddresses: [...new Set([...m.accounting.excludedAddresses.map(address), component('initializer'), component('feeVault')])].sort(),
     execution: {mode: 'production', broadcastEnabled, operator: address(m.operator), feeVault: component('feeVault'),
       codeHashes: Object.fromEntries(Object.entries(m.components).map(([name, item]) => [name, item.runtimeCodeHash])), ...m.execution}};

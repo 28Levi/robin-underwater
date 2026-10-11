@@ -12,6 +12,10 @@ export function loadConfig(file){
  if(!Array.isArray(c.excludedAddresses))throw Error('Missing excludedAddresses');c.excludedAddresses=c.excludedAddresses.map(address);
  if(c.hookFlavor==='native20')c.excludedAddresses=[...new Set([...c.excludedAddresses,c.initializer])];
  if(c.maxFinalityLagSeconds!==undefined&&(!Number.isSafeInteger(c.maxFinalityLagSeconds)||c.maxFinalityLagSeconds<1))throw Error('Invalid maxFinalityLagSeconds');
+ if(c.execution?.payoutIntervalSeconds!==undefined){
+  if(!Number.isSafeInteger(c.execution.payoutIntervalSeconds)||c.execution.payoutIntervalSeconds<1)throw Error('Invalid payoutIntervalSeconds');
+  if(!Number.isSafeInteger(c.payoutStartTimestamp)||c.payoutStartTimestamp<1)throw Error('Invalid payoutStartTimestamp');
+ }else if(c.payoutStartTimestamp!==undefined)throw Error('payoutStartTimestamp requires payoutIntervalSeconds');
  if(!/^[A-Z][A-Z0-9_]*$/.test(c.rpcUrlEnvironment??''))throw Error('Invalid RPC environment variable name');
  return c;
 }

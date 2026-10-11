@@ -8,6 +8,7 @@ import {executionBinding,readJournal,writeJournal} from './execution-journal.mjs
 import {createRound,nextRoundBatch} from './reward-round.mjs';
 import {verifyProductionNetwork,verifyProductionToken} from './production-network.mjs';
 import {verifyCandidateState} from './candidate-state.mjs';
+import {payoutSchedulePolicy,openPayoutCycle,completeScheduledHarvest,bindScheduledRound,finishPayoutCycle} from './payout-schedule.mjs';
 
 const rewardAbi=['function operator() view returns(address)','function available() view returns(uint256)',
  'function pending(address) view returns(uint256)','function pay(address)',
@@ -60,6 +61,7 @@ export function executionPolicy(c){
  if(!Number.isSafeInteger(c.batchSize)||c.batchSize<1||c.batchSize>100)throw Error('Invalid execution batch size');
  for(const n of ['maxGasPerTransactionWei','maxTotalGasWei','minimumHarvestWei','minimumBatchWei'])amount(e[n],n);
  if(!Number.isSafeInteger(e.retryIntervalSeconds)||e.retryIntervalSeconds<1)throw Error('Invalid retry interval');
+ payoutSchedulePolicy(c);
  for(const n of ['token','hook','distributor','feeVault'])if(!/^0x[0-9a-f]{64}$/.test(e.codeHashes?.[n]??''))throw Error('Missing pinned runtime hash');
  address(e.feeVault);return e;
 }
@@ -102,7 +104,12 @@ async function recover(provider,state,file,now){
    state.round.nextIndex=p.roundEnd;
    if(state.round.nextIndex>=state.round.allocations.length)state.round=null;
   }
-  state.pending=null;writeJournal(file,state);
+  state.pending=null;
+  if(!state.fault&&state.schedule){
+   if(p.kind==='harvest')completeScheduledHarvest(state);
+   else if(p.kind==='payout'&&!state.round)finishPayoutCycle(state,(await provider.getBlock('latest')).timestamp);
+  }
+  writeJournal(file,state);
   return {state:state.fault?'blocked':'confirmed',kind:p.kind,hash:p.hash,reason:state.fault};
  }
  const nonce=await provider.getTransactionCount(Transaction.from(p.raw).from,'latest');
@@ -166,11 +173,25 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
     throw Error('Finalized execution history changed; reconciliation required');}
   const now=(await provider.getBlock('latest')).timestamp;
   const recovered=await recover(provider,state,file,now);if(recovered)return recovered;
+  const schedulePolicy=payoutSchedulePolicy(c);
+  if(schedulePolicy){
+   const before=JSON.stringify(state.schedule);
+   openPayoutCycle(state,schedulePolicy,now);
+   if(JSON.stringify(state.schedule)!==before)writeJournal(file,state);
+   if(state.schedule.active?.phase==='harvest'){
+    const head=await provider.getBlock('latest');
+    if(await feeVault.creatorAccrued({blockTag:head.number})>=BigInt(e.minimumHarvestWei))
+     return await submit(provider,signer,c,e,state,file,{kind:'harvest',to:e.feeVault,data:fees.encodeFunctionData('claimCreator'),deadline:null,headHash:head.hash,headNumber:head.number});
+    completeScheduledHarvest(state);writeJournal(file,state);
+   }
+  }
   const snapshotFile=path.join(dir,'snapshot.json');
   const snapshot=await buildSnapshot(provider,c,readSnapshot(snapshotFile,c));writeSnapshot(snapshotFile,c,snapshot);
-  const prepared=await preparePlan(provider,c,snapshot),ledger=LossLedger.restore(snapshot.ledger);
-  if(!state.round&&BigInt(prepared.plan.allocated)>=BigInt(e.minimumBatchWei)){
+  const allocationDue=!schedulePolicy||state.schedule.active?.phase==='allocation';
+  const prepared=allocationDue?await preparePlan(provider,c,snapshot):null,ledger=LossLedger.restore(snapshot.ledger);
+  if(allocationDue&&!state.round&&BigInt(prepared.plan.allocated)>=BigInt(e.minimumBatchWei)){
    state.round=createRound(prepared);
+   bindScheduledRound(state);
    atomicWrite(path.join(dir,'recovery-reports',`${state.round.id.slice(2)}.json`),prepared.plan);
    writeJournal(file,state);
   }
@@ -191,11 +212,17 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
    }
    if(deferred)break; // Leave the round intact, but permit independent harvest/retry work.
    state.round.nextIndex=batch.end;
-   if(batch.end>=state.round.allocations.length)state.round=null;
+   if(batch.end>=state.round.allocations.length){
+    state.round=null;
+    if(schedulePolicy)finishPayoutCycle(state,(await provider.getBlock('latest')).timestamp);
+   }
    writeJournal(file,state);
   }
+  if(schedulePolicy&&state.schedule.active?.phase==='allocation'&&!state.round){
+   finishPayoutCycle(state,(await provider.getBlock('latest')).timestamp);writeJournal(file,state);
+  }
   const head=await provider.getBlock('latest');
-  if(await feeVault.creatorAccrued({blockTag:head.number})>=BigInt(e.minimumHarvestWei))
+  if(!schedulePolicy&&await feeVault.creatorAccrued({blockTag:head.number})>=BigInt(e.minimumHarvestWei))
    return await submit(provider,signer,c,e,state,file,{kind:'harvest',to:e.feeVault,data:fees.encodeFunctionData('claimCreator'),deadline:null,headHash:head.hash,headNumber:head.number});
   for(const account of snapshot.pendingRecipients){
    if((state.retryAttempts[account]??0)>=3)continue;
@@ -203,6 +230,7 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
    if(await vault.pending(account,{blockTag:head.number})>0n)
     return await submit(provider,signer,c,e,state,file,{kind:'retry',recipient:account,to:c.distributor,data:rewards.encodeFunctionData('pay',[account]),deadline:null,headHash:head.hash,headNumber:head.number});
   }
-  return {state:'idle',reason:'No eligible funded batch, harvest or due payment retry'};
+  return {state:'idle',reason:schedulePolicy&&!state.schedule.active?'Waiting for next scheduled payout interval or due payment retry':'No eligible funded batch, harvest or due payment retry',
+   ...(schedulePolicy?{nextPayoutAt:state.schedule.nextDueAt,payoutCycle:state.schedule.active?.phase??null}:{})};
  }finally{release();}
 }

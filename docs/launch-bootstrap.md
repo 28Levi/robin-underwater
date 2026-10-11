@@ -1,5 +1,7 @@
 # Reviewed launch bootstrap
 
+The current timing policy uses a version 3 manifest: five-minute eligibility and 15-minute payout rounds. It requires a separate exact worker revision; the verified launch timestamp becomes the immutable configuration's scheduling anchor. Historical v1/v2 manifests retain their old validation and hashes. See [reward timing](reward-timing.md). Old review consent cannot activate the changed policy.
+
 This preparation removes post-launch address and transaction-hash copying. It is not an accepted platform launch package, installed production service, or authorization to send a transaction.
 
 The browser-safe `src/launch-manifest.mjs` defines the immutable manifest shared with the wallet review screen. It pins the current Custom Launch Plan v1.2 identifiers and digests, exact transaction account/nonce/value/calldata, executor runtime, predicted token/hook/initializer/fee-vault addresses and runtime hashes, existing distributor receipt, source revision, fee destinations, initial-buy minimum, accounting settings and approved gas limits. Old retired v4 launch handoffs are rejected. The current model is the reviewed canonical Native20 implementation; another contract design needs its own reviewed verifier, even if a platform can deploy it.

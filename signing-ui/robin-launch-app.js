@@ -98,6 +98,8 @@ function showPackage() {
     ['Minimum treasury harvest', `${ethers.formatEther(e.minimumHarvestWei)} ETH`],
     ['Minimum reward batch', `${ethers.formatEther(e.minimumBatchWei)} ETH`],
     ['Holding requirement', `${a.minimumAgeSeconds / 60} minutes`], ['Price averaging window', `${a.twapWindowSeconds / 60} minutes`],
+    ['Payout interval', e.payoutIntervalSeconds === undefined ? 'No scheduled interval in this historical policy'
+      : `${e.payoutIntervalSeconds / 60} minutes from the finalized launch timestamp; eligible, funded batches only`],
     ['Retry interval', `${e.retryIntervalSeconds / 60} minutes`],
     ['Excluded addresses', a.excludedAddresses.length ? a.excludedAddresses.join(', ') : 'None'],
   ]);
