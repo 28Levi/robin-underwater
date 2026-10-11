@@ -3,7 +3,7 @@ import * as ethers from 'ethers';
 import graphArtifact from '../vendor/programmable-launch-plan-v1/graph-factory.json' with {type: 'json'};
 import {inspectPackedRequest, verifyPlanResource} from './launch-plan-api.mjs';
 import {assertRobinLaunchIntent} from './launch-intent.mjs';
-import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash} from './launch-manifest.mjs';
+import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2} from './launch-manifest.mjs';
 import {validateLaunchPackage, boundedLaunchTransaction, ANCHOR, MANAGER, DISTRIBUTOR, DISTRIBUTOR_HASH} from '../signing-ui/robin-launch-guards.mjs';
 import {ATOMIC, ATOMIC_HASH, GRAPH, GRAPH_HASH, PLAN_MANIFEST, PERMIT_AUTHORITY, PERMIT_AUTHORITY_HASH} from './launch-plan.mjs';
 
@@ -110,10 +110,11 @@ export function inspectAtomicLaunchEnvelope(resource, plan, preparation, intent)
 
 /** Deterministic candidate only. Fresh wallet checks and the user's consent remain separate gates. */
 export function buildLaunchHandoff({requestBytes, packReport, preparation, accepted, intent, distributor, policy,
-  sourceRevision, capabilities, facts, activationMode = 'manual', approvalReference = 'final-user-wallet-review-pending', now = Date.now(), crypto = ethers}) {
+  sourceRevision, workerSourceRevision, capabilities, facts, activationMode = 'manual', approvalReference = 'final-user-wallet-review-pending', now = Date.now(), crypto = ethers}) {
   assertRobinLaunchIntent(intent);
   require(keys(policy, ['preserveLaunchBalanceWei', 'accounting', 'execution']), 'Explicit reviewed launch reserve/accounting/operator policy required.');
   require(/^[0-9a-f]{40}$/.test(sourceRevision ?? ''), 'Exact final published source revision required.');
+  require(workerSourceRevision === undefined || /^[0-9a-f]{40}$/.test(workerSourceRevision), 'Exact worker source revision required when specified.');
   const packed = inspectPackedRequest(Buffer.from(requestBytes), packReport), resource = acceptedLaunchResource(accepted);
   verifyPlanResource(resource, packed);
   const plan = packed.plan;
@@ -163,7 +164,9 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
     && same(receipt.transactionHash, distributor.transactionHash) && Number(BigInt(receipt.blockNumber)) === distributor.blockNumber
     && receipt.blockHash === distributor.blockHash && facts.state.distributorBlock?.hash === distributor.blockHash,
   'Existing distributor receipt is not canonical and successful.');
-  const manifest = {schemaVersion: 'robinhook.launch-bootstrap.v1', chainId: 4663, name: 'ROBINHOOK', symbol: 'ROBIN', sourceRevision,
+  const workerBinding = workerSourceRevision === undefined ? {} : {workerSourceRevision};
+  const manifest = {schemaVersion: workerSourceRevision === undefined ? LAUNCH_MANIFEST_SCHEMA : LAUNCH_MANIFEST_SCHEMA_V2,
+    chainId: 4663, name: 'ROBINHOOK', symbol: 'ROBIN', sourceRevision, ...workerBinding,
     planId: resource.planId, planHash: resource.planHash, platformManifestDigest: resource.manifestDigest, requestSha256: packed.hash,
     projectMetadataHash: hashJson(plan.publication), fundingPlanHash: hashJson(plan.budgets),
     transaction: {from: ethers.getAddress(t.from), to: ethers.getAddress(t.to), nonce: t.nonce, valueWei: t.value,
@@ -183,7 +186,7 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
   validateLaunchPackage(pkg, manifest, manifestSha256, ethers, now);
   const bounded = boundedLaunchTransaction(pkg, manifest, manifestSha256, facts.state, crypto, now);
   return {manifest, manifestSha256, report: {schemaVersion: 'robinhook.launch-handoff-candidate.v1', checkedAt: new Date(now).toISOString(),
-    status: 'candidate-for-final-user-review', manifestSha256, planId: manifest.planId, requestSha256: packed.hash, sourceRevision,
+    status: 'candidate-for-final-user-review', manifestSha256, planId: manifest.planId, requestSha256: packed.hash, sourceRevision, ...workerBinding,
     simulationBlock: {number: facts.simulation.blockNumber, hash: facts.simulation.blockHash}, maximumLaunchGasWei: bounded.maximumCost.toString(),
     activationMode, automationAuthorized: false, walletSigning: false, transactionBroadcast: false, platformIssuanceCreated: false}};
 }

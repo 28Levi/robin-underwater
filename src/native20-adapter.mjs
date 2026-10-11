@@ -1,5 +1,5 @@
 import {Interface} from 'ethers';
-import {address} from './ledger.mjs';
+import {address,ZERO} from './ledger.mjs';
 import {hookInterface} from './receipt-adapter.mjs';
 export const native20Interface=new Interface([
  'event NativeFeesAccrued(bytes32 indexed poolId,address indexed sender,bool isBuy,uint256 grossNative,uint256 platformFee,uint256 creatorFee)'
@@ -43,7 +43,29 @@ export function normalizeNative20Receipt(receipt,c) {
    &&address(seed[0].token)===address(c.token)&&address(seed[0].hook)===address(c.hook)
    &&address(initialBuys[0].token)===address(c.token)&&initialBuys[0].tokensOut===tokens
    &&initialBuys[0].grossNativeWei===f.grossNative&&buy?seed[0].tokenAmount:null;
+  // GraphFactory creates the token and executes its first buy in one receipt.
+  // Remove its constructor mint only when the complete fixed-inventory launch
+  // transfer sequence is present. Ordinary mints and ambiguous receipts retain
+  // the zero-basis fallback; they must never inherit a purchase cost.
+  let constructorMint=null;
+  if(seedAmount!==null&&seedAmount>0n&&seedAmount<=10n**27n&&seed[0].lockedLiquidity>0n
+   &&prices.length===1&&address(prices[0].currency0)===ZERO&&address(prices[0].currency1)===address(c.token)
+   &&address(prices[0].hooks)===address(c.hook)&&prices[0].fee===0n&&prices[0].tickSpacing===60n
+   &&address(f.sender)===address(c.initializer)&&address(s.sender)===address(c.initializer)){
+   const transfers=[];
+   for(const log of receipt.logs){
+    if(address(log.address)!==address(c.token))continue;
+    let parsed;try{parsed=transferInterface.parseLog(log);}catch{}
+    if(parsed)transfers.push({log,...parsed.args.toObject()});
+   }
+   const [mint,inventory,purchase]=transfers;
+   if(transfers.length===3&&address(mint.from)===ZERO&&address(mint.to)===address(c.initializer)&&mint.value===10n**27n
+    &&address(inventory.from)===address(c.initializer)&&address(inventory.to)===address(c.poolManager)&&inventory.value===seedAmount
+    &&address(purchase.from)===address(c.poolManager)&&address(purchase.to)===address(initialBuys[0].buyer)
+    &&address(purchase.to)!==ZERO&&purchase.value===tokens)constructorMint=mint.log;
+  }
   const logs=receipt.logs.filter(log=>{
+   if(log===constructorMint)return false;
    if(seedAmount!==null&&address(log.address)===address(c.token)){
     try{const p=transferInterface.parseLog(log);if(p&&address(p.args.from)===address(c.initializer)
      &&address(p.args.to)===address(c.poolManager)&&p.args.value===seedAmount)return false;}catch{}

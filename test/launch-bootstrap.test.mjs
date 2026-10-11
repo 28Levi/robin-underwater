@@ -189,6 +189,18 @@ test('changed source, corrupt state, forked checkpoint and overwritten output ar
   await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, target, options(f.m)), /differs/);
 });
 
+test('v2 bootstrap requires reviewed worker revision and fresh consent while contract provenance remains pinned', async t => {
+  const f = fixture('after-reviewed-launch'), oldConsent = consent(f.m), originalRevision = f.m.sourceRevision;
+  Object.assign(f.m, {schemaVersion: 'robinhook.launch-bootstrap.v2', workerSourceRevision: 'b'.repeat(40)});
+  const target = dir(t), workerOptions = {...options(f.m), sourceRevision: f.m.workerSourceRevision};
+  await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, target, options(f.m)), /revision/);
+  await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, target, {...workerOptions, consent: oldConsent}), /consent/);
+  const result = await runLaunchBootstrapCycle(f.provider, f.m, target, {...workerOptions,
+    consent: consent(f.m), approvedManifestSha256: launchManifestHash(f.m, ethers)});
+  assert.equal(result.state, 'ready-for-approved-services'); assert.equal(result.signing, false);
+  assert.equal(f.m.sourceRevision, originalRevision);
+});
+
 test('missing mint proof and consumed launch nonce cannot be mistaken for a launch', async t => {
   const f = fixture(); f.provider.getLogs = async () => [];
   await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, dir(t), options(f.m)), /mint evidence/);

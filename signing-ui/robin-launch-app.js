@@ -1,10 +1,14 @@
 import {CHAIN_ID, ANCHOR, MANAGER, validateReviewManifest, validateLaunchPackage,
   boundedLaunchTransaction, launchSubmissionKey} from '/signing-ui/robin-launch-guards.mjs';
+import {requestConnectionStep} from '/signing-ui/wallet-connection.mjs';
+import {effectiveWorkerSourceRevision} from '/src/launch-manifest.mjs';
 
 const ethers = window.ethers, $ = id => document.getElementById(id);
 const status = text => { $('status').textContent = text; };
 const wallets = [];
 let session, manifest, pkg, provider, ready = false, busy = false, walletRevision = 0;
+let reviewRecorded = false, hostReady = false, hostReadyExpiresAt = 0, checkingHost = false;
+let connectionAttempt = 0, connectionAbort = null, connectionPending = false;
 const automatic = () => manifest?.activation.mode === 'after-reviewed-launch';
 const storageKey = () => launchSubmissionKey(manifest);
 const saved = () => manifest ? localStorage.getItem(storageKey()) : null;
@@ -12,14 +16,31 @@ const submitted = () => { try { const record = JSON.parse(saved()); return recor
 function updateControls() {
   $('connect').disabled = busy || !session || !wallets.length;
   $('wallet').disabled = busy;
+  $('cancel-connect').hidden = !connectionPending;
   $('review').disabled = !ready || busy;
-  $('launch').disabled = !ready || busy || !$('review').checked || !!saved();
+  $('record-review').disabled = !ready || busy || !$('review').checked || reviewRecorded || !!saved();
+  $('launch').disabled = !ready || busy || !$('review').checked || !reviewRecorded || !hostReady || Date.now() >= hostReadyExpiresAt || !!saved();
   $('retry-proof').hidden = !session || !submitted() || submitted().proofRecorded === true;
   $('retry-proof').disabled = busy;
 }
 function invalidate() {
-  walletRevision++; ready = false; $('review').checked = false;
+  walletRevision++; ready = false; hostReady = false; $('review').checked = false;
   updateControls(); if (!busy) status('Wallet selection changed. Connect and check again.');
+}
+async function checkHostReadiness() {
+  if (!session || checkingHost) return;
+  checkingHost = true;
+  try {
+    const response = await fetch('/readiness.json', {cache: 'no-store'}), result = await response.json();
+    if (!response.ok || result.manifestSha256 !== session.manifestSha256) throw Error('Readiness unavailable');
+    reviewRecorded = result.reviewRecorded === true;
+    hostReady = result.hostReady === true && Date.parse(result.expiresAt) > Date.now();
+    hostReadyExpiresAt = hostReady ? Date.parse(result.expiresAt) : 0;
+    $('host-status').textContent = hostReady ? 'Your review is recorded and the rewards host is ready. You can open the launch in your wallet.'
+      : reviewRecorded ? 'Your review is recorded. Waiting for the rewards host to receive and verify it. Your wallet has not been opened.'
+      : 'Confirm your review first. Your wallet opens only after the rewards host is ready.';
+  } catch { hostReady = false; hostReadyExpiresAt = 0; $('host-status').textContent = 'Rewards-host readiness is unavailable. Wallet launch stays disabled.'; }
+  finally { checkingHost = false; updateControls(); }
 }
 function addWallet(name, candidate) {
   if (!candidate?.request || wallets.some(wallet => wallet.provider === candidate)) return;
@@ -65,6 +86,7 @@ function showPackage() {
   $('links').replaceChildren(...(publication.links ?? []).map(uri => { const p = document.createElement('p'); p.textContent = uri; return p; }));
   $('manifest-hash').textContent = session.manifestSha256;
   $('source-revision').textContent = manifest.sourceRevision;
+  $('worker-source-revision').textContent = effectiveWorkerSourceRevision(manifest);
   $('platform-history').href = `https://programmable.market/developers/api-keys?view=history&chainId=4663&launchId=${encodeURIComponent(manifest.planId)}`;
   $('platform-history').hidden = false;
   $('automation-notice').textContent = automatic()
@@ -79,7 +101,7 @@ function showPackage() {
     ['Retry interval', `${e.retryIntervalSeconds / 60} minutes`],
     ['Excluded addresses', a.excludedAddresses.length ? a.excludedAddresses.join(', ') : 'None'],
   ]);
-  $('review-label').textContent = `I reviewed ROBINHOOK / ROBIN, the ${ethers.formatEther(t.valueWei)} ETH purchase, ${ethers.formatEther(manifest.maxLaunchGasWei)} ETH launch gas ceiling, addresses and ${automatic() ? 'automatic payout policy' : 'manual payout activation'} above.`;
+  $('review-label').textContent = `I reviewed ROBINHOOK / ROBIN, the ${ethers.formatEther(t.valueWei)} ETH purchase, ${ethers.formatEther(manifest.maxLaunchGasWei)} ETH launch gas ceiling, addresses, contract and worker revisions, and ${automatic() ? 'automatic payout policy' : 'manual payout activation'} above.`;
 }
 async function loadPackage() {
   const response = await fetch('/package.json', {cache: 'no-store'}), result = await response.json();
@@ -135,31 +157,73 @@ window.addEventListener('storage', event => {
   if (manifest && event.key === storageKey()) { invalidate(); status('Another tab updated this wallet nonce. Reconcile its submission before retrying.'); }
 });
 $('connect').addEventListener('click', async () => {
+  const attempt = ++connectionAttempt, controller = new AbortController();
+  connectionAbort = controller; connectionPending = true;
   ready = false; busy = true; $('review').checked = false; updateControls();
   try {
     provider?.removeListener?.('accountsChanged', invalidate); provider?.removeListener?.('chainChanged', invalidate);
-    provider = wallets[Number($('wallet').value)]?.provider;
+    const chosen = wallets[Number($('wallet').value)]; provider = chosen?.provider;
     if (!provider) throw Error('Select an available browser wallet.');
-    await provider.request({method: 'eth_requestAccounts'});
-    if (await provider.request({method: 'eth_chainId'}) !== CHAIN_ID) {
-      try { await provider.request({method: 'wallet_switchEthereumChain', params: [{chainId: CHAIN_ID}]}); }
+    const selected = provider;
+    const step = async (method, params) => {
+      const result = await requestConnectionStep(selected, method, params, {signal: controller.signal});
+      if (attempt !== connectionAttempt) throw Object.assign(Error('Connection cancelled'), {code: 'WALLET_CONNECTION_CANCELLED'});
+      return result;
+    };
+    status(`Approve the connection in ${chosen.name}. If its prompt does not open in Codex, open this same page in your normal wallet browser. You can cancel this wait below.`);
+    await step('eth_requestAccounts');
+    if (await step('eth_chainId') !== CHAIN_ID) {
+      status(`Approve the switch to Robinhood Chain in ${chosen.name}.`);
+      try { await step('wallet_switchEthereumChain', [{chainId: CHAIN_ID}]); }
       catch (error) {
         if (error.code !== 4902) throw error;
-        await provider.request({method: 'wallet_addEthereumChain', params: [{chainId: CHAIN_ID, chainName: 'Robinhood Chain',
-          nativeCurrency: {name: 'Ether', symbol: 'ETH', decimals: 18}, rpcUrls: ['https://rpc.mainnet.chain.robinhood.com']}]});
-        await provider.request({method: 'wallet_switchEthereumChain', params: [{chainId: CHAIN_ID}]});
+        status(`Approve adding Robinhood Chain in ${chosen.name}, then approve switching to it.`);
+        await step('wallet_addEthereumChain', [{chainId: CHAIN_ID, chainName: 'Robinhood Chain',
+          nativeCurrency: {name: 'Ether', symbol: 'ETH', decimals: 18}, rpcUrls: ['https://rpc.mainnet.chain.robinhood.com']}]);
+        await step('wallet_switchEthereumChain', [{chainId: CHAIN_ID}]);
       }
     }
     provider.on?.('accountsChanged', invalidate); provider.on?.('chainChanged', invalidate);
     status('Checking the current approved plan, deployed contracts, finality, nonce and gas budget…');
-    await freshTransaction(); ready = true;
+    await freshTransaction();
+    if (attempt !== connectionAttempt) return;
+    ready = true; await checkHostReadiness();
+    if (attempt !== connectionAttempt) return;
     status(saved() ? `A submission is already recorded for this wallet nonce. Reconcile it before retrying.\n${saved()}`
       : 'Checks passed. Review the details and check the review box to open the exact transaction in your wallet.');
-  } catch (error) { status(error.message ?? 'Wallet check failed.'); }
+  } catch (error) {
+    if (attempt !== connectionAttempt) return;
+    if (error.code === 'WALLET_CONNECTION_TIMEOUT') {
+      walletRevision++; status('The wallet has not answered yet. Open this same page in your normal wallet browser if the prompt does not open in Codex. Approve or dismiss any pending request in your extension before connecting again.');
+    } else if (error.code === 'WALLET_CONNECTION_CANCELLED') status('Connection wait cancelled. Dismiss any pending request in your wallet before reconnecting.');
+    else if (error.code === -32002) status('Your wallet already has a pending connection request. Open the extension to approve or dismiss it, then connect again.');
+    else status(error.message ?? 'Wallet check failed.');
+  }
+  finally { if (attempt === connectionAttempt) { connectionPending = false; connectionAbort = null; busy = false; updateControls(); } }
+});
+$('cancel-connect').addEventListener('click', () => {
+  if (!connectionPending) return;
+  connectionAttempt++; walletRevision++; connectionAbort?.abort(); connectionAbort = null;
+  connectionPending = false; busy = false; ready = false; $('review').checked = false; updateControls();
+  status('Connection wait cancelled. Dismiss any pending request in your wallet before reconnecting. No launch request was sent.');
+});
+$('record-review').addEventListener('click', async () => {
+  if (busy || !ready || !$('review').checked || reviewRecorded || saved()) return;
+  busy = true; updateControls();
+  try {
+    await freshTransaction();
+    const response = await fetch('/review', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Robin-Review-Token': session.reviewToken},
+      body: JSON.stringify({manifestSha256: session.manifestSha256, reviewAccepted: true,
+        automationAccepted: automatic(), economicRiskAccepted: automatic()})});
+    const recorded = await response.json();
+    if (!response.ok || recorded.status !== 'review-recorded' || recorded.manifestSha256 !== session.manifestSha256) throw Error('The exact launch review could not be recorded.');
+    reviewRecorded = true; status('Review recorded. The wallet step will become available after the rewards host confirms this exact review.');
+    await checkHostReadiness();
+  } catch (error) { status(error.message ?? 'Review could not be recorded.'); }
   finally { busy = false; updateControls(); }
 });
 $('launch').addEventListener('click', async () => {
-  if (busy || !ready || !$('review').checked || saved()) return;
+  if (busy || !ready || !$('review').checked || !reviewRecorded || !hostReady || Date.now() >= hostReadyExpiresAt || saved()) return;
   busy = true; ready = false; updateControls(); let sendStarted = false;
   try {
     if (!navigator.locks) throw Error('Use an up-to-date browser with transaction locking support.');
@@ -167,15 +231,17 @@ $('launch').addEventListener('click', async () => {
       if (!lock) throw Error('Another tab is preparing this wallet nonce.');
       const selected = provider, revision = walletRevision, {transaction} = await freshTransaction();
       if (saved()) throw Error('A submission is already recorded. Reconcile it before retrying.');
-      const response = await fetch('/review', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Robin-Review-Token': session.reviewToken},
-        body: JSON.stringify({manifestSha256: session.manifestSha256, reviewAccepted: true,
-          automationAccepted: automatic(), economicRiskAccepted: automatic()})});
+      const response = await fetch('/signing-ready', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Robin-Review-Token': session.reviewToken},
+        body: JSON.stringify({manifestSha256: session.manifestSha256})});
       const recorded = await response.json();
-      if (!response.ok || recorded.status !== 'review-recorded' || recorded.manifestSha256 !== session.manifestSha256) throw Error('The exact launch review could not be recorded. No wallet action opened.');
+      if (!response.ok || recorded.status !== 'signing-ready' || recorded.manifestSha256 !== session.manifestSha256
+        || Date.parse(recorded.expiresAt) <= Date.now()) throw Error('The rewards host is not ready for this exact review. No wallet action opened.');
       validateLaunchPackage(pkg, manifest, session.manifestSha256, ethers);
       const accounts = await selected.request({method: 'eth_accounts'});
       if (provider !== selected || revision !== walletRevision || accounts[0]?.toLowerCase() !== manifest.transaction.from.toLowerCase()
         || await selected.request({method: 'eth_chainId'}) !== CHAIN_ID) throw Error('Wallet changed during final checks.');
+      validateLaunchPackage(pkg, manifest, session.manifestSha256, ethers);
+      if (Date.parse(recorded.expiresAt) <= Date.now()) throw Error('Rewards-host acknowledgement expired during wallet checks. Refresh readiness before signing.');
       if (saved()) throw Error('Another submission is recorded for this wallet nonce.');
       localStorage.setItem(storageKey(), JSON.stringify({state: 'awaiting-wallet-response', manifestSha256: session.manifestSha256,
         planId: manifest.planId, nonce: manifest.transaction.nonce, at: new Date().toISOString()}));
@@ -208,7 +274,7 @@ try {
   session = await response.json(); manifest = session.manifest;
   validateReviewManifest(manifest, session.manifestSha256, ethers);
   pkg = {resource: {plan: {publication: session.publication}}}; showPackage();
-  await loadPackage(); updateControls();
+  await loadPackage(); await checkHostReadiness(); updateControls();
   status(saved() ? `Existing submission record. Reconcile before retrying.\n${saved()}`
     : 'Ready. Connect the displayed launch wallet to check the exact transaction.');
 } catch (error) {
@@ -217,7 +283,9 @@ try {
   updateControls(); status(`${error.message ?? 'Reviewed handoff unavailable.'}${submitted() ? '\nAn existing transaction is recorded. Retry only its platform receipt; do not launch again.' : ''}`);
 }
 setInterval(() => {
+  if (hostReady && Date.now() >= hostReadyExpiresAt) { hostReady = false; updateControls(); }
   if (ready && Date.parse(manifest.transaction.expiresAt) - Date.now() < 90000) {
     ready = false; updateControls(); status('Authorization is about to expire. Prepare a fresh reviewed handoff; do not sign.');
   }
 }, 1000);
+setInterval(() => { if (!busy && !saved()) checkHostReadiness(); }, 3000);

@@ -2,7 +2,7 @@
 
 `scripts/install-launch-admission.mjs` installs public launch evidence into the worker's dedicated durable launch directory. It runs offline: it never contacts Programmable or RPC, reads a signing key, signs, broadcasts, changes host configuration, or starts services. It does not validate current platform availability or replace final wallet review.
 
-Run it on the worker host with the exact final `manifest.json`, its independently reviewed SHA-256 digest, and the source commit actually running on that host. The manifest's source revision must equal that commit. The CLI also checks the explicit revision against `ROBIN_SOURCE_REVISION` or `RENDER_GIT_COMMIT` when configured, using the same precedence as the standby. Use the same absolute directory configured as `ROBIN_LAUNCH_STATE_DIRECTORY` for `launch-standby.mjs`.
+Run it on the worker host with the exact final `manifest.json`, its independently reviewed SHA-256 digest, and the source commit actually running on that host. For a v1 manifest that is `sourceRevision`; a v2 manifest binds the running code with `workerSourceRevision` and preserves `sourceRevision` for the approved contract package. The CLI also checks the explicit revision against `ROBIN_SOURCE_REVISION` or `RENDER_GIT_COMMIT` when configured, using the same precedence as the standby. Use the same absolute directory configured as `ROBIN_LAUNCH_STATE_DIRECTORY` for `launch-standby.mjs`.
 
 ```sh
 node scripts/install-launch-admission.mjs \
@@ -25,5 +25,7 @@ The review is checked by the existing `validateLaunchConsent` policy against the
 All inputs and existing destinations are checked before publication. Completed file contents are fsynced, then published through exclusive hard links on the same filesystem, so admission never appears partially written and existing files are never replaced. If supplied, consent is published first and admission last. After an interrupted review-first installation, rerun with the identical explicit review input. A filesystem without hard-link support fails closed; there is no overwrite fallback.
 
 An exact rerun preserves existing bytes and succeeds. A changed package, changed review, different pinned manifest, symlinked path, stale install lock, or runtime state with missing admission fails closed. Preserve existing state and investigate; do not clear journals or locks to force installation. This tool assumes trusted local filesystem administrators and does not isolate itself from another process with permission to mutate the same directories.
+
+A worker-only revision change does not permit this installer to replace an existing admission. Reconcile any previous unlaunched review through the explicit host replacement procedure, preserving all evidence and unresolved wallet attempts. Prepare new local consent and a new host acknowledgement for the v2 manifest; an old review or acknowledgement cannot carry over. Never reset operator journals or change the platform package to install a worker fix.
 
 Successful installation only reports delivery. It does not set `ROBIN_AUTOMATION_APPROVED_MANIFEST_SHA256`, add `--services`, authorize operator spending, or confirm a successful token launch. The separate existing consent, exact host approval, finality and contract verification gates still apply. Final production integration and a controlled post-launch payout remain necessary.

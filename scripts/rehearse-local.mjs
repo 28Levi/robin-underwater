@@ -11,13 +11,25 @@ import {buildSnapshot} from '../src/replay.mjs';
 import {LossLedger,stringify} from '../src/ledger.mjs';
 const require=createRequire(import.meta.url),root=path.resolve('.'),rpcUrl='http://127.0.0.1:18545';
 const runDirectory=path.join(root,'output','rehearsal',String(Date.now()));fs.mkdirSync(runDirectory,{recursive:true});
-const report={schemaVersion:'robin.local-rehearsal.v1',startedAt:new Date().toISOString(),network:'disposable local Hardhat EVM',
+const reviewedManifest=JSON.parse(fs.readFileSync(new URL('../test/fixtures/native30-execution-limits.json',import.meta.url),'utf8'));
+const feeProfilePath=process.argv[2];
+if(process.argv.length>3)throw Error('Usage: node scripts/rehearse-local.mjs [observed-live-fee-profile.json]');
+const observedFees=feeProfilePath?JSON.parse(fs.readFileSync(feeProfilePath,'utf8')):null;
+if(observedFees){
+ assert.equal(observedFees.chainId,4663);assert.ok(Number.isSafeInteger(observedFees.block));
+ assert.ok(Number.isFinite(Date.parse(observedFees.checkedAt)));
+ assert.match(observedFees.baseFeePerGas,/^[1-9][0-9]*$/);
+ assert.match(observedFees.feeData.maxPriorityFeePerGas,/^(0|[1-9][0-9]*)$/);
+}
+const report={schemaVersion:'robin.native30-process-rehearsal.v1',startedAt:new Date().toISOString(),network:'disposable local Hardhat EVM',
  mainnetTransactionsSent:0,realFundsSpentWei:'0',publicTestMnemonicOnly:true,graphFactorySimulated:true,checks:[],cycles:[]};
+report.reviewedExecutionLimits=reviewedManifest.execution;
+report.observedLiveFees=observedFees;
 const server=spawn(process.execPath,[require.resolve('hardhat/internal/cli/cli.js'),'node','--hostname','127.0.0.1','--port','18545'],
  {cwd:root,env:{...process.env,LOCALAPPDATA:path.join(runDirectory,'runtime'),APPDATA:path.join(runDirectory,'runtime'),
   HARDHAT_CONFIG:path.join(root,'hardhat.rehearsal.config.cjs')},stdio:'ignore',windowsHide:true});
 const rpc=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});
-let f,slowRpc;
+let f,slowRpc,feeRpc;
 const check=(name,details={})=>{report.checks.push({name,passed:true,...details});console.log('PASS: '+name);};
 try{
  let online=false;
@@ -28,8 +40,24 @@ try{
   await delay(200);
  }
  if(!online)throw Error('Local node unavailable');
+ let executorRpcUrl=rpcUrl;
+ if(observedFees){
+  // Only the disposable chain's fee quote is modeled. No live RPC or real signer is used.
+  feeRpc=http.createServer(async(req,res)=>{
+   try{let body='';for await(const chunk of req)body+=chunk;
+    const upstream=await fetch(rpcUrl,{method:'POST',headers:{'content-type':'application/json'},body});
+    const requests=JSON.parse(body),reply=await upstream.json();
+    const requestList=Array.isArray(requests)?requests:[requests],replies=Array.isArray(reply)?reply:[reply];
+    for(const item of replies)if(requestList.find(r=>r.id===item.id)?.method==='eth_maxPriorityFeePerGas')
+     item.result='0x'+BigInt(observedFees.feeData.maxPriorityFeePerGas).toString(16);
+    res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify(Array.isArray(reply)?replies:replies[0]));
+   }catch{res.writeHead(502);res.end();}
+  });
+  await new Promise(resolve=>feeRpc.listen(18547,'127.0.0.1',resolve));
+  executorRpcUrl='http://127.0.0.1:18547';
+ }
  const remote={network:{provider:{send:(method,params)=>rpc.send(method,params),request:({method,params})=>rpc.send(method,params??[])}}};
- f=await native20Fixture(remote,{operatorIndex:3,name:'ROBINHOOK',symbol:'ROBIN',firstBuyWei:E/100n});
+ f=await native20Fixture(remote,{operatorIndex:3,name:'ROBINHOOK',symbol:'ROBIN',firstBuyWei:E/100n,feeProfile:'robin-native30'});
  const {provider,owner,alice,bob,token,hook,feeVault,reward,c,swap}=f;
  const addresses={early:await owner.getAddress(),alice:await alice.getAddress(),bob:await bob.getAddress(),recipient:await(await provider.getSigner(4)).getAddress()};
  const lateBuyer=await provider.getSigner(5);
@@ -37,7 +65,9 @@ try{
   await swap(bob,false,(await token.balanceOf(addresses.bob))/2n)];
  const fees=receipts.flatMap(r=>r.logs.map(l=>{try{return hook.interface.parseLog(l);}catch{return null;}})).filter(l=>l?.name==='NativeFeesAccrued');
  for(const fee of fees){assert.equal(fee.args.creatorFee+fee.args.platformFee,(fee.args.grossNative*200n+9999n)/10000n);
-  assert.equal(fee.args.platformFee,(fee.args.grossNative*20n+9999n)/10000n);}
+  assert.equal(fee.args.platformFee,(fee.args.grossNative*30n+9999n)/10000n);}
+ assert.equal(await hook.creatorBuyFeeBps(),170n);assert.equal(await hook.creatorSellFeeBps(),170n);
+ assert.equal(await hook.PLATFORM_FEE_BPS(),30n);
  assert.equal(await feeVault.creatorAccrued(),fees.reduce((sum,p)=>sum+p.args.creatorFee,0n));
  check('Real swaps charge 2% total and separate project/platform fee balances',{swaps:fees.length});
  await rpc.send('evm_increaseTime',[3700]);await rpc.send('evm_mine',[]);
@@ -59,11 +89,14 @@ try{
  check('Transferring half the tokens carries half the basis; combined loss stays the same within 1 wei');
  const operator=HDNodeWallet.fromPhrase('test test test test test test test test test test test junk',undefined,"m/44'/60'/0'/0/3");
  const config={...c,rpcUrlEnvironment:'ROBIN_REHEARSAL_RPC_URL',execution:{mode:'local-only',operator:operator.address,feeVault:await feeVault.getAddress(),
-  maxGasPerTransactionWei:(E/100n).toString(),maxTotalGasWei:E.toString(),minimumHarvestWei:'1000',minimumBatchWei:'1000',retryIntervalSeconds:3600,codeHashes:{}}};
+  maxGasPerTransactionWei:reviewedManifest.execution.maxGasPerTransactionWei,maxTotalGasWei:reviewedManifest.execution.maxTotalGasWei,
+  minimumHarvestWei:reviewedManifest.execution.minimumHarvestWei,minimumBatchWei:reviewedManifest.execution.minimumBatchWei,
+  retryIntervalSeconds:reviewedManifest.execution.retryIntervalSeconds,codeHashes:{}}};
  for(const name of ['token','hook','distributor','feeVault'])config.execution.codeHashes[name]=keccak256(await provider.getCode(name==='feeVault'?config.execution.feeVault:config[name]));
  const configFile=path.join(runDirectory,'config.json');fs.writeFileSync(configFile,stringify(config));
  const stateDirectory=path.join(runDirectory,'bot-state');
- async function cycle(endpoint=rpcUrl){
+ async function cycle(endpoint=executorRpcUrl){
+  if(observedFees){await rpc.send('hardhat_setNextBlockBaseFeePerGas',['0x'+BigInt(observedFees.baseFeePerGas).toString(16)]);await rpc.send('evm_mine',[]);}
   const child=spawn(process.execPath,['scripts/executor.mjs',configFile,'--once'],{cwd:root,windowsHide:true,
    env:{...process.env,ROBIN_REHEARSAL_RPC_URL:endpoint,ROBIN_LOCAL_OPERATOR_PRIVATE_KEY:operator.privateKey,ROBIN_STATE_DIRECTORY:stateDirectory},stdio:['ignore','pipe','pipe']});
   let output='';child.stdout.on('data',b=>{output+=b.toString();});child.stderr.resume();
@@ -108,7 +141,7 @@ try{
  await swap(bob,true,E/1000n);
  slowRpc=http.createServer(async(req,res)=>{
   try{let body='';for await(const chunk of req)body+=chunk;
-   const upstream=await fetch(rpcUrl,{method:'POST',headers:{'content-type':'application/json'},body});
+   const upstream=await fetch(executorRpcUrl,{method:'POST',headers:{'content-type':'application/json'},body});
    const reply=await upstream.text();await delay(250);res.writeHead(200,{'content-type':'application/json'});res.end(reply);
   }catch{res.writeHead(502);res.end();}
  });
@@ -123,7 +156,8 @@ try{
  report.passed=true;
 }catch(error){report.passed=false;report.failure=error.message;console.error('REHEARSAL FAILED: '+error.message);process.exitCode=1;}
 finally{
- report.finishedAt=new Date().toISOString();fs.writeFileSync('output/local-rehearsal.json',stringify(report)+'\n');
- slowRpc?.close();f?.provider.destroy();rpc.destroy();server.kill();
- console.log('Evidence: output/local-rehearsal.json (local funds only)');
+ report.finishedAt=new Date().toISOString();fs.writeFileSync(path.join(runDirectory,'report.json'),stringify(report)+'\n');
+ fs.writeFileSync('output/robin-native30-process-rehearsal.json',stringify(report)+'\n');
+ slowRpc?.close();feeRpc?.close();f?.provider.destroy();rpc.destroy();server.kill();
+ console.log('Evidence: output/robin-native30-process-rehearsal.json (local funds only)');
 }

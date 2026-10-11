@@ -15,6 +15,40 @@ const rewardAbi=['function operator() view returns(address)','function available
 const feeAbi=['function creatorRecipient() view returns(address)','function creatorAccrued() view returns(uint256)','function claimCreator()'];
 const rewards=new Interface(rewardAbi),fees=new Interface(feeAbi);
 const amount=(x,name)=>{if(typeof x!=='string'||! /^[1-9][0-9]*$/.test(x))throw Error(`Missing positive execution ${name}`);return BigInt(x);};
+class GasBudgetError extends Error {
+ constructor(scope,maxFeePerGas){
+  const details={transaction:['PER_TRANSACTION_GAS_CAP','per-transaction cap'],cumulative:['CUMULATIVE_GAS_CAP','cumulative cap'],
+   batch:['PAYOUT_GAS_MINIMUM_CONFLICT','no payout slice fits both the per-transaction cap and minimum batch value']}[scope];
+  super(`Execution gas budget exceeded: ${details[1]}`);
+  this.code=details[0];this.maxFeePerGas=maxFeePerGas;
+ }
+}
+const bufferedGas=units=>(units*120n+99n)/100n;
+function payoutCandidate(c,prepared,batch){
+ return {kind:'payout',to:c.distributor,deadline:prepared.expiresAt,headHash:prepared.checkedHead.hash,headNumber:prepared.checkedHead.number,roundEnd:batch.end,
+  data:rewards.encodeFunctionData('distributeEligible',[batch.batchId,batch.auditHash,c.token,prepared.expiresAt,
+   batch.entries.map(a=>a.account),batch.entries.map(a=>a.amount),batch.entries.map(a=>a.balance)])};
+}
+
+/** Reduce only the contiguous slice, never the round's original entitlements.
+ * Quotes do not sign or reserve gas. submit() repeats state, fee, total-budget and
+ * balance checks for the selected slice immediately before signing.
+ */
+async function smallerPayoutBatch(provider,c,e,operator,round,prepared,ledger,snapshot,batch,maxFeePerGas){
+ let low=1,high=batch.end-round.nextIndex-1,best=null;
+ while(low<=high){
+  const size=Math.floor((low+high)/2);
+  const candidateBatch=await nextRoundBatch(provider,{...c,batchSize:size},round,prepared,ledger,snapshot);
+  if(candidateBatch.total<BigInt(e.minimumBatchWei)){low=size+1;continue;}
+  const candidate=payoutCandidate(c,prepared,candidateBatch);
+  const units=await provider.estimateGas({from:operator,to:candidate.to,data:candidate.data,value:0n});
+  if(units<=0n)throw Error('Execution gas estimate unavailable');
+  if(bufferedGas(units)*maxFeePerGas<=BigInt(e.maxGasPerTransactionWei)){best=candidateBatch;low=size+1;}
+  else high=size-1;
+ }
+ if(!best)throw new GasBudgetError('batch',maxFeePerGas);
+ return best;
+}
 
 export function executionPolicy(c){
  const e=c.execution;if(!e||!['local-only','production'].includes(e.mode))throw Error('Choose local EVM or production execution mode');
@@ -89,9 +123,9 @@ async function submit(provider,signer,c,e,state,file,candidate){
  const [units,feeData]=await Promise.all([provider.estimateGas(request),provider.getFeeData()]);
  if(units<=0n)throw Error('Execution gas estimate unavailable');
  if(!feeData.maxFeePerGas||feeData.maxPriorityFeePerGas===null)throw Error('EIP-1559 fee data unavailable');
- const gasLimit=(units*120n+99n)/100n,reservation=gasLimit*feeData.maxFeePerGas;
- if(reservation>BigInt(e.maxGasPerTransactionWei)||BigInt(state.reservedGasWei)+reservation>BigInt(e.maxTotalGasWei))
-  throw Error('Execution gas budget exceeded');
+ const gasLimit=bufferedGas(units),reservation=gasLimit*feeData.maxFeePerGas;
+ if(reservation>BigInt(e.maxGasPerTransactionWei))throw new GasBudgetError('transaction',feeData.maxFeePerGas);
+ if(BigInt(state.reservedGasWei)+reservation>BigInt(e.maxTotalGasWei))throw new GasBudgetError('cumulative',feeData.maxFeePerGas);
  if(candidate.kind==='retry'&&BigInt(state.retryGasWei)+reservation>BigInt(e.maxTotalGasWei)/10n)
   return {state:'idle',reason:'Automatic retry gas allowance exhausted; recipient can call pay directly'};
  if(await provider.getBalance(from)<reservation)throw Error('Operator lacks gas funding');
@@ -141,18 +175,21 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
    writeJournal(file,state);
   }
   while(state.round){
-   const batch=await nextRoundBatch(provider,c,state.round,prepared,ledger,snapshot);
-   if(batch.total>=BigInt(e.minimumBatchWei)){
-    const candidate={kind:'payout',to:c.distributor,deadline:prepared.expiresAt,headHash:prepared.checkedHead.hash,headNumber:prepared.checkedHead.number,roundEnd:batch.end,
-     data:rewards.encodeFunctionData('distributeEligible',[batch.batchId,batch.auditHash,c.token,prepared.expiresAt,
-      batch.entries.map(a=>a.account),batch.entries.map(a=>a.amount),batch.entries.map(a=>a.balance)])};
+   let batch=await nextRoundBatch(provider,c,state.round,prepared,ledger,snapshot),deferred=false;
+   while(batch.total>=BigInt(e.minimumBatchWei)){
+    const candidate=payoutCandidate(c,prepared,batch);
     atomicWrite(path.join(dir,'plans',`${batch.batchId.slice(2)}.json`),{...batch.audit,auditHash:batch.auditHash,guardedTransaction:candidate});
     try{return await submit(provider,signer,c,e,state,file,candidate);}
     catch(error){
+     if(error.code==='PER_TRANSACTION_GAS_CAP'&&batch.end-state.round.nextIndex>1){
+      batch=await smallerPayoutBatch(provider,c,e,operator,state.round,prepared,ledger,snapshot,batch,error.maxFeePerGas);
+      continue;
+     }
      if(!/^Head changed during (preparation|estimation); rebuild next cycle$/.test(error.message))throw error;
-     break; // Leave the round intact, but permit independent harvest/retry work.
+     deferred=true;break;
     }
    }
+   if(deferred)break; // Leave the round intact, but permit independent harvest/retry work.
    state.round.nextIndex=batch.end;
    if(batch.end>=state.round.allocations.length)state.round=null;
    writeJournal(file,state);

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as ethers from 'ethers';
 import {atomicWrite} from './store.mjs';
-import {canonicalLaunchJson, launchManifestHash, validateLaunchManifest} from './launch-manifest.mjs';
+import {canonicalLaunchJson, launchManifestHash, validateLaunchManifest, effectiveWorkerSourceRevision} from './launch-manifest.mjs';
 
 function contained(root, file) {
   const relative = path.relative(root, file);
@@ -50,7 +50,7 @@ export function inspectLaunchAdmission(settings) {
   if (Object.keys(envelope ?? {}).sort().join(',') !== 'manifest,manifestSha256,schemaVersion'
     || envelope.schemaVersion !== 'robinhook.launch-admission.v1') throw Error('Invalid launch admission envelope');
   const manifest = validateLaunchManifest(envelope.manifest), hash = launchManifestHash(manifest, ethers);
-  if (hash !== envelope.manifestSha256 || manifest.sourceRevision !== sourceRevision) throw Error('Admission digest or source revision mismatch');
+  if (hash !== envelope.manifestSha256 || effectiveWorkerSourceRevision(manifest) !== sourceRevision) throw Error('Admission digest or source revision mismatch');
   if (fs.existsSync(pinnedFile)) {
     if (canonicalLaunchJson(JSON.parse(fs.readFileSync(pinnedFile, 'utf8'))) !== canonicalLaunchJson(manifest))
       throw Error('Admitted launch package changed; preserve and reconcile state');

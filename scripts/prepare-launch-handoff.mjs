@@ -6,13 +6,16 @@ import {buildLaunchHandoff, readLaunchChainFacts} from '../src/launch-manifest-b
 
 export function parseHandoffOptions(args) {
   const options = new Map(), required = ['request', 'pack-report', 'preparation', 'accepted-package', 'distributor', 'policy', 'source-revision', 'out'];
-  const allowed = new Set([...required, 'activation']);
+  const allowed = new Set([...required, 'activation', 'worker-source-revision']);
   for (let i = 0; i < args.length; i += 2) {
     const key = args[i]?.replace(/^--/, ''), value = args[i + 1];
     if (!allowed.has(key) || !args[i].startsWith('--') || !value || value.startsWith('--') || options.has(key)) throw Error('Invalid or repeated handoff option');
     options.set(key, value);
   }
   for (const key of required) if (!options.has(key)) throw Error(`Required: --${key}`);
+  if (options.has('worker-source-revision') && !/^[0-9a-f]{40}$/.test(options.get('worker-source-revision'))) {
+    throw Error('Worker source revision must be an exact 40-character lowercase commit hash.');
+  }
   if (options.has('activation') && !['manual', 'after-reviewed-launch'].includes(options.get('activation'))) {
     throw Error('Activation must be manual or after-reviewed-launch; this choice still requires final user review.');
   }
@@ -25,6 +28,7 @@ export function readHandoffInputs(options) {
   return {out, requestBytes: fs.readFileSync(options.get('request')), packReport: json(options.get('pack-report')),
     preparation: json(options.get('preparation')), accepted: json(options.get('accepted-package')),
     distributor: json(options.get('distributor')), policy: json(options.get('policy')), sourceRevision: options.get('source-revision'),
+    ...(options.has('worker-source-revision') ? {workerSourceRevision: options.get('worker-source-revision')} : {}),
     activationMode: options.get('activation') ?? 'manual'};
 }
 

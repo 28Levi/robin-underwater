@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "robin.local-rehearsal-policy.v1",
+  "source": "ROBIN execution limits reviewed 2026-10-11; local-only fixture, not launch authorization",
+  "execution": {
+    "maxGasPerTransactionWei": "200000000000000",
+    "maxTotalGasWei": "5000000000000000",
+    "minimumHarvestWei": "10000000000000",
+    "minimumBatchWei": "10000000000000",
+    "retryIntervalSeconds": 3600
+  }
+}

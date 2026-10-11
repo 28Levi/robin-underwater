@@ -87,6 +87,22 @@ test('candidate rejects binding changes, non-ready admission, stale evidence, re
   for (const mutate of mutations) { const x = fixture(); mutate(x); assert.throws(() => buildLaunchHandoff(x)); }
 });
 
+test('explicit worker revision changes only local review identity while exact approved contract package remains unchanged', () => {
+  const input = fixture(), requestBefore = Buffer.from(input.requestBytes), resourceBefore = canonicalLaunchJson(input.accepted);
+  const original = buildLaunchHandoff(input), workerSourceRevision = '2'.repeat(40);
+  const revised = buildLaunchHandoff({...input, workerSourceRevision});
+  assert.equal(revised.manifest.schemaVersion, 'robinhook.launch-bootstrap.v2');
+  assert.equal(revised.manifest.workerSourceRevision, workerSourceRevision);
+  assert.equal(revised.manifest.sourceRevision, input.preparation.sourceRevision);
+  assert.equal(revised.report.workerSourceRevision, workerSourceRevision);
+  const {workerSourceRevision: _worker, schemaVersion: _schema, ...remaining} = revised.manifest;
+  assert.deepEqual({...remaining, schemaVersion: 'robinhook.launch-bootstrap.v1'}, original.manifest);
+  assert.notEqual(revised.manifestSha256, original.manifestSha256);
+  assert.deepEqual(input.requestBytes, requestBefore); assert.equal(canonicalLaunchJson(input.accepted), resourceBefore);
+  for (const worker of ['', 'main', 'G'.repeat(40), null]) assert.throws(() => buildLaunchHandoff({...input, workerSourceRevision: worker}), /worker source/);
+  assert.throws(() => buildLaunchHandoff({...input, sourceRevision: workerSourceRevision, workerSourceRevision: sourceRevision}), /source revision/);
+});
+
 test('a stale 1.8% / 0.2% preparation or fee intent cannot produce a current handoff', () => {
   for (const field of ['preparation', 'intent']) {
     const x = fixture();

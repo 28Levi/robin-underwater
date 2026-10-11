@@ -6,7 +6,7 @@ import {atomicWrite, acquireLock} from './store.mjs';
 import {executionBinding} from './execution-journal.mjs';
 import {executionPolicy} from './executor.mjs';
 import {verifyProductionNetwork, verifyProductionToken, POOL_MANAGER} from './production-network.mjs';
-import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, validateLaunchConsent} from './launch-manifest.mjs';
+import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, validateLaunchConsent, effectiveWorkerSourceRevision} from './launch-manifest.mjs';
 
 const HASH = /^0x[0-9a-f]{64}$/;
 const digest = value => `sha256:${ethers.sha256(ethers.toUtf8Bytes(canonicalLaunchJson(value))).slice(2)}`;
@@ -162,7 +162,7 @@ export function operatorStartupAllowed(manifest, consent, proof, approvedManifes
 export async function runLaunchBootstrapCycle(provider, manifest, dir, {expectedManifestSha256, sourceRevision, consent = null,
   approvedManifestSha256 = null, now = Math.floor(Date.now() / 1000)} = {}) {
   const m = validateLaunchManifest(manifest), manifestSha256 = launchManifestHash(m, ethers);
-  if (manifestSha256 !== expectedManifestSha256 || sourceRevision !== m.sourceRevision) throw Error('Launch manifest or executing source revision changed');
+  if (manifestSha256 !== expectedManifestSha256 || sourceRevision !== effectiveWorkerSourceRevision(m)) throw Error('Launch manifest or executing source revision changed');
   if (consent) validateLaunchConsent(consent, m, ethers);
   const release = acquireLock(path.join(dir, 'launch-bootstrap.lock'));
   try {

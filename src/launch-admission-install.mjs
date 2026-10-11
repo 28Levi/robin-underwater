@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import * as ethers from 'ethers';
-import {canonicalLaunchJson, launchManifestHash, validateLaunchConsent, validateLaunchManifest} from './launch-manifest.mjs';
+import {canonicalLaunchJson, launchManifestHash, validateLaunchConsent, validateLaunchManifest, effectiveWorkerSourceRevision} from './launch-manifest.mjs';
 
 const MAX_BYTES = 256 * 1024;
 export class AdmissionInstallError extends Error {}
@@ -85,7 +85,7 @@ export function installLaunchAdmission({manifestFile, expectedManifestSha256, st
   // Complete input validation before creating or changing any destination.
   const manifest = parseJson(readPublicFile(path.resolve(manifestFile)));
   try { validateLaunchManifest(manifest); } catch { fail('Invalid reviewed ROBIN launch manifest.'); }
-  if (launchManifestHash(manifest, ethers) !== expectedManifestSha256 || manifest.sourceRevision !== sourceRevision)
+  if (launchManifestHash(manifest, ethers) !== expectedManifestSha256 || effectiveWorkerSourceRevision(manifest) !== sourceRevision)
     fail('Manifest digest or running source revision mismatch.');
   const checkConsent = bytes => {
     const consent = parseJson(bytes);
