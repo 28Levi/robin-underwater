@@ -69,10 +69,13 @@ function materialize(c,values){
 }
 function constructor(c,args){const types=c.abi.find(a=>a.type==='constructor')?.inputs??[];const encoded=coder.encode(types,args);return {args:encoded,initCode:concat(['0x'+c.evm.bytecode.object,encoded])};}
 
-export function assertCurrentPlanCapabilities(capabilities){
+export function assertCurrentPlanCapabilities(capabilities,{preflightOnly=false}={}){
  const c=capabilities,a=c?.availability?.bindings?.execution?.atomic;
- if(c?.schemaVersion!=='programmable.custom-launch-capabilities.v1'||c.chainId!=='4663'||c.manifestDigest!==PLAN_MANIFEST
-  ||c.availability?.manifestDigest!==PLAN_MANIFEST||c.availability?.operations?.create?.state!=='active'||c.availability?.operations?.preflight?.state!=='active'
+ const createState=c?.availability?.operations?.create?.state;
+ // Offline preflight preparation is not admission: only the create-availability
+ // requirement changes. Unknown states and all exact execution roots still fail.
+ if(typeof preflightOnly!=='boolean'||c?.schemaVersion!=='programmable.custom-launch-capabilities.v1'||c.chainId!=='4663'||c.manifestDigest!==PLAN_MANIFEST
+  ||c.availability?.manifestDigest!==PLAN_MANIFEST||!(preflightOnly?['active','canary','disabled','degraded'].includes(createState):createState==='active')||c.availability?.operations?.preflight?.state!=='active'
   ||a?.executorKind!=='atomic_execute_and_stamp_v2'||!same(a.address,ATOMIC)||a.runtimeCodeHash!==ATOMIC_HASH||a.selector!=='0x506aba45'
   ||!same(a.poolManager,MANAGER)||a.poolManagerRuntimeCodeHash!==MANAGER_HASH||!same(a.permitAuthority,PERMIT_AUTHORITY)||a.permitAuthorityRuntimeCodeHash!==PERMIT_AUTHORITY_HASH)
   throw Error('Current released Atomic launch capability required');
@@ -80,8 +83,8 @@ export function assertCurrentPlanCapabilities(capabilities){
 }
 
 /** Deterministic project-side plan. This does not issue platform admission or a wallet transaction. */
-export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distributor,sourceRevision,nonce,now=Math.floor(Date.now()/1000),graphGasLimit=PROJECT_GAS_LIMIT,totalGasLimit=TOTAL_GAS_LIMIT,validitySeconds=MAX_ORDER_LIFETIME_SECONDS}){
- assertRobinLaunchIntent(intent);assertCurrentPlanCapabilities(capabilities);
+export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distributor,sourceRevision,nonce,now=Math.floor(Date.now()/1000),graphGasLimit=PROJECT_GAS_LIMIT,totalGasLimit=TOTAL_GAS_LIMIT,validitySeconds=MAX_ORDER_LIFETIME_SECONDS,preflightOnly=false}){
+ assertRobinLaunchIntent(intent);assertCurrentPlanCapabilities(capabilities,{preflightOnly});
  if(intent.chainId!==4663||intent.decimals!==18||intent.projectBuyFeeBps!==180||intent.projectSellFeeBps!==180||intent.platformFeeBps!==20
   ||intent.lpFeePips!==0||intent.totalBuyFeeBps!==200||intent.totalSellFeeBps!==200||intent.hookRecipe!=='canonical-native20-no-module'
   ||intent.initialLiquidityWei!=='0'||intent.maxLaunchValueWei!==intent.initialBuyWei||intent.maxGasCostWei!=='800000000000000')throw Error('ROBIN launch economics changed');
@@ -143,5 +146,9 @@ export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distr
   dependencies:[{dependencyId:'pool-manager',chainId:'4663',address:MANAGER,runtimeCodeHash:MANAGER_HASH},{dependencyId:'graph-factory',chainId:'4663',address:GRAPH,runtimeCodeHash:GRAPH_HASH},{dependencyId:'reward-distributor',chainId:'4663',address:getAddress(intent.creatorFeeRecipient),runtimeCodeHash:distributor.runtimeCodeHash,authoritySnapshot:{operator:getAddress(intent.operator)}}],
   expectedEffects:effects,budgets:{maxTotalValue:intent.initialBuyWei,maxTotalGas:totalGasLimit,validAfter:String(now-60),deadline:String(now-60+validitySeconds)},feeObligations:[],claimDescriptors:[],distributionPreferences:[],
   publication:{visibility:'listed',name:intent.name,symbol:intent.symbol,description:intent.descriptionDraft,imageUrl:intent.image,primaryComponentId:'token',primaryMarketId:'robin-native',links:[intent.website,intent.x,intent.publicSource.url+'/tree/'+sourceRevision]}};
- return {plan,report:{schemaVersion:'robin.launch-plan-preparation.v1',checkedAt:new Date(now*1000).toISOString(),sourceRevision,sourceCommitment,addresses,manifestDigest:PLAN_MANIFEST,graphCommitment:authorization.graphCommitment,authorizedLauncher:ATOMIC,factory:GRAPH,projectCallDataHash:keccak256(factoryCall),initialBuyWei:intent.initialBuyWei,minimumTokensOut:intent.minimumTokensOut,maximumLaunchGasCostWei:intent.maxGasCostWei,graphGasLimit,totalGasLimit,hookFees:{projectBuyBps:180,projectSellBps:180,platformBps:20,lpFeePips:0},routedTradingFee:{...capabilities.currentTradeFeePolicy,waiverVerified:false,totalTradingFeeConfirmed:false},platformAdmission:false,walletSigning:false,transactionBroadcast:false},factoryCall,authorization,targets,runtimeCodes:Object.fromEntries(Object.entries(materializations).map(([id,m])=>[id,'0x'+Buffer.from(m.deployedRuntimeCodeBase64,'base64').toString('hex')]))};
+ return {plan,report:{schemaVersion:'robin.launch-plan-preparation.v1',checkedAt:new Date(now*1000).toISOString(),sourceRevision,sourceCommitment,addresses,manifestDigest:PLAN_MANIFEST,graphCommitment:authorization.graphCommitment,authorizedLauncher:ATOMIC,factory:GRAPH,projectCallDataHash:keccak256(factoryCall),initialBuyWei:intent.initialBuyWei,minimumTokensOut:intent.minimumTokensOut,maximumLaunchGasCostWei:intent.maxGasCostWei,graphGasLimit,totalGasLimit,hookFees:{projectBuyBps:180,projectSellBps:180,platformBps:20,lpFeePips:0},routedTradingFee:{...capabilities.currentTradeFeePolicy,waiverVerified:false,totalTradingFeeConfirmed:false},
+  preparationMode:preflightOnly?'preflight-only':'launch-preparation',
+  readiness:preflightOnly?'preflight-only-not-admitted-not-wallet-ready':'not-admitted-not-wallet-ready',
+  platformAvailability:{create:structuredClone(capabilities.availability.operations.create),preflight:structuredClone(capabilities.availability.operations.preflight)},
+  platformAdmission:false,walletReady:false,walletSigning:false,transactionBroadcast:false,automaticRewardsEnabled:false},factoryCall,authorization,targets,runtimeCodes:Object.fromEntries(Object.entries(materializations).map(([id,m])=>[id,'0x'+Buffer.from(m.deployedRuntimeCodeBase64,'base64').toString('hex')]))};
 }

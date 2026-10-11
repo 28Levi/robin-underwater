@@ -88,3 +88,25 @@ test('missing, blocked or stale preflight cannot create a platform plan', async 
   await assert.rejects(runPlanOperation({ ...f, api, stateDirectory: dir, action: 'create' }), /preflight/);
   assert.equal(creates, 0);
 });
+
+test('active preflight remains usable while unavailable creation never submits or writes a launch journal', async t => {
+  for (const state of ['canary', 'disabled', 'degraded']) {
+    const f = fixture(), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'robin-preflight-only-'));
+    t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+    const posts = [];
+    const api = async (route, options) => {
+      if (route.endsWith('credentials/me')) return { ok: true, data: f.credential };
+      if (route.endsWith('capabilities')) return { ok: true, data: { manifestDigest: digest,
+        availability: { operations: { preflight: { state: 'active' }, create: { state } } } } };
+      posts.push({ route, bytes: options?.bytes });
+      assert.ok(route.endsWith(':preflight'));
+      return { ok: true, data: { planHash, manifestDigest: digest, launchEligibility: { status: 'ready', hardBlockers: [] } } };
+    };
+    const result = await runPlanOperation({ ...f, api, stateDirectory: dir, action: 'preflight' });
+    assert.equal(result.ok, true);
+    await assert.rejects(runPlanOperation({ ...f, api, stateDirectory: dir, action: 'create' }), /not active/);
+    assert.equal(posts.length, 1);
+    assert.ok(posts[0].bytes.equals(f.bytes));
+    assert.equal(fs.existsSync(path.join(dir, 'submission.json')), false);
+  }
+});

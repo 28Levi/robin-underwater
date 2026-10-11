@@ -2,6 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import {Contract,JsonRpcSigner,Interface,keccak256,toBeHex,MaxUint256} from 'ethers';
 import {compileRobinLaunchContracts,buildRobinLaunchPlan,assertCurrentPlanCapabilities,ATOMIC,GRAPH,MANAGER,PLAN_MANIFEST,PROJECT_GAS_LIMIT,TOTAL_GAS_LIMIT,MAX_ORDER_LIFETIME_SECONDS} from '../src/launch-plan.mjs';
 import {runCustomLaunchPlanPackerCliV1} from '../vendor/programmable-launch-plan-v1/request-packer.mjs';
+import {parseRobinLaunchPlanOptions} from '../scripts/prepare-robin-launch-plan.mjs';
 import {native20Fixture,E,artifact} from './helpers/native20-fixture.mjs';
 process.env.HARDHAT_CONFIG=path.resolve('hardhat.native20.config.cjs');const {default:hre}=await import('hardhat');
 const read=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,'')),intent=read('launch-intent.json'),capabilities=read('vendor/programmable-launch-plan-v1/capabilities-observed.json'),factory=read('vendor/programmable-launch-plan-v1/graph-factory.json');
@@ -33,6 +34,56 @@ test('plan rejects retired/unbound capabilities, altered economics, stale custod
  assert.throws(()=>assertCurrentPlanCapabilities({schemaVersion:'programmable.custom-launch-capabilities.v2'}));
  for(const validitySeconds of [60,86401,172800])assert.throws(()=>buildRobinLaunchPlan({...input,validitySeconds}),/Atomic order lifetime/);
  assert.throws(()=>buildRobinLaunchPlan({...input,totalGasLimit:PROJECT_GAS_LIMIT}),/Outer gas budget/);
+});
+
+test('explicit preflight-only preparation preserves real create availability without altering the exact plan',()=>{
+ for(const state of ['canary','disabled','degraded']){
+  const observed=structuredClone(capabilities),reasons=[{code:'PLAN_OPERATION_DISABLED',message:'Fixture operation is not open for create.'}];
+  observed.availability.operations.create={state,reasons};
+  assert.throws(()=>assertCurrentPlanCapabilities(observed),/capability/);
+  assert.throws(()=>buildRobinLaunchPlan({...input,capabilities:observed}),/capability/);
+  assert.equal(assertCurrentPlanCapabilities(observed,{preflightOnly:true}),observed);
+  const prepared=buildRobinLaunchPlan({...input,capabilities:observed,preflightOnly:true});
+  assert.deepEqual(prepared.plan,built.plan);assert.equal(prepared.factoryCall,built.factoryCall);
+  assert.deepEqual(prepared.report.platformAvailability.create,{state,reasons});
+  assert.equal(prepared.report.platformAvailability.preflight.state,'active');
+  assert.equal(prepared.report.preparationMode,'preflight-only');assert.equal(prepared.report.readiness,'preflight-only-not-admitted-not-wallet-ready');
+  for(const key of ['platformAdmission','walletReady','walletSigning','transactionBroadcast','automaticRewardsEnabled'])assert.equal(prepared.report[key],false);
+  observed.availability.operations.create.reasons[0].message='changed after preparation';
+  assert.equal(prepared.report.platformAvailability.create.reasons[0].message,'Fixture operation is not open for create.');
+ }
+ assert.equal(built.report.preparationMode,'launch-preparation');assert.equal(built.report.walletReady,false);
+});
+
+test('preflight-only still requires active preflight and every exact chain, manifest, executor and runtime binding',()=>{
+ for(const state of ['canary','disabled','degraded','unavailable',undefined]){
+  const observed=structuredClone(capabilities);observed.availability.operations.preflight.state=state;
+  assert.throws(()=>buildRobinLaunchPlan({...input,capabilities:observed,preflightOnly:true}),/capability/);
+ }
+ for(const state of ['unavailable','retired',undefined]){
+  const observed=structuredClone(capabilities);observed.availability.operations.create.state=state;
+  assert.throws(()=>assertCurrentPlanCapabilities(observed,{preflightOnly:true}),/capability/);
+ }
+ const changed=[c=>c.schemaVersion='unknown',c=>c.chainId='1',c=>c.manifestDigest='sha256:'+'0'.repeat(64),
+  c=>c.availability.manifestDigest='sha256:'+'0'.repeat(64),
+  ...['executorKind','address','runtimeCodeHash','selector','poolManager','poolManagerRuntimeCodeHash','permitAuthority','permitAuthorityRuntimeCodeHash']
+   .map(key=>c=>{c.availability.bindings.execution.atomic[key]='changed';})];
+ for(const mutate of changed){const observed=structuredClone(capabilities);mutate(observed);
+  assert.throws(()=>buildRobinLaunchPlan({...input,capabilities:observed,preflightOnly:true}),/capability/);
+ }
+ assert.throws(()=>assertCurrentPlanCapabilities(capabilities,{preflightOnly:'true'}),/capability/);
+ assert.throws(()=>buildRobinLaunchPlan({...input,preflightOnly:true,factory:{...factory,runtimeCodeHash:'0x'+'0'.repeat(64)}}),/GraphFactory/);
+ assert.throws(()=>buildRobinLaunchPlan({...input,preflightOnly:true,distributor:{...distributor,verified:false}}),/distributor/);
+});
+
+test('preflight-only CLI flag is standalone, explicit and cannot swallow or duplicate valued options',()=>{
+ const base=['--source-revision','1'.repeat(40),'--capabilities','capabilities.json','--distributor','distributor.json','--out','new-output'];
+ assert.equal(parseRobinLaunchPlanOptions(base).has('--preflight-only'),false);
+ for(const args of [['--preflight-only',...base],[...base,'--preflight-only']]){
+  const parsed=parseRobinLaunchPlanOptions(args);assert.equal(parsed.get('--preflight-only'),true);assert.equal(parsed.get('--out'),'new-output');
+ }
+ for(const args of [[...base,'--preflight-only','true'],[...base,'--preflight-only','--preflight-only'],[...base,'--nonce','--preflight-only'],
+  [...base,'--out','other-output'],[...base,'--enable-create'],['--preflight-only']])assert.throws(()=>parseRobinLaunchPlanOptions(args));
 });
 
 test('exact factory runtime executes the graph from Atomic caller, preserving buyer, fees, runtime and buy/sell behavior',async()=>{

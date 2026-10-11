@@ -1,6 +1,6 @@
 {
   "schemaVersion": "robin.source-release.v1",
-  "createdAt": "2026-10-10T21:43:37.319Z",
+  "createdAt": "2026-10-11T11:47:43.962Z",
   "status": "source-for-review; no production deployment or platform acceptance",
   "files": [
     {
@@ -85,8 +85,8 @@
     },
     {
       "path": "src/launch-plan.mjs",
-      "bytes": 19324,
-      "sha256": "9535f46972ab33516c626f4a69e720b51bf196bdd46e1b884d71d08c2eca6494"
+      "bytes": 20092,
+      "sha256": "eddbc8689820f5a81529ed01d89c9c1e20045834b8052057d2948195a4c439da"
     },
     {
       "path": "src/launch-review-server.mjs",
@@ -400,13 +400,13 @@
     },
     {
       "path": "test/launch-plan-api.test.mjs",
-      "bytes": 6284,
-      "sha256": "021b35e890fec5a03da1d02ffb66241cdd901e7fcb512bfc4ab3459bfc40c4d3"
+      "bytes": 7619,
+      "sha256": "32350837dc8eaaaddb48075298997a7b7220edf08f5358750d9d3cda2f78ac3f"
     },
     {
       "path": "test/launch-plan.test.mjs",
-      "bytes": 8900,
-      "sha256": "88e8bd1bcec22bd42205929bc11a3af93800f29c99e5127f21e676fd675c6958"
+      "bytes": 13122,
+      "sha256": "58998d5c60797655fef9020753893b21c27de47ef6d06029a81dfb158e703604"
     },
     {
       "path": "test/launch-rpc.test.mjs",
@@ -575,8 +575,8 @@
     },
     {
       "path": "docs/current-launch-plan.md",
-      "bytes": 9381,
-      "sha256": "a9608b403d1686a74ba2dbb6312d5ae6296e76201f9ae9c7d1ee5013a1ff62a5"
+      "bytes": 11088,
+      "sha256": "90280fd32b9ea39926a0e94e950a967d75cd44c36990453ad2b301a941b017c3"
     },
     {
       "path": "docs/funding-and-signing.md",
@@ -825,8 +825,8 @@
     },
     {
       "path": "scripts/prepare-robin-launch-plan.mjs",
-      "bytes": 2809,
-      "sha256": "41e045c79f3b99b6755c592bd0515016e78589969e0e5b01832cd0da79310aa7"
+      "bytes": 3648,
+      "sha256": "387877fb698d6dfd23f0058fa2f0baf74abd88f41a98b925097328a9f30659dd"
     },
     {
       "path": "scripts/robin-launch-api.mjs",
