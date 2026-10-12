@@ -2,6 +2,7 @@ import fs from 'node:fs';import path from 'node:path';
 import {FetchRequest,JsonRpcProvider,Wallet} from 'ethers';
 import {loadConfig} from '../src/config.mjs';import {executionPolicy,verifyExecution,executeCycle} from '../src/executor.mjs';
 import {atomicWrite} from '../src/store.mjs';
+import {atomicFileFailureStatus} from '../src/atomic-file.mjs';
 import {withReadOnlyRpcRetries,assertOperatorRunning} from '../src/read-only-rpc-retry.mjs';
 import {runProductionOperatorLoop} from '../src/production-operator-loop.mjs';
 
@@ -30,5 +31,9 @@ try{
    }});
   if(result.blocked)process.exitCode=2;
  }
-}catch{console.error('Production verification or startup failed; no secret values printed. Check configuration, RPC and operator custody.');process.exitCode=2;
+}catch(error){
+ const persistence=atomicFileFailureStatus(error);
+ if(persistence)console.error(JSON.stringify(persistence));
+ else console.error('Production verification or startup failed; no secret values printed. Check configuration, RPC and operator custody.');
+ process.exitCode=2;
 }finally{provider.destroy();}

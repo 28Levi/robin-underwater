@@ -1,7 +1,9 @@
 import {isRetryableRpcReadError} from './read-only-rpc-retry.mjs';
 import {initialPriceWindowStatus} from './price-window-warmup.mjs';
+import {atomicFileFailureStatus} from './atomic-file.mjs';
 /** Fixed public status text only. Provider/custody errors may contain secrets. */
 export function operatorFailureStatus(error){
+ const persistence=atomicFileFailureStatus(error);if(persistence)return persistence;
  const warmup=initialPriceWindowStatus(error);if(warmup)return {...warmup};
  if(isRetryableRpcReadError(error))return {state:'waiting',code:'TRANSIENT_RPC_READ',
   reason:'Temporary RPC read failure; preserving the journal and retrying with backoff'};

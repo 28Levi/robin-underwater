@@ -1,5 +1,6 @@
-import fs from 'node:fs';import path from 'node:path';import {createHash,randomUUID} from 'node:crypto';
+import fs from 'node:fs';import path from 'node:path';import {createHash} from 'node:crypto';
 import {stringify,LEDGER_VERSION} from './ledger.mjs';
+import {writeAtomicText} from './atomic-file.mjs';
 const hash=s=>'0x'+createHash('sha256').update(s).digest('hex');
 export function fingerprint(c){
  const {chainId,token,hook,hookFlavor,initializer,distributor,poolManager,poolId,deploymentBlock,excludedAddresses,
@@ -8,9 +9,7 @@ export function fingerprint(c){
   minimumAgeSeconds,twapWindowSeconds,maxOracleAgeSeconds}));
 }
 export function atomicWrite(file,value) {
- fs.mkdirSync(path.dirname(file),{recursive:true});const temp=`${file}.${randomUUID()}.tmp`,fd=fs.openSync(temp,'wx',0o600);
- try{fs.writeFileSync(fd,stringify(value));fs.fsyncSync(fd);}finally{fs.closeSync(fd);}
- fs.renameSync(temp,file);
+ writeAtomicText(file,stringify(value));
 }
 export function writeSnapshot(file,c,snapshot){const payload=stringify(snapshot);
  atomicWrite(file,{schemaVersion:'robin.snapshot.v1',configHash:fingerprint(c),payloadHash:hash(payload),payload});}
