@@ -15,6 +15,8 @@
     "minimumHarvestWei": "10000000000000",
     "minimumBatchWei": "10000000000000",
     "retryIntervalSeconds": 3600,
-    "payoutIntervalSeconds": 900
+    "payoutIntervalSeconds": 900,
+    "confirmationMode": "pipelined-finalized-v1",
+    "maxInflightTransactions": 8
   }
 }

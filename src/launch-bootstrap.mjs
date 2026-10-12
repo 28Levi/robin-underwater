@@ -9,6 +9,11 @@ import {verifyProductionNetwork, verifyProductionToken, POOL_MANAGER} from './pr
 import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, validateLaunchConsent, effectiveWorkerSourceRevision} from './launch-manifest.mjs';
 
 const HASH = /^0x[0-9a-f]{64}$/;
+const supportedEnvelope = transaction => [0, 2].includes(transaction.type)
+  && (transaction.type !== 0 || transaction.maxFeePerGas == null && transaction.maxPriorityFeePerGas == null)
+  && ['accessList', 'authorizationList', 'blobVersionedHashes'].every(key => transaction[key] == null
+    || Array.isArray(transaction[key]) && transaction[key].length === 0)
+  && ['blobs', 'sidecars'].every(key => transaction[key] === undefined);
 const digest = value => `sha256:${ethers.sha256(ethers.toUtf8Bytes(canonicalLaunchJson(value))).slice(2)}`;
 const transfers = new ethers.Interface(['event Transfer(address indexed from,address indexed to,uint256 value)']);
 const initializerAbi = ['function initialBuyer() view returns(address)', 'function initialBuyWei() view returns(uint256)',
@@ -79,7 +84,7 @@ export async function verifyLaunchReceipt(provider, manifest, transactionHash, {
     || address(transaction.from) !== address(t.from) || address(transaction.to ?? ZERO) !== address(t.to)
     || address(receipt.from) !== address(t.from) || address(receipt.to ?? ZERO) !== address(t.to)
     || BigInt(transaction.nonce) !== BigInt(t.nonce) || transaction.value !== BigInt(t.valueWei)
-    || ethers.keccak256(transaction.data) !== t.calldataHash || transaction.gasLimit !== BigInt(t.gasLimit)
+    || ethers.keccak256(transaction.data) !== t.calldataHash || !supportedEnvelope(transaction) || transaction.gasLimit < 21000n
     || block.timestamp > Math.floor(Date.parse(t.expiresAt) / 1000)) throw Error('Finalized transaction differs from the reviewed launch');
   const token = address(m.components.token.address), initializer = address(m.components.initializer.address);
   if (await provider.getCode(token, m.watchFrom.blockNumber) !== '0x') throw Error('Predicted token existed before this reviewed launch');
@@ -136,17 +141,27 @@ export async function verifyLaunchReceipt(provider, manifest, transactionHash, {
   if (!rawReceipt || rawReceipt.blockHash !== block.hash || rawReceipt.transactionHash !== transactionHash || BigInt(rawReceipt.status) !== 1n)
     throw Error('Raw launch receipt is inconsistent');
   const additionalFee = BigInt(rawReceipt.l1Fee ?? '0x0'), gasPrice = receipt.gasPrice;
-  const maxFee = transaction.maxFeePerGas ?? transaction.gasPrice;
+  const maxFee = transaction.type === 2 ? transaction.maxFeePerGas : transaction.gasPrice;
+  const priorityFee = transaction.maxPriorityFeePerGas;
   if (gasPrice === null || gasPrice === undefined || maxFee === null || maxFee === undefined || maxFee <= 0n || gasPrice <= 0n
-    || gasPrice > maxFee || receipt.gasUsed <= 0n || receipt.gasUsed > transaction.gasLimit || additionalFee < 0n)
+    || transaction.type === 2 && (priorityFee === null || priorityFee === undefined || priorityFee < 0n || priorityFee > maxFee)
+    || gasPrice > maxFee || receipt.gasUsed <= 0n || receipt.gasUsed > transaction.gasLimit || additionalFee < 0n
+    || BigInt(rawReceipt.blobGasUsed ?? 0) !== 0n || BigInt(rawReceipt.blobGasPrice ?? 0) !== 0n)
     throw Error('Launch gas evidence unavailable');
+  // Wallets may adjust the outer gas estimate. Successful execution and
+  // gasUsed <= gasLimit prove adequacy; the signed maximum liability, not just
+  // the cheaper mined cost, must fit the original reviewed ETH ceiling. The
+  // calldata hash above still pins the signed order and inner Graph call gas.
+  // Legacy gasPrice remains supported for the existing local review UI; type2
+  // uses maxFeePerGas rather than its cheaper mined effective gas price.
   const gasCost = receipt.gasUsed * gasPrice + additionalFee, gasLiability = transaction.gasLimit * maxFee + additionalFee;
   if (gasCost > BigInt(m.maxLaunchGasWei) || gasLiability > BigInt(m.maxLaunchGasWei)
     || await provider.getBalance(t.from, block.number) < BigInt(m.preserveLaunchBalanceWei)) throw Error('Launch exceeded the reviewed spending boundary');
   if ((await provider.getBlock(block.number))?.hash !== block.hash || (await provider.getBlock('finalized')).number < block.number)
     throw Error('Launch finality changed during verification');
   return {state: 'verified', proof: {...proof, initialTokensReceivedWei: received.toString(), gasCostWei: gasCost.toString(),
-    gasLiabilityWei: gasLiability.toString(), poolId: config.poolId, signing: false, broadcast: false}};
+    gasLiabilityWei: gasLiability.toString(), signedGasLimit: transaction.gasLimit.toString(), quotedGasLimit: t.gasLimit,
+    gasLimitAdjusted: transaction.gasLimit !== BigInt(t.gasLimit), poolId: config.poolId, signing: false, broadcast: false}};
 }
 
 /** The separate recorded UI review, exact finalized proof and host-approved digest are all required. */

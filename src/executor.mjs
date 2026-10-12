@@ -9,6 +9,7 @@ import {createRound,nextRoundBatch} from './reward-round.mjs';
 import {verifyProductionNetwork,verifyProductionToken} from './production-network.mjs';
 import {verifyCandidateState} from './candidate-state.mjs';
 import {payoutSchedulePolicy,openPayoutCycle,completeScheduledHarvest,bindScheduledRound,finishPayoutCycle} from './payout-schedule.mjs';
+import {executePipelinedCycle} from './pipeline-executor.mjs';
 
 const rewardAbi=['function operator() view returns(address)','function available() view returns(uint256)',
  'function pending(address) view returns(uint256)','function pay(address)',
@@ -62,6 +63,11 @@ export function executionPolicy(c){
  for(const n of ['maxGasPerTransactionWei','maxTotalGasWei','minimumHarvestWei','minimumBatchWei'])amount(e[n],n);
  if(!Number.isSafeInteger(e.retryIntervalSeconds)||e.retryIntervalSeconds<1)throw Error('Invalid retry interval');
  payoutSchedulePolicy(c);
+ if(e.confirmationMode!==undefined){
+  if(e.confirmationMode!=='pipelined-finalized-v1'||e.maxInflightTransactions!==8||!payoutSchedulePolicy(c))
+   throw Error('Invalid pipelined confirmation policy');
+  address(e.operator??'');
+ }else if(e.maxInflightTransactions!==undefined)throw Error('Inflight limit requires pipelined confirmation mode');
  for(const n of ['token','hook','distributor','feeVault'])if(!/^0x[0-9a-f]{64}$/.test(e.codeHashes?.[n]??''))throw Error('Missing pinned runtime hash');
  address(e.feeVault);return e;
 }
@@ -126,6 +132,7 @@ async function submit(provider,signer,c,e,state,file,candidate){
  await verifyCandidateState(provider,c,candidate,head,'preparation');
  const latest=await provider.getTransactionCount(from,'latest'),pending=await provider.getTransactionCount(from,'pending');
  if(latest!==pending)throw Error('Operator has an untracked pending transaction');
+ if(state.pipeline&&latest!==state.pipeline.nextNonce)throw Error('Pipeline operator nonce changed; reconciliation required');
  const request={from,to:candidate.to,data:candidate.data,value:0n};
  const [units,feeData]=await Promise.all([provider.estimateGas(request),provider.getFeeData()]);
  if(units<=0n)throw Error('Execution gas estimate unavailable');
@@ -139,6 +146,11 @@ async function submit(provider,signer,c,e,state,file,candidate){
  const afterEstimate=await provider.getBlock('latest');
  await verifyCandidateState(provider,c,candidate,afterEstimate,'estimation');
  if(candidate.deadline!==null&&afterEstimate.timestamp>candidate.deadline)throw Error('Payout expired before signing');
+ if(state.pipeline){
+  const [latestAfter,pendingAfter]=await Promise.all([provider.getTransactionCount(from,'latest'),provider.getTransactionCount(from,'pending')]);
+  if(latestAfter!==state.pipeline.nextNonce||pendingAfter!==latestAfter)
+   throw Error('Pipeline operator nonce changed; reconciliation required');
+ }
  const raw=await signer.signTransaction({to:candidate.to,data:candidate.data,value:0n,chainId:c.chainId,nonce:latest,type:2,
   gasLimit,maxFeePerGas:feeData.maxFeePerGas,maxPriorityFeePerGas:feeData.maxPriorityFeePerGas});
  const signed=Transaction.from(raw);
@@ -152,6 +164,15 @@ async function submit(provider,signer,c,e,state,file,candidate){
   const recipient=address(candidate.recipient);state.retryAttempts[recipient]=(state.retryAttempts[recipient]??0)+1;
  }
  state.pending={hash:signed.hash,raw,nonce:latest,kind:candidate.kind,deadline:candidate.deadline,recipient:candidate.recipient??null,roundEnd:candidate.roundEnd??null};
+ if(state.pipeline){
+  state.pipeline.nextNonce=latest+1;
+  if(candidate.kind==='harvest')state.pipeline.lastHarvestAttemptAt=afterEstimate.timestamp;
+  if(candidate.kind==='payout'){
+   const decoded=rewards.decodeFunctionData('distributeEligible',candidate.data);
+   Object.assign(state.pending,{roundId:state.round?.id,batchId:decoded[0],auditHash:decoded[1],
+    allocations:decoded[4].map((account,i)=>({account:address(account),amount:decoded[5][i].toString(),balance:decoded[6][i].toString()}))});
+  }
+ }
  // Signed bytes are durable BEFORE broadcasting. Gas reservations are never automatically replenished.
  writeJournal(file,state);
  try{await provider.broadcastTransaction(raw);}catch{return {state:'broadcast-uncertain',kind:candidate.kind,hash:signed.hash};}
@@ -172,6 +193,8 @@ export async function executeCycle(provider,signer,c,dir='output/executor'){
    if(!block||block.hash!==last.blockHash||!finalized||finalized.number<last.blockNumber)
     throw Error('Finalized execution history changed; reconciliation required');}
   const now=(await provider.getBlock('latest')).timestamp;
+  if(e.confirmationMode==='pipelined-finalized-v1')return await executePipelinedCycle({provider,signer,c,e,dir,file,state,now,operator,vault,feeVault,
+   submit,payoutCandidate,smallerPayoutBatch});
   const recovered=await recover(provider,state,file,now);if(recovered)return recovered;
   const schedulePolicy=payoutSchedulePolicy(c);
   if(schedulePolicy){

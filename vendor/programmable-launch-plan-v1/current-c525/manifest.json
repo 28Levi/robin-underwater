@@ -1,0 +1,4790 @@
+{
+  "schemaVersion": "programmable.custom-launch-contract.v1",
+  "requestSchemaVersion": "programmable.custom-launch-plan.v1",
+  "proofSchemaVersion": "programmable.custom-launch-plan-step-proof.v1",
+  "projectionSchemaVersion": "programmable.launch-projection.v1",
+  "policyVersion": "programmable.custom-launch-policy.v1",
+  "feePolicyVersion": "programmable.custom-launch-fee.v1",
+  "packerVersion": "1.4.2",
+  "openapiVersion": "4.6.2",
+  "admissionPolicies": {
+    "recommendedForNewPlans": "programmable.custom-launch-policy.provenance.v1",
+    "requestField": "admissionPolicy",
+    "omitted": "programmable.custom-launch-policy.v1",
+    "openProvenance": {
+      "version": "programmable.custom-launch-policy.provenance.v1",
+      "feeObligations": [],
+      "tradeFeePolicy": {
+        "policyVersion": "programmable.routed-swap-fee.v3",
+        "rateBps": 100,
+        "ratePercent": "1.00%",
+        "appliesTo": "programmable-routed-open-provenance-trades",
+        "basis": "gross-output-credit",
+        "currency": "swap-output-asset",
+        "rounding": "floor-once-per-swap",
+        "recipient": "0xD88539d3c4C460136a733A3Fd60cf6BF269079da",
+        "collection": "atomic-output-transfer-in-swap",
+        "historicalSignedFeeObligations": "preserved",
+        "verifiedExistingPoolFee": "no-additional-route-fee",
+        "externalTradeFeeGuaranteed": false
+      },
+      "contractSafetyAssessment": "not_required",
+      "economicAssessment": "not_required",
+      "callbackSafetyAssessment": "not_required",
+      "bondingCurve": "not_required",
+      "liquidityLock": "not_required",
+      "publicationVisibility": "listed",
+      "stamp": "required",
+      "sourceRuntimeBinding": "required",
+      "exactAuthorizedExecution": "required",
+      "finalizedPublication": "required"
+    }
+  },
+  "routeId": "custom-launch-plan:create:v1",
+  "chains": [
+    "4663"
+  ],
+  "limits": {
+    "requestBytes": 16777216,
+    "jsonDepth": 64,
+    "components": 16,
+    "compilationUnits": 16,
+    "ownerResourceBytes": 67108864,
+    "ownerResponseBytes": 68157440,
+    "publicProjectionResponseBytes": 16777216,
+    "actions": 64,
+    "markets": 16,
+    "dependencies": 64,
+    "effects": 256,
+    "claims": 64,
+    "initCodeBytes": 49152,
+    "runtimeBytes": 24576,
+    "calldataBytes": 131072,
+    "compilationInputBytes": 5242880,
+    "identifierBytes": 256,
+    "listPageSize": 25
+  },
+  "digestDomains": {
+    "occurrence": "programmable.custom-launch-plan-occurrence.v1",
+    "launchId": "programmable.custom-launch-plan-launch-id.v1",
+    "controllerPrefix": "programmable.custom-launch-plan-controller-prefix.v1",
+    "effects": "programmable.custom-launch-plan-effects.v1",
+    "sourcePublication": "programmable.custom-launch-plan-source-publication.v1",
+    "signerPolicy": "programmable.custom-launch-plan-signer-policy.v1",
+    "staticPolicy": "programmable.custom-launch-policy.v1",
+    "replan": "programmable.custom-launch-plan-replan.v1",
+    "feeObligations": "programmable.custom-launch-plan-fee-obligations.v1",
+    "stampNonce": "programmable.custom-launch-plan-stamp-nonce.v1",
+    "occurrenceFields": [
+      "planHash",
+      "kind",
+      "id"
+    ],
+    "launchIdFields": [
+      "chainId",
+      "controller",
+      "planHash"
+    ],
+    "controllerAddressNormalization": "lowercase",
+    "controllerPrefixFields": [
+      "chainId",
+      "controller",
+      "planHash",
+      "compilationDigest",
+      "policyBindingHash",
+      "steps",
+      "finality"
+    ],
+    "stepFields": [
+      "stepId",
+      "transactionDigest",
+      "transactionHash"
+    ],
+    "stampNonceFields": [
+      "planHash",
+      "prefixDigest",
+      "issuedAt"
+    ],
+    "executionEvidenceHash": "finalized_controller_prefix_excluding_own_stamp",
+    "framing": "utf8_domain_nul_canonical_json_sha256"
+  },
+  "executors": [
+    "atomic_graph_v2",
+    "controller_multi_step_v1",
+    "observe_and_stamp_v1",
+    "atomic_execute_and_stamp_v2"
+  ],
+  "atomicExecution": {
+    "executor": "atomic_execute_and_stamp_v2",
+    "bindingId": "launch_atomic_v2",
+    "selector": "0x506aba45",
+    "envelopeSchema": "programmable.custom-launch-plan-atomic-envelope.v2",
+    "signerPolicySchema": "programmable.custom-launch-plan-signer-policy.v2",
+    "domain": {
+      "name": "ProgrammableLaunchPlanAtomic",
+      "version": "2",
+      "chainId": "released_chain",
+      "verifyingContract": "released_executor"
+    },
+    "orderType": "ProgrammableLaunchPlanAtomicOrderV2",
+    "signature": "separate_platform_signature_over_safe_message",
+    "projectCaller": "released_executor",
+    "graphAuthorizedLauncher": "released_executor",
+    "graphSalt": "rederive_from_exact_launcher",
+    "responseVersion": "1.2",
+    "walletConfirmations": 1,
+    "maximumCalls": 32,
+    "maximumCallDataBytes": 1048576,
+    "maximumEnvelopeBytes": 1100000,
+    "maximumComponents": 64,
+    "maximumMarkets": 32,
+    "maximumSignatureBytes": 16384,
+    "maximumValiditySeconds": 86400,
+    "directEoaCreation": "unsupported",
+    "explicitStampPlaceholder": "unsupported",
+    "replay": "preserve_original_wallet_attempt",
+    "actionPreconditions": "first_project_call_group_entry_only",
+    "actionPostconditions": "atomic_completion",
+    "nonExecutionChecks": "leading_entry_trailing_completion_intermediate_rejected",
+    "verifyEffect": "includes_effect_id_at_declared_boundary",
+    "callCoalescing": "directly_adjacent_identical_deployments_only",
+    "callGasLimit": "total_callee_budget_including_value_stipend",
+    "minimumValueCallGas": "2300",
+    "nonceDomain": "programmable.custom-launch-plan-atomic-nonce.v2",
+    "nonceFields": [
+      "planHash",
+      "issuedAt"
+    ],
+    "orderValidity": "exact_plan_valid_after_and_deadline",
+    "finality": "one_exact_transaction_and_occurrence_readback",
+    "futureTransactionHashInOrder": false,
+    "legacyAtomicGraph": "unchanged_may_require_separate_stamp",
+    "deployment": "requires_released_runtime_and_source_evidence"
+  },
+  "actions": [
+    "deployCreate2",
+    "deployCreate",
+    "deployEoaCreate",
+    "useExisting",
+    "call",
+    "initializePool",
+    "provideLiquidity",
+    "verifyEffect"
+  ],
+  "reservedActionIdPrefixes": [
+    "platform:"
+  ],
+  "explicitStampPlaceholder": {
+    "kind": "call",
+    "authority": {
+      "kind": "platform",
+      "binding": "launch_stamp",
+      "operation": "stampPlanV1"
+    },
+    "terminal": true,
+    "target": "released_launch_stamp",
+    "data": "0x",
+    "value": "0",
+    "finalBytesAuthority": "protected_issuer_after_final_controller_prefix"
+  },
+  "hookPermissionBits": {
+    "beforeInitialize": 13,
+    "afterInitialize": 12,
+    "beforeAddLiquidity": 11,
+    "afterAddLiquidity": 10,
+    "beforeRemoveLiquidity": 9,
+    "afterRemoveLiquidity": 8,
+    "beforeSwap": 7,
+    "afterSwap": 6,
+    "beforeDonate": 5,
+    "afterDonate": 4,
+    "beforeSwapReturnDelta": 3,
+    "afterSwapReturnDelta": 2,
+    "afterAddLiquidityReturnDelta": 1,
+    "afterRemoveLiquidityReturnDelta": 0
+  },
+  "sourceSchemaVersion": "programmable.exact-source-verification-bundle.v2",
+  "invariants": {
+    "open_provenance": "The explicit provenance policy requires listed Programmable publication and empty fee obligations. It imposes no contract safety or economic assessment.",
+    "request_integrity": "The exact bounded UTF-8 JSON request obeys this version's published grammar and commitments.",
+    "chain_binding": "Every action, dependency and claim is bound to the requested supported chain.",
+    "controller_binding": "Only the credential-bound controller may authorize the exact transaction.",
+    "window": "The immutable validity window has a deadline strictly after validAfter.",
+    "budget": "The aggregate exact action value and gas remain inside the declared budgets.",
+    "source_binding": "Every declared component binds an exact compilation unit, source and constructor/runtime materialization.",
+    "runtime_binding": "Declared, compiled and observed critical runtime hashes agree.",
+    "hook_permissions": "Declared permission bits match the address. Legacy policy V1 also checks return-delta dependencies; open provenance relies on actual requested execution.",
+    "callback_abi": "Legacy policy V1 requires enabled callbacks to have the exact selector and return shape. Open provenance does not impose callback ABI recognition.",
+    "callback_authority": "Legacy policy V1 requires effectful callbacks to reject other callers. Open provenance does not assess callback authentication.",
+    "action_binding": "Action references resolve to the immutable ordered graph and execution bytes.",
+    "platform_authority": "Platform authority is restricted to one terminal call with the released launch_stamp target, stampPlanV1 operation, empty data and zero value; the issuer fills the bound stamp after the final controller prefix.",
+    "effect_binding": "Completion effects bind their exact criticality, targets and observed values.",
+    "dependency_binding": "Existing dependencies bind the exact address, runtime and authority snapshot.",
+    "fee_obligation": "Legacy policy V1 applies 20 bps to declared pool paths or Programmable-routed swaps; no-swap is not_applicable. Open provenance requires no fee obligation.",
+    "execution": "Exact controller transaction simulation and finalized execution preserve all bound effects.",
+    "availability": "Missing analysis, adapter or provider evidence is pending and retryable, never an unsafe judgment.",
+    "manifest": "The operation uses artifacts generated from the same immutable manifest digest.",
+    "idempotency": "Changed bytes use a new idempotency key; retries and successor plans preserve existing immutable reservations.",
+    "distribution": "Open provenance requires listed Programmable publication; legacy publication is optional. External submissions remain optional and require stored opt-in."
+  },
+  "errors": {
+    "PLAN_OPEN_PROVENANCE_BINDING_INVALID": {
+      "code": "PLAN_OPEN_PROVENANCE_BINDING_INVALID",
+      "invariant": "programmable.custom-launch-policy.provenance.v1#open_provenance",
+      "description": "The explicit provenance policy requires listed Programmable publication and empty fee obligations. It imposes no contract safety or economic assessment.",
+      "stage": "preflight.bindings",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_REQUEST_INVALID": {
+      "code": "PLAN_REQUEST_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#request_integrity",
+      "description": "The exact bounded UTF-8 JSON request obeys this version's published grammar and commitments.",
+      "stage": "preflight.parse",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_FIELD_INVALID": {
+      "code": "PLAN_FIELD_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#request_integrity",
+      "description": "The exact bounded UTF-8 JSON request obeys this version's published grammar and commitments.",
+      "stage": "preflight.schema",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_NON_CANONICAL": {
+      "code": "PLAN_NON_CANONICAL",
+      "invariant": "programmable.custom-launch-policy.v1#request_integrity",
+      "description": "The exact bounded UTF-8 JSON request obeys this version's published grammar and commitments.",
+      "stage": "preflight.parse",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_LIMIT_EXCEEDED": {
+      "code": "PLAN_LIMIT_EXCEEDED",
+      "invariant": "programmable.custom-launch-policy.v1#request_integrity",
+      "description": "The exact bounded UTF-8 JSON request obeys this version's published grammar and commitments.",
+      "stage": "preflight.schema",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_MANIFEST_MISMATCH": {
+      "code": "PLAN_MANIFEST_MISMATCH",
+      "invariant": "programmable.custom-launch-policy.v1#manifest",
+      "description": "The operation uses artifacts generated from the same immutable manifest digest.",
+      "stage": "preflight.contract",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_CHAIN_BINDING_INVALID": {
+      "code": "PLAN_CHAIN_BINDING_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#chain_binding",
+      "description": "Every action, dependency and claim is bound to the requested supported chain.",
+      "stage": "preflight.bindings",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_CHAIN_NOT_ALLOWED": {
+      "code": "PLAN_CHAIN_NOT_ALLOWED",
+      "invariant": "programmable.custom-launch-policy.v1#chain_binding",
+      "description": "Every action, dependency and claim is bound to the requested supported chain.",
+      "stage": "authentication",
+      "retryMode": "operator_retry",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_CONTROLLER_BINDING_INVALID": {
+      "code": "PLAN_CONTROLLER_BINDING_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#controller_binding",
+      "description": "Only the credential-bound controller may authorize the exact transaction.",
+      "stage": "preflight.bindings",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_WINDOW_INVALID": {
+      "code": "PLAN_WINDOW_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#window",
+      "description": "The immutable validity window has a deadline strictly after validAfter.",
+      "stage": "preflight.bindings",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_BUDGET_EXCEEDED": {
+      "code": "PLAN_BUDGET_EXCEEDED",
+      "invariant": "programmable.custom-launch-policy.v1#budget",
+      "description": "The aggregate exact action value and gas remain inside the declared budgets.",
+      "stage": "preflight.bindings",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_SOURCE_BINDING_INVALID": {
+      "code": "PLAN_SOURCE_BINDING_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#source_binding",
+      "description": "Every declared component binds an exact compilation unit, source and constructor/runtime materialization.",
+      "stage": "preflight.source",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_COMPILER_UNAVAILABLE": {
+      "code": "PLAN_COMPILER_UNAVAILABLE",
+      "invariant": "programmable.custom-launch-policy.v1#availability",
+      "description": "Missing analysis, adapter or provider evidence is pending and retryable, never an unsafe judgment.",
+      "stage": "preflight.source",
+      "retryMode": "operator_retry",
+      "blockingAxis": "lifecycle",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_RUNTIME_BINDING_INVALID": {
+      "code": "PLAN_RUNTIME_BINDING_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#runtime_binding",
+      "description": "Declared, compiled and observed critical runtime hashes agree.",
+      "stage": "preflight.source",
+      "retryMode": "change_contract",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_HOOK_PERMISSIONS_INVALID": {
+      "code": "PLAN_HOOK_PERMISSIONS_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#hook_permissions",
+      "description": "Declared permission bits match the address. Legacy policy V1 also checks return-delta dependencies; open provenance relies on actual requested execution.",
+      "stage": "preflight.policy",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_CALLBACK_ABI_INVALID": {
+      "code": "PLAN_CALLBACK_ABI_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#callback_abi",
+      "description": "Legacy policy V1 requires enabled callbacks to have the exact selector and return shape. Open provenance does not impose callback ABI recognition.",
+      "stage": "preflight.policy",
+      "retryMode": "change_contract",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_CALLBACK_AUTHORITY_INVALID": {
+      "code": "PLAN_CALLBACK_AUTHORITY_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#callback_authority",
+      "description": "Legacy policy V1 requires effectful callbacks to reject other callers. Open provenance does not assess callback authentication.",
+      "stage": "preflight.policy",
+      "retryMode": "change_contract",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_ACTION_BINDING_INVALID": {
+      "code": "PLAN_ACTION_BINDING_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#action_binding",
+      "description": "Action references resolve to the immutable ordered graph and execution bytes.",
+      "stage": "preflight.bindings",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_PLATFORM_AUTHORITY_INVALID": {
+      "code": "PLAN_PLATFORM_AUTHORITY_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#platform_authority",
+      "description": "Platform authority is restricted to one terminal call with the released launch_stamp target, stampPlanV1 operation, empty data and zero value; the issuer fills the bound stamp after the final controller prefix.",
+      "stage": "preflight.policy",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_EFFECT_BINDING_INVALID": {
+      "code": "PLAN_EFFECT_BINDING_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#effect_binding",
+      "description": "Completion effects bind their exact criticality, targets and observed values.",
+      "stage": "preflight.bindings",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_DEPENDENCY_BINDING_INVALID": {
+      "code": "PLAN_DEPENDENCY_BINDING_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#dependency_binding",
+      "description": "Existing dependencies bind the exact address, runtime and authority snapshot.",
+      "stage": "preflight.bindings",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_FEE_OBLIGATION_INVALID": {
+      "code": "PLAN_FEE_OBLIGATION_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#fee_obligation",
+      "description": "Legacy policy V1 applies 20 bps to declared pool paths or Programmable-routed swaps; no-swap is not_applicable. Open provenance requires no fee obligation.",
+      "stage": "preflight.policy",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_EXECUTION_REVERTED": {
+      "code": "PLAN_EXECUTION_REVERTED",
+      "invariant": "programmable.custom-launch-policy.v1#execution",
+      "description": "Exact controller transaction simulation and finalized execution preserve all bound effects.",
+      "stage": "preflight.simulation",
+      "retryMode": "change_contract",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_EXECUTION_EVIDENCE_INVALID": {
+      "code": "PLAN_EXECUTION_EVIDENCE_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#execution",
+      "description": "Exact controller transaction simulation and finalized execution preserve all bound effects.",
+      "stage": "preflight.simulation",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_PROVIDER_UNAVAILABLE": {
+      "code": "PLAN_PROVIDER_UNAVAILABLE",
+      "invariant": "programmable.custom-launch-policy.v1#availability",
+      "description": "Missing analysis, adapter or provider evidence is pending and retryable, never an unsafe judgment.",
+      "stage": "preflight.provider",
+      "retryMode": "same_request",
+      "blockingAxis": "lifecycle",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_ANALYSIS_PENDING": {
+      "code": "PLAN_ANALYSIS_PENDING",
+      "invariant": "programmable.custom-launch-policy.v1#availability",
+      "description": "Missing analysis, adapter or provider evidence is pending and retryable, never an unsafe judgment.",
+      "stage": "preflight.analysis",
+      "retryMode": "poll",
+      "blockingAxis": "lifecycle",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "EXECUTION_ADAPTER_UNAVAILABLE": {
+      "code": "EXECUTION_ADAPTER_UNAVAILABLE",
+      "invariant": "programmable.custom-launch-policy.v1#availability",
+      "description": "Missing analysis, adapter or provider evidence is pending and retryable, never an unsafe judgment.",
+      "stage": "preflight.execution",
+      "retryMode": "operator_retry",
+      "blockingAxis": "lifecycle",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_ADMISSION_PENDING": {
+      "code": "PLAN_ADMISSION_PENDING",
+      "invariant": "programmable.custom-launch-policy.v1#availability",
+      "description": "Missing analysis, adapter or provider evidence is pending and retryable, never an unsafe judgment.",
+      "stage": "admission",
+      "retryMode": "poll",
+      "blockingAxis": "lifecycle",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_OPERATION_DISABLED": {
+      "code": "PLAN_OPERATION_DISABLED",
+      "invariant": "programmable.custom-launch-policy.v1#availability",
+      "description": "Missing analysis, adapter or provider evidence is pending and retryable, never an unsafe judgment.",
+      "stage": "admission",
+      "retryMode": "operator_retry",
+      "blockingAxis": "lifecycle",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_ARTIFACT_DRIFT": {
+      "code": "PLAN_ARTIFACT_DRIFT",
+      "invariant": "programmable.custom-launch-policy.v1#manifest",
+      "description": "The operation uses artifacts generated from the same immutable manifest digest.",
+      "stage": "discovery",
+      "retryMode": "operator_retry",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_IDEMPOTENCY_INVALID": {
+      "code": "PLAN_IDEMPOTENCY_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#idempotency",
+      "description": "Changed bytes use a new idempotency key; retries and successor plans preserve existing immutable reservations.",
+      "stage": "admission",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_NOT_FOUND": {
+      "code": "PLAN_NOT_FOUND",
+      "invariant": "programmable.custom-launch-policy.v1#controller_binding",
+      "description": "Only the credential-bound controller may authorize the exact transaction.",
+      "stage": "read",
+      "retryMode": "same_request",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_CREDENTIAL_INVALID": {
+      "code": "PLAN_CREDENTIAL_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#controller_binding",
+      "description": "Only the credential-bound controller may authorize the exact transaction.",
+      "stage": "authentication",
+      "retryMode": "same_request",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_SCOPE_INVALID": {
+      "code": "PLAN_SCOPE_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#controller_binding",
+      "description": "Only the credential-bound controller may authorize the exact transaction.",
+      "stage": "authentication",
+      "retryMode": "same_request",
+      "blockingAxis": "launchEligibility",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_RATE_LIMITED": {
+      "code": "PLAN_RATE_LIMITED",
+      "invariant": "programmable.custom-launch-policy.v1#availability",
+      "description": "Missing analysis, adapter or provider evidence is pending and retryable, never an unsafe judgment.",
+      "stage": "authentication",
+      "retryMode": "same_request",
+      "blockingAxis": "lifecycle",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    },
+    "PLAN_PUBLICATION_INVALID": {
+      "code": "PLAN_PUBLICATION_INVALID",
+      "invariant": "programmable.custom-launch-policy.v1#distribution",
+      "description": "Open provenance requires listed Programmable publication; legacy publication is optional. External submissions remain optional and require stored opt-in.",
+      "stage": "publication",
+      "retryMode": "repack_new_idempotency",
+      "blockingAxis": "distribution",
+      "witnessSchema": "request|source|compiler|runtime|runtime_trace|chain_read|policy|provider + ref + details"
+    }
+  },
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://api.programmable.market/v4/chains/4663/custom-launch-contract/schema.json",
+    "title": "Programmable Custom Launch Plan V1",
+    "type": "object",
+    "properties": {
+      "schemaVersion": {
+        "const": "programmable.custom-launch-plan.v1"
+      },
+      "manifestDigest": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      },
+      "admissionPolicy": {
+        "const": "programmable.custom-launch-policy.provenance.v1"
+      },
+      "chainId": {
+        "type": "string",
+        "pattern": "^(?:0|[1-9][0-9]*)$",
+        "maxLength": 20,
+        "x-uintBits": 64
+      },
+      "controller": {
+        "$ref": "#/$defs/controller"
+      },
+      "executor": {
+        "enum": [
+          "atomic_graph_v2",
+          "controller_multi_step_v1",
+          "observe_and_stamp_v1",
+          "atomic_execute_and_stamp_v2"
+        ]
+      },
+      "verificationBundle": {
+        "$ref": "#/$defs/verificationBundle"
+      },
+      "components": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/component"
+        },
+        "minItems": 1,
+        "maxItems": 16
+      },
+      "actions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/action"
+        },
+        "minItems": 1,
+        "maxItems": 64
+      },
+      "markets": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/market"
+        },
+        "minItems": 0,
+        "maxItems": 16
+      },
+      "hookBindings": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/hookBinding"
+        },
+        "minItems": 0,
+        "maxItems": 16
+      },
+      "dependencies": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/dependency"
+        },
+        "minItems": 0,
+        "maxItems": 64
+      },
+      "expectedEffects": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/effect"
+        },
+        "minItems": 0,
+        "maxItems": 256
+      },
+      "budgets": {
+        "type": "object",
+        "properties": {
+          "maxTotalValue": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 78,
+            "x-uintBits": 256
+          },
+          "maxTotalGas": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 78,
+            "x-uintBits": 256
+          },
+          "validAfter": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 20,
+            "x-uintBits": 64
+          },
+          "deadline": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 20,
+            "x-uintBits": 64
+          }
+        },
+        "required": [
+          "maxTotalValue",
+          "maxTotalGas",
+          "validAfter",
+          "deadline"
+        ],
+        "additionalProperties": false
+      },
+      "feeObligations": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/feeObligation"
+        },
+        "minItems": 0,
+        "maxItems": 64
+      },
+      "claimDescriptors": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/claimDescriptor"
+        },
+        "minItems": 0,
+        "maxItems": 64
+      },
+      "distributionPreferences": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "enum": [
+                "hooklist",
+                "uniswap_api",
+                "uniswap_labs"
+              ]
+            },
+            "optedIn": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "provider",
+            "optedIn"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 0,
+        "maxItems": 3
+      },
+      "publication": {
+        "$ref": "#/$defs/publication"
+      }
+    },
+    "required": [
+      "schemaVersion",
+      "manifestDigest",
+      "chainId",
+      "controller",
+      "executor",
+      "verificationBundle",
+      "components",
+      "actions",
+      "markets",
+      "hookBindings",
+      "dependencies",
+      "expectedEffects",
+      "budgets",
+      "feeObligations",
+      "claimDescriptors",
+      "distributionPreferences"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "addressRef": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$",
+                "x-canonical": "address"
+              }
+            },
+            "required": [
+              "address"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "componentId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              }
+            },
+            "required": [
+              "componentId"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "controller": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "kind": {
+            "enum": [
+              "eoa",
+              "delegated_eoa_v1",
+              "erc1271",
+              "smart_account"
+            ]
+          },
+          "runtimeCodeHash": {
+            "type": "string",
+            "pattern": "^0x[0-9a-f]{64}$"
+          },
+          "authoritySnapshot": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "address",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "component": {
+        "type": "object",
+        "properties": {
+          "componentId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "artifactId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "expectedAddress": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "runtimeCodeHash": {
+            "type": "string",
+            "pattern": "^0x[0-9a-f]{64}$"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "minItems": 0,
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "componentId",
+          "artifactId",
+          "expectedAddress",
+          "runtimeCodeHash"
+        ],
+        "additionalProperties": false
+      },
+      "call": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "$ref": "#/$defs/addressRef"
+          },
+          "data": {
+            "type": "string",
+            "pattern": "^0x(?:[0-9a-f]{2})*$",
+            "maxLength": 262146
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 78,
+            "x-uintBits": 256
+          },
+          "gasLimit": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 78,
+            "x-uintBits": 256
+          }
+        },
+        "required": [
+          "target",
+          "data",
+          "value",
+          "gasLimit"
+        ],
+        "additionalProperties": false
+      },
+      "eoaCreation": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "null"
+          },
+          "data": {
+            "type": "string",
+            "pattern": "^0x(?:[0-9a-f]{2})*$",
+            "maxLength": 98306,
+            "minLength": 4
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 78,
+            "x-uintBits": 256
+          },
+          "gasLimit": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 78,
+            "x-uintBits": 256
+          }
+        },
+        "required": [
+          "target",
+          "data",
+          "value",
+          "gasLimit"
+        ],
+        "additionalProperties": false
+      },
+      "authority": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "controller"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "platform"
+              },
+              "binding": {
+                "const": "launch_stamp"
+              },
+              "operation": {
+                "const": "stampPlanV1"
+              }
+            },
+            "required": [
+              "kind",
+              "binding",
+              "operation"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "action": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "pattern": "^(?!platform:)[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "authority": {
+                "$ref": "#/$defs/authority"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "postconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "kind": {
+                "const": "deployCreate2"
+              },
+              "componentId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "factory": {
+                "$ref": "#/$defs/addressRef"
+              },
+              "salt": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              },
+              "initCode": {
+                "type": "string",
+                "pattern": "^0x(?:[0-9a-f]{2})*$",
+                "maxLength": 98306,
+                "minLength": 4
+              },
+              "execution": {
+                "$ref": "#/$defs/call"
+              }
+            },
+            "required": [
+              "actionId",
+              "dependsOn",
+              "authority",
+              "preconditions",
+              "postconditions",
+              "kind",
+              "componentId",
+              "factory",
+              "salt",
+              "initCode",
+              "execution"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "pattern": "^(?!platform:)[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "authority": {
+                "$ref": "#/$defs/authority"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "postconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "kind": {
+                "const": "deployCreate"
+              },
+              "componentId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "parent": {
+                "$ref": "#/$defs/addressRef"
+              },
+              "nonce": {
+                "type": "string",
+                "pattern": "^(?:0|[1-9][0-9]*)$",
+                "maxLength": 20,
+                "x-uintBits": 64
+              },
+              "execution": {
+                "$ref": "#/$defs/call"
+              }
+            },
+            "required": [
+              "actionId",
+              "dependsOn",
+              "authority",
+              "preconditions",
+              "postconditions",
+              "kind",
+              "componentId",
+              "parent",
+              "nonce",
+              "execution"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "pattern": "^(?!platform:)[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "authority": {
+                "$ref": "#/$defs/authority"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "postconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "kind": {
+                "const": "deployEoaCreate"
+              },
+              "componentId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "nonce": {
+                "type": "string",
+                "pattern": "^(?:0|[1-9][0-9]*)$",
+                "maxLength": 20,
+                "x-uintBits": 64
+              },
+              "execution": {
+                "$ref": "#/$defs/eoaCreation"
+              }
+            },
+            "required": [
+              "actionId",
+              "dependsOn",
+              "authority",
+              "preconditions",
+              "postconditions",
+              "kind",
+              "componentId",
+              "nonce",
+              "execution"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "pattern": "^(?!platform:)[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "authority": {
+                "$ref": "#/$defs/authority"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "postconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "kind": {
+                "const": "useExisting"
+              },
+              "componentId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              }
+            },
+            "required": [
+              "actionId",
+              "dependsOn",
+              "authority",
+              "preconditions",
+              "postconditions",
+              "kind",
+              "componentId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "pattern": "^(?!platform:)[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "authority": {
+                "$ref": "#/$defs/authority"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "postconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "kind": {
+                "const": "call"
+              },
+              "execution": {
+                "$ref": "#/$defs/call"
+              }
+            },
+            "required": [
+              "actionId",
+              "dependsOn",
+              "authority",
+              "preconditions",
+              "postconditions",
+              "kind",
+              "execution"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "pattern": "^(?!platform:)[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "authority": {
+                "$ref": "#/$defs/authority"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "postconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "kind": {
+                "const": "initializePool"
+              },
+              "marketId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "sqrtPriceX96": {
+                "type": "string",
+                "pattern": "^(?:0|[1-9][0-9]*)$",
+                "maxLength": 78,
+                "x-uintBits": 160
+              },
+              "execution": {
+                "$ref": "#/$defs/call"
+              }
+            },
+            "required": [
+              "actionId",
+              "dependsOn",
+              "authority",
+              "preconditions",
+              "postconditions",
+              "kind",
+              "marketId",
+              "sqrtPriceX96",
+              "execution"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "pattern": "^(?!platform:)[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "authority": {
+                "$ref": "#/$defs/authority"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "postconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "kind": {
+                "const": "provideLiquidity"
+              },
+              "marketId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "execution": {
+                "$ref": "#/$defs/call"
+              }
+            },
+            "required": [
+              "actionId",
+              "dependsOn",
+              "authority",
+              "preconditions",
+              "postconditions",
+              "kind",
+              "marketId",
+              "execution"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "pattern": "^(?!platform:)[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "authority": {
+                "$ref": "#/$defs/authority"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "postconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                },
+                "minItems": 0,
+                "maxItems": 256
+              },
+              "kind": {
+                "const": "verifyEffect"
+              },
+              "effectId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              }
+            },
+            "required": [
+              "actionId",
+              "dependsOn",
+              "authority",
+              "preconditions",
+              "postconditions",
+              "kind",
+              "effectId"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "market": {
+        "type": "object",
+        "properties": {
+          "marketId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "kind": {
+            "const": "uniswap_v4"
+          },
+          "poolManager": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "currency0": {
+            "$ref": "#/$defs/addressRef"
+          },
+          "currency1": {
+            "$ref": "#/$defs/addressRef"
+          },
+          "fee": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8388608
+          },
+          "tickSpacing": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32767
+          },
+          "hooks": {
+            "$ref": "#/$defs/addressRef"
+          }
+        },
+        "required": [
+          "marketId",
+          "kind",
+          "poolManager",
+          "currency0",
+          "currency1",
+          "fee",
+          "tickSpacing",
+          "hooks"
+        ],
+        "additionalProperties": false
+      },
+      "hookBinding": {
+        "type": "object",
+        "properties": {
+          "componentId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "poolManager": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "permissions": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16383
+          },
+          "callbackAbi": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "minItems": 0,
+            "maxItems": 256
+          },
+          "hookDataSchema": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "componentId",
+          "poolManager",
+          "permissions",
+          "callbackAbi"
+        ],
+        "additionalProperties": false
+      },
+      "dependency": {
+        "type": "object",
+        "properties": {
+          "dependencyId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "chainId": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 20,
+            "x-uintBits": 64
+          },
+          "address": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "runtimeCodeHash": {
+            "type": "string",
+            "pattern": "^0x[0-9a-f]{64}$"
+          },
+          "authoritySnapshot": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "dependencyId",
+          "chainId",
+          "address",
+          "runtimeCodeHash"
+        ],
+        "additionalProperties": false
+      },
+      "effect": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "effectId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "criticality": {
+                "enum": [
+                  "critical",
+                  "optional",
+                  "observed"
+                ]
+              },
+              "kind": {
+                "const": "runtime"
+              },
+              "target": {
+                "$ref": "#/$defs/addressRef"
+              },
+              "runtimeCodeHash": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "effectId",
+              "criticality",
+              "kind",
+              "target",
+              "runtimeCodeHash"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "effectId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "criticality": {
+                "enum": [
+                  "critical",
+                  "optional",
+                  "observed"
+                ]
+              },
+              "kind": {
+                "const": "callResult"
+              },
+              "target": {
+                "$ref": "#/$defs/addressRef"
+              },
+              "data": {
+                "type": "string",
+                "pattern": "^0x(?:[0-9a-f]{2})*$",
+                "maxLength": 262146
+              },
+              "expected": {
+                "type": "string",
+                "pattern": "^0x(?:[0-9a-f]{2})*$",
+                "maxLength": 262146
+              }
+            },
+            "required": [
+              "effectId",
+              "criticality",
+              "kind",
+              "target",
+              "data",
+              "expected"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "effectId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "criticality": {
+                "enum": [
+                  "critical",
+                  "optional",
+                  "observed"
+                ]
+              },
+              "kind": {
+                "const": "storage"
+              },
+              "target": {
+                "$ref": "#/$defs/addressRef"
+              },
+              "slot": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              },
+              "expected": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "effectId",
+              "criticality",
+              "kind",
+              "target",
+              "slot",
+              "expected"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "effectId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "criticality": {
+                "enum": [
+                  "critical",
+                  "optional",
+                  "observed"
+                ]
+              },
+              "kind": {
+                "const": "balance"
+              },
+              "target": {
+                "$ref": "#/$defs/addressRef"
+              },
+              "asset": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$",
+                "x-canonical": "address"
+              },
+              "minimum": {
+                "type": "string",
+                "pattern": "^(?:0|[1-9][0-9]*)$",
+                "maxLength": 78,
+                "x-uintBits": 256
+              },
+              "maximum": {
+                "type": "string",
+                "pattern": "^(?:0|[1-9][0-9]*)$",
+                "maxLength": 78,
+                "x-uintBits": 256
+              }
+            },
+            "required": [
+              "effectId",
+              "criticality",
+              "kind",
+              "target",
+              "asset",
+              "minimum",
+              "maximum"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "effectId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "criticality": {
+                "enum": [
+                  "critical",
+                  "optional",
+                  "observed"
+                ]
+              },
+              "kind": {
+                "const": "child"
+              },
+              "componentId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "runtimeCodeHash": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              },
+              "derivation": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "const": "create"
+                      },
+                      "parent": {
+                        "$ref": "#/$defs/addressRef"
+                      },
+                      "nonce": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]*)$",
+                        "maxLength": 20,
+                        "x-uintBits": 64
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "parent",
+                      "nonce"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "const": "create2"
+                      },
+                      "parent": {
+                        "$ref": "#/$defs/addressRef"
+                      },
+                      "salt": {
+                        "type": "string",
+                        "pattern": "^0x[0-9a-f]{64}$"
+                      },
+                      "initCodeHash": {
+                        "type": "string",
+                        "pattern": "^0x[0-9a-f]{64}$"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "parent",
+                      "salt",
+                      "initCodeHash"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": [
+              "effectId",
+              "criticality",
+              "kind",
+              "componentId",
+              "runtimeCodeHash",
+              "derivation"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "witness": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "request",
+              "source",
+              "compiler",
+              "runtime",
+              "runtime_trace",
+              "chain_read",
+              "policy",
+              "provider"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "kind",
+          "ref",
+          "details"
+        ],
+        "additionalProperties": false
+      },
+      "feeObligation": {
+        "type": "object",
+        "properties": {
+          "obligationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "mode": {
+            "enum": [
+              "pool_enforced",
+              "programmable_routed",
+              "not_applicable"
+            ]
+          },
+          "policyVersion": {
+            "const": "programmable.custom-launch-fee.v1"
+          },
+          "rateBps": {
+            "enum": [
+              20,
+              0
+            ]
+          },
+          "scope": {
+            "enum": [
+              "proven_pool_paths",
+              "programmable_built_or_routed_qualifying_swaps",
+              "no_qualifying_swap_flow"
+            ]
+          },
+          "recipient": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$",
+                "x-canonical": "address"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "marketIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+            },
+            "minItems": 0,
+            "maxItems": 16
+          },
+          "enforcementWitness": {
+            "$ref": "#/$defs/witness"
+          }
+        },
+        "required": [
+          "obligationId",
+          "mode",
+          "policyVersion",
+          "rateBps",
+          "scope",
+          "recipient",
+          "marketIds"
+        ],
+        "additionalProperties": false
+      },
+      "claimDescriptor": {
+        "type": "object",
+        "properties": {
+          "claimId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "chainId": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "maxLength": 20,
+            "x-uintBits": 64
+          },
+          "asset": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "accrualContract": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "read": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "string",
+                "pattern": "^0x(?:[0-9a-f]{2})*$",
+                "maxLength": 262146
+              },
+              "resultType": {
+                "const": "uint256"
+              }
+            },
+            "required": [
+              "data",
+              "resultType"
+            ],
+            "additionalProperties": false
+          },
+          "claim": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "string",
+                "pattern": "^0x(?:[0-9a-f]{2})*$",
+                "maxLength": 262146
+              },
+              "value": {
+                "const": "0"
+              }
+            },
+            "required": [
+              "data",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "requiredController": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "beneficiary": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "x-canonical": "address"
+          },
+          "immutableRecipient": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$",
+                "x-canonical": "address"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "runtimeCodeHash": {
+            "type": "string",
+            "pattern": "^0x[0-9a-f]{64}$"
+          },
+          "proof": {
+            "$ref": "#/$defs/witness"
+          }
+        },
+        "required": [
+          "claimId",
+          "chainId",
+          "asset",
+          "accrualContract",
+          "read",
+          "claim",
+          "requiredController",
+          "beneficiary",
+          "immutableRecipient",
+          "runtimeCodeHash",
+          "proof"
+        ],
+        "additionalProperties": false
+      },
+      "publication": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "enum": [
+              "listed",
+              "unlisted"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "symbol": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 16384
+          },
+          "imageUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "primaryComponentId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "primaryMarketId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 2048
+            },
+            "minItems": 0,
+            "maxItems": 16
+          }
+        },
+        "required": [
+          "visibility"
+        ],
+        "additionalProperties": false
+      },
+      "verificationBundle": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "const": "programmable.exact-source-verification-bundle.v2"
+          },
+          "compilationUnits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/compilationUnit"
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/artifact"
+            },
+            "minItems": 1,
+            "maxItems": 16
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "compilationUnits",
+          "components"
+        ],
+        "additionalProperties": false
+      },
+      "compilationUnit": {
+        "type": "object",
+        "properties": {
+          "compilationUnitId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "compilerVersion": {
+            "type": "string",
+            "pattern": "^0\\.[0-9]+\\.[0-9]+\\+commit\\.[0-9a-f]{8}$"
+          },
+          "standardJsonInputBase64": {
+            "type": "string",
+            "maxLength": 6990508,
+            "minLength": 4,
+            "x-canonical": "base64"
+          },
+          "standardJsonInputSha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "compilationUnitId",
+          "compilerVersion",
+          "standardJsonInputBase64",
+          "standardJsonInputSha256"
+        ],
+        "additionalProperties": false
+      },
+      "artifact": {
+        "type": "object",
+        "properties": {
+          "targetId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "compilationUnitId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "sourcePath": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "contractName": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "constructorArguments": {
+            "type": "string",
+            "pattern": "^0x(?:[0-9a-f]{2})*$",
+            "maxLength": 262146
+          },
+          "runtimeMaterialization": {
+            "$ref": "#/$defs/runtimeMaterialization"
+          }
+        },
+        "required": [
+          "targetId",
+          "compilationUnitId",
+          "sourcePath",
+          "contractName",
+          "constructorArguments",
+          "runtimeMaterialization"
+        ],
+        "additionalProperties": false
+      },
+      "runtimeMaterialization": {
+        "type": "object",
+        "properties": {
+          "immutableReferences": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "immutableId": {
+                  "type": "string",
+                  "pattern": "^(?:0|[1-9][0-9]*)$",
+                  "maxLength": 78,
+                  "x-uintBits": 256
+                },
+                "ranges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 24576
+                      },
+                      "length": {
+                        "const": 32
+                      }
+                    },
+                    "required": [
+                      "start",
+                      "length"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 1024
+                }
+              },
+              "required": [
+                "immutableId",
+                "ranges"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 1024
+          },
+          "runtimeImmutables": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "immutableId": {
+                      "type": "string",
+                      "pattern": "^(?:0|[1-9][0-9]*)$",
+                      "maxLength": 78,
+                      "x-uintBits": 256
+                    },
+                    "abiType": {
+                      "const": "address"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+                    }
+                  },
+                  "required": [
+                    "immutableId",
+                    "abiType",
+                    "target"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "immutableId": {
+                      "type": "string",
+                      "pattern": "^(?:0|[1-9][0-9]*)$",
+                      "maxLength": 78,
+                      "x-uintBits": 256
+                    },
+                    "abiType": {
+                      "type": "string",
+                      "maxLength": 256
+                    },
+                    "literal": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "immutableId",
+                    "abiType",
+                    "literal"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "minItems": 0,
+            "maxItems": 1024
+          },
+          "deployedRuntimeCodeBase64": {
+            "type": "string",
+            "maxLength": 32768,
+            "minLength": 4,
+            "x-canonical": "base64"
+          },
+          "deployedRuntimeCodeHash": {
+            "type": "string",
+            "pattern": "^0x[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "immutableReferences",
+          "runtimeImmutables",
+          "deployedRuntimeCodeBase64",
+          "deployedRuntimeCodeHash"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "responseSchemas": {
+    "CustomLaunchManualReviewV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-manual-review.v1"
+        },
+        "reviewId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "subjectHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "chainId": {
+          "enum": [
+            "1",
+            "4663"
+          ]
+        },
+        "controller": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$",
+          "x-canonical": "address"
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "approved",
+            "rejected",
+            "expired"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "approvedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expiresAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requiresRepack": {
+          "type": "boolean"
+        },
+        "reviewDueAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reviewOverdue": {
+          "type": "boolean"
+        },
+        "launchRequestedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "launchDeadline": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "reviewId",
+        "subjectHash",
+        "chainId",
+        "controller",
+        "state",
+        "revision",
+        "submittedAt",
+        "approvedAt",
+        "expiresAt",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchFindingV1": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "stage": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "blockingAxis": {
+          "oneOf": [
+            {
+              "enum": [
+                "launchEligibility",
+                "assurance",
+                "distribution",
+                "lifecycle"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "invariant": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "jsonPointer": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "actual": {},
+        "constraint": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "witness": {
+          "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/witness"
+        },
+        "repair": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "enum": [
+                "replace_value",
+                "repack",
+                "change_contract",
+                "inspect",
+                "retry",
+                "none"
+              ]
+            },
+            "value": {},
+            "patch": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false
+        },
+        "retry": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "same_request",
+                "repack_new_idempotency",
+                "poll",
+                "change_contract",
+                "operator_retry"
+              ]
+            },
+            "sameBytesAllowed": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "mode",
+            "sameBytesAllowed"
+          ],
+          "additionalProperties": false
+        },
+        "resumeUrl": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "documentationUrl": {
+          "type": "string",
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "code",
+        "stage",
+        "blockingAxis",
+        "invariant",
+        "jsonPointer",
+        "actual",
+        "constraint",
+        "witness",
+        "repair",
+        "retry",
+        "resumeUrl",
+        "documentationUrl"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchClaimV1": {
+      "type": "object",
+      "properties": {
+        "claimType": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "subject": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "observedValue": {},
+        "status": {
+          "enum": [
+            "verified",
+            "unresolved",
+            "disclosed"
+          ]
+        },
+        "witness": {
+          "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/witness"
+        },
+        "assessor": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "assessorVersion": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "validAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "blockNumber": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 20,
+              "x-uintBits": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "claimType",
+        "subject",
+        "observedValue",
+        "status",
+        "witness",
+        "assessor",
+        "assessorVersion",
+        "validAt",
+        "blockNumber"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchDistributionV1": {
+      "type": "object",
+      "properties": {
+        "programmableRouting": {
+          "enum": [
+            "untested",
+            "compatible",
+            "adapter_required",
+            "incompatible"
+          ]
+        },
+        "uniswapApi": {
+          "enum": [
+            "not_requested",
+            "pending",
+            "available",
+            "unavailable"
+          ]
+        },
+        "uniswapLabsRouting": {
+          "enum": [
+            "unknown",
+            "automatic",
+            "review_required",
+            "allowed",
+            "unavailable"
+          ]
+        },
+        "hooklist": {
+          "enum": [
+            "not_requested",
+            "queued",
+            "submitted",
+            "merged",
+            "rejected"
+          ]
+        }
+      },
+      "required": [
+        "programmableRouting",
+        "uniswapApi",
+        "uniswapLabsRouting",
+        "hooklist"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPreflightV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-preflight.v1"
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "planHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "launchEligibility": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "enum": [
+                "ready",
+                "action_required",
+                "analysis_pending"
+              ]
+            },
+            "hardBlockers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CustomLaunchFindingV1"
+              }
+            }
+          },
+          "required": [
+            "status",
+            "hardBlockers"
+          ],
+          "additionalProperties": false
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchFindingV1"
+          }
+        },
+        "assurance": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "enum": [
+                "provenance_only",
+                "provenance_verified",
+                "properties_verified"
+              ]
+            },
+            "claims": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CustomLaunchClaimV1"
+              }
+            }
+          },
+          "required": [
+            "level",
+            "claims"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "planHash",
+        "manifestDigest",
+        "launchEligibility",
+        "findings",
+        "assurance"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchAdmissionV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-admission.v1"
+        },
+        "planHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "rawRequestSha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "principalId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "controller": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$",
+          "x-canonical": "address"
+        },
+        "chainId": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-uintBits": 64
+        },
+        "evidenceDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "issuerVersion": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "issuerKeyId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "assuranceClaims": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchClaimV1"
+          }
+        },
+        "receiptHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "signature": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "planHash",
+        "rawRequestSha256",
+        "manifestDigest",
+        "principalId",
+        "controller",
+        "chainId",
+        "evidenceDigest",
+        "issuerVersion",
+        "issuerKeyId",
+        "issuedAt",
+        "expiresAt",
+        "assuranceClaims",
+        "receiptHash",
+        "signature"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchWalletStepV1": {
+      "type": "object",
+      "properties": {
+        "stepId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "actionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "wallet_action_ready",
+            "broadcast",
+            "mined",
+            "final",
+            "failed"
+          ]
+        },
+        "controller": {
+          "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/controller"
+        },
+        "transaction": {
+          "type": "object",
+          "properties": {
+            "chainId": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 20,
+              "x-uintBits": 64
+            },
+            "from": {
+              "type": "string",
+              "pattern": "^0x[0-9a-fA-F]{40}$",
+              "x-canonical": "address"
+            },
+            "to": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^0x[0-9a-fA-F]{40}$",
+                  "x-canonical": "address"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "data": {
+              "type": "string",
+              "pattern": "^0x(?:[0-9a-f]{2})*$",
+              "maxLength": 262146
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 78,
+              "x-uintBits": 256
+            },
+            "gasLimit": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 78,
+              "x-uintBits": 256
+            },
+            "nonce": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 20,
+              "x-uintBits": 64
+            },
+            "deadline": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 20,
+              "x-uintBits": 64
+            }
+          },
+          "required": [
+            "chainId",
+            "from",
+            "to",
+            "data",
+            "value",
+            "gasLimit",
+            "nonce",
+            "deadline"
+          ],
+          "additionalProperties": false
+        },
+        "transactionDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "postconditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "transactionHash": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^0x[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "stepId",
+        "actionIds",
+        "status",
+        "controller",
+        "transaction",
+        "transactionDigest",
+        "preconditions",
+        "postconditions",
+        "transactionHash"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanReplanBindingV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-replan.v1"
+        },
+        "previousPlanId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "previousPlanHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "previousRawRequestSha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "previousManifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "chainId": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-uintBits": 64
+        },
+        "controller": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$",
+          "x-canonical": "address"
+        },
+        "finalizedPrefix": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stepId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+              },
+              "transactionDigest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transactionHash": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              },
+              "evidenceHash": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "inclusion": {
+                "type": "object",
+                "properties": {
+                  "chainId": {
+                    "type": "string",
+                    "pattern": "^(?:0|[1-9][0-9]*)$",
+                    "maxLength": 20,
+                    "x-uintBits": 64
+                  },
+                  "transactionHash": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-f]{64}$"
+                  },
+                  "blockNumber": {
+                    "type": "string",
+                    "pattern": "^(?:0|[1-9][0-9]*)$",
+                    "maxLength": 20,
+                    "x-uintBits": 64
+                  },
+                  "blockHash": {
+                    "type": "string",
+                    "pattern": "^0x[0-9a-f]{64}$"
+                  },
+                  "blockTimestamp": {
+                    "type": "string",
+                    "pattern": "^(?:0|[1-9][0-9]*)$",
+                    "maxLength": 20,
+                    "x-uintBits": 64
+                  },
+                  "transactionIndex": {
+                    "type": "string",
+                    "pattern": "^(?:0|[1-9][0-9]*)$",
+                    "maxLength": 20,
+                    "x-uintBits": 64
+                  }
+                },
+                "required": [
+                  "chainId",
+                  "transactionHash",
+                  "blockNumber",
+                  "blockHash",
+                  "blockTimestamp",
+                  "transactionIndex"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "stepId",
+              "transactionDigest",
+              "transactionHash",
+              "evidenceHash",
+              "inclusion"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "bindingHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "previousPlanId",
+        "previousPlanHash",
+        "previousRawRequestSha256",
+        "previousManifestDigest",
+        "chainId",
+        "controller",
+        "finalizedPrefix",
+        "bindingHash"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanResourceV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-resource.v1"
+        },
+        "planId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "principalId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "planHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "rawRequestSha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "plan": {
+          "$ref": "#/components/schemas/CustomLaunchPlanV1"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "preflight_complete",
+            "launch_ready",
+            "action_required",
+            "analysis_pending",
+            "reserved",
+            "wallet_action_ready",
+            "broadcast",
+            "mined",
+            "final",
+            "source_verified",
+            "indexed",
+            "publicly_visible",
+            "expired"
+          ]
+        },
+        "preflight": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/CustomLaunchPreflightV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "admission": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/CustomLaunchAdmissionV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchWalletStepV1"
+          },
+          "minItems": 0,
+          "maxItems": 65
+        },
+        "walletAuthorization": {
+          "type": "object",
+          "properties": {
+            "stampPreparation": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "controllerPrefix": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "stampPreparation",
+            "controllerPrefix"
+          ],
+          "additionalProperties": false
+        },
+        "admissionEvidence": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "replan": {
+          "$ref": "#/components/schemas/CustomLaunchPlanReplanBindingV1"
+        },
+        "manualReview": {
+          "$ref": "#/components/schemas/CustomLaunchManualReviewV1"
+        },
+        "distribution": {
+          "$ref": "#/components/schemas/CustomLaunchDistributionV1"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "resumeUrl": {
+          "type": "string",
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "planId",
+        "requestId",
+        "principalId",
+        "planHash",
+        "rawRequestSha256",
+        "manifestDigest",
+        "plan",
+        "status",
+        "preflight",
+        "admission",
+        "steps",
+        "distribution",
+        "createdAt",
+        "updatedAt",
+        "resumeUrl"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanListV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-list.v1"
+        },
+        "chainId": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-uintBits": 64
+        },
+        "plans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchPlanResourceV1"
+          },
+          "minItems": 0,
+          "maxItems": 25
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "chainId",
+        "plans",
+        "nextCursor"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanErrorsV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-errors.v1"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policyVersion": {
+          "const": "programmable.custom-launch-policy.v1"
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchFindingV1"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "policyVersion",
+        "manifestDigest",
+        "findings"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchCapabilitiesV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-capabilities.v1"
+        },
+        "chainId": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-uintBits": 64
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "launchContract": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "executors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "minItems": 0,
+          "maxItems": 4
+        },
+        "feeModes": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "currentTradeFeePolicy": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "feeModesScope": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "availability": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "disabled",
+                "canary",
+                "active",
+                "degraded"
+              ]
+            },
+            "manifestDigest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "operations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "disabled",
+                      "canary",
+                      "active",
+                      "degraded"
+                    ]
+                  },
+                  "reasons": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 256
+                    }
+                  }
+                },
+                "required": [
+                  "state",
+                  "reasons"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "bindings": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "state",
+            "manifestDigest",
+            "operations",
+            "bindings"
+          ],
+          "additionalProperties": false
+        },
+        "compatibility": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "chainId",
+        "manifestDigest",
+        "launchContract",
+        "limits",
+        "actions",
+        "executors",
+        "feeModes",
+        "availability",
+        "compatibility"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchCredentialV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-credential.v1"
+        },
+        "chainId": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-uintBits": 64
+        },
+        "controller": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^0x[0-9a-fA-F]{40}$",
+              "x-canonical": "address"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "credentialId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "credentialKind": {
+          "enum": [
+            "wallet-api-key",
+            "partner-root",
+            "partner-subkey"
+          ]
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "requestSchemaVersion": {
+          "const": "programmable.custom-launch-plan.v1"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "chainId",
+        "controller",
+        "credentialId",
+        "credentialKind",
+        "scopes",
+        "limits",
+        "manifestDigest",
+        "requestSchemaVersion"
+      ],
+      "additionalProperties": false
+    },
+    "LaunchProjectionV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.launch-projection.v1"
+        },
+        "sourceVersion": {
+          "enum": [
+            "router_v1",
+            "multi_role_v2",
+            "custom_launch_plan_v1"
+          ]
+        },
+        "launchId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "chainId": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-uintBits": 64
+        },
+        "controller": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$",
+          "x-canonical": "address"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finalizedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "manifestDigest": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "planHash": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/component"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "markets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/market"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "primaryComponentId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "primaryMarketId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "publication": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/publication"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assuranceClaims": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchClaimV1"
+          }
+        },
+        "claimDescriptors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/claimDescriptor"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "distribution": {
+          "$ref": "#/components/schemas/CustomLaunchDistributionV1"
+        },
+        "sourceVerification": {
+          "enum": [
+            "pending",
+            "verified",
+            "partial",
+            "failed"
+          ]
+        },
+        "finality": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "enum": [
+                "pending",
+                "final"
+              ]
+            },
+            "transactionHashes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              },
+              "minItems": 0,
+              "maxItems": 65
+            },
+            "blockNumber": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(?:0|[1-9][0-9]*)$",
+                  "maxLength": 20,
+                  "x-uintBits": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "blockHash": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^0x[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "witness": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/witness"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "transactionHashes",
+            "blockNumber",
+            "blockHash",
+            "witness"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "sourceVersion",
+        "launchId",
+        "chainId",
+        "controller",
+        "createdAt",
+        "finalizedAt",
+        "manifestDigest",
+        "planHash",
+        "components",
+        "markets",
+        "primaryComponentId",
+        "primaryMarketId",
+        "publication",
+        "assuranceClaims",
+        "claimDescriptors",
+        "distribution",
+        "sourceVerification",
+        "finality"
+      ],
+      "additionalProperties": false
+    },
+    "LaunchProjectionPageV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.launch-projection-page.v1"
+        },
+        "launches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/LaunchProjectionV1"
+          },
+          "minItems": 0,
+          "maxItems": 25
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "launches",
+        "nextCursor"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanResourceV1_1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-resource.v1"
+        },
+        "planId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "principalId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "planHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "rawRequestSha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "plan": {
+          "$ref": "#/components/schemas/CustomLaunchPlanV1"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "preflight_complete",
+            "launch_ready",
+            "action_required",
+            "analysis_pending",
+            "reserved",
+            "wallet_action_ready",
+            "broadcast",
+            "mined",
+            "final",
+            "source_verified",
+            "indexed",
+            "publicly_visible",
+            "expired"
+          ]
+        },
+        "preflight": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/CustomLaunchPreflightV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "admission": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/CustomLaunchAdmissionV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchWalletStepV1"
+          },
+          "minItems": 0,
+          "maxItems": 65
+        },
+        "walletAuthorization": {
+          "type": "object",
+          "properties": {
+            "stampPreparation": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "controllerPrefix": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "stampPreparation",
+            "controllerPrefix"
+          ],
+          "additionalProperties": false
+        },
+        "admissionEvidence": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "replan": {
+          "$ref": "#/components/schemas/CustomLaunchPlanReplanBindingV1"
+        },
+        "manualReview": {
+          "$ref": "#/components/schemas/CustomLaunchManualReviewV1"
+        },
+        "distribution": {
+          "$ref": "#/components/schemas/CustomLaunchDistributionV1"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "resumeUrl": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "walletUrl": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048,
+          "description": "Fixed Programmable website handoff; conveys no authorization. Present only for response version 1.1."
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "planId",
+        "requestId",
+        "principalId",
+        "planHash",
+        "rawRequestSha256",
+        "manifestDigest",
+        "plan",
+        "status",
+        "preflight",
+        "admission",
+        "steps",
+        "distribution",
+        "createdAt",
+        "updatedAt",
+        "resumeUrl"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanListV1_1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-list.v1"
+        },
+        "chainId": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-uintBits": 64
+        },
+        "plans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchPlanResourceV1_1"
+          },
+          "minItems": 0,
+          "maxItems": 25
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "chainId",
+        "plans",
+        "nextCursor"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchWalletPlanListV1_1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-list.v1"
+        },
+        "plans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchPlanResourceV1_1"
+          },
+          "minItems": 0,
+          "maxItems": 25
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "plans",
+        "nextCursor"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchWalletPlanProofReceiptV1_1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-step-proof.v1"
+        },
+        "planId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "stepId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "transactionHash": {
+          "type": "string",
+          "pattern": "^0x[0-9a-f]{64}$"
+        },
+        "accepted": {
+          "const": true
+        },
+        "authoritative": {
+          "const": false
+        },
+        "acceptedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "resumeUrl": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "walletUrl": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "planId",
+        "stepId",
+        "transactionHash",
+        "accepted",
+        "authoritative",
+        "acceptedAt",
+        "resumeUrl"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanContinuationV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-continuation.v1"
+        },
+        "status": {
+          "const": "replan_required"
+        },
+        "originalManifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "currentManifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "replanUrl": {
+          "type": "string",
+          "maxLength": 2048,
+          "pattern": "^/v4/chains/4663/custom-launch-plans/[A-Za-z0-9][A-Za-z0-9._:-]{0,127}:replan$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "status",
+        "originalManifestDigest",
+        "currentManifestDigest",
+        "replanUrl"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchWalletStepV1_2": {
+      "type": "object",
+      "properties": {
+        "stepId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "actionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "minItems": 0,
+          "maxItems": 65
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "wallet_action_ready",
+            "broadcast",
+            "mined",
+            "final",
+            "failed"
+          ]
+        },
+        "controller": {
+          "$ref": "#/components/schemas/CustomLaunchPlanV1/$defs/controller"
+        },
+        "transaction": {
+          "type": "object",
+          "properties": {
+            "chainId": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 20,
+              "x-uintBits": 64
+            },
+            "from": {
+              "type": "string",
+              "pattern": "^0x[0-9a-fA-F]{40}$",
+              "x-canonical": "address"
+            },
+            "to": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^0x[0-9a-fA-F]{40}$",
+                  "x-canonical": "address"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "data": {
+              "type": "string",
+              "pattern": "^0x(?:[0-9a-f]{2})*$",
+              "maxLength": 2200002
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 78,
+              "x-uintBits": 256
+            },
+            "gasLimit": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 78,
+              "x-uintBits": 256
+            },
+            "nonce": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 20,
+              "x-uintBits": 64
+            },
+            "deadline": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)$",
+              "maxLength": 20,
+              "x-uintBits": 64
+            }
+          },
+          "required": [
+            "chainId",
+            "from",
+            "to",
+            "data",
+            "value",
+            "gasLimit",
+            "nonce",
+            "deadline"
+          ],
+          "additionalProperties": false
+        },
+        "transactionDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "postconditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "transactionHash": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^0x[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "stepId",
+        "actionIds",
+        "status",
+        "controller",
+        "transaction",
+        "transactionDigest",
+        "preconditions",
+        "postconditions",
+        "transactionHash"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanResourceV1_2": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-resource.v1"
+        },
+        "planId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "requestId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "principalId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "planHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "rawRequestSha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "plan": {
+          "$ref": "#/components/schemas/CustomLaunchPlanV1"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "preflight_complete",
+            "launch_ready",
+            "action_required",
+            "analysis_pending",
+            "reserved",
+            "wallet_action_ready",
+            "broadcast",
+            "mined",
+            "final",
+            "source_verified",
+            "indexed",
+            "publicly_visible",
+            "expired"
+          ]
+        },
+        "preflight": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/CustomLaunchPreflightV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "admission": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/CustomLaunchAdmissionV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchWalletStepV1_2"
+          },
+          "minItems": 0,
+          "maxItems": 65
+        },
+        "walletAuthorization": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "stampPreparation": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "controllerPrefix": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "stampPreparation",
+                "controllerPrefix"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "atomicPreparation": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "executionOrder": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "atomicPreparation",
+                "executionOrder"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "admissionEvidence": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "replan": {
+          "$ref": "#/components/schemas/CustomLaunchPlanReplanBindingV1"
+        },
+        "manualReview": {
+          "$ref": "#/components/schemas/CustomLaunchManualReviewV1"
+        },
+        "distribution": {
+          "$ref": "#/components/schemas/CustomLaunchDistributionV1"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "resumeUrl": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "walletUrl": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048,
+          "description": "Fixed Programmable website handoff; conveys no authorization."
+        },
+        "continuation": {
+          "$ref": "#/components/schemas/CustomLaunchPlanContinuationV1",
+          "description": "Derived advice for a historical plan without a current signed next step. Does not change or authorize any original bytes; unresolved wallet sends take precedence."
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "planId",
+        "requestId",
+        "principalId",
+        "planHash",
+        "rawRequestSha256",
+        "manifestDigest",
+        "plan",
+        "status",
+        "preflight",
+        "admission",
+        "steps",
+        "distribution",
+        "createdAt",
+        "updatedAt",
+        "resumeUrl"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchPlanListV1_2": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-list.v1"
+        },
+        "chainId": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-uintBits": 64
+        },
+        "plans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchPlanResourceV1_2"
+          },
+          "minItems": 0,
+          "maxItems": 25
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "chainId",
+        "plans",
+        "nextCursor"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchWalletPlanListV1_2": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-list.v1"
+        },
+        "plans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/CustomLaunchPlanResourceV1_2"
+          },
+          "minItems": 0,
+          "maxItems": 25
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "plans",
+        "nextCursor"
+      ],
+      "additionalProperties": false
+    },
+    "CustomLaunchWalletPlanProofReceiptV1_2": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "programmable.custom-launch-plan-step-proof.v1"
+        },
+        "planId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "stepId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/+\\-]{0,255}$"
+        },
+        "transactionHash": {
+          "type": "string",
+          "pattern": "^0x[0-9a-f]{64}$"
+        },
+        "accepted": {
+          "const": true
+        },
+        "authoritative": {
+          "const": false
+        },
+        "acceptedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "resumeUrl": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "walletUrl": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "planId",
+        "stepId",
+        "transactionHash",
+        "accepted",
+        "authoritative",
+        "acceptedAt",
+        "resumeUrl"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "responseContract": {
+    "header": "Programmable-Launch-Response-Version",
+    "default": "1.0",
+    "supported": [
+      "1.0",
+      "1.1",
+      "1.2"
+    ],
+    "metadataOnly": true,
+    "persistedPlanUnchanged": true,
+    "versions": {
+      "1.0": {
+        "resourceSchema": "CustomLaunchPlanResourceV1",
+        "listSchema": "CustomLaunchPlanListV1",
+        "walletUrl": "omitted"
+      },
+      "1.1": {
+        "resourceSchema": "CustomLaunchPlanResourceV1_1",
+        "listSchema": "CustomLaunchPlanListV1_1",
+        "walletUrl": "website_handoff"
+      },
+      "1.2": {
+        "resourceSchema": "CustomLaunchPlanResourceV1_2",
+        "listSchema": "CustomLaunchPlanListV1_2",
+        "walletUrl": "website_handoff",
+        "atomicAuthorization": "explicit_execution_order",
+        "requiredForExecutor": "atomic_execute_and_stamp_v2",
+        "continuation": {
+          "schema": "CustomLaunchPlanContinuationV1",
+          "optional": true,
+          "meaning": "historical_plan_requires_explicit_replan",
+          "originalSignedSubjectsUnchanged": true,
+          "unresolvedWalletSendPrecedence": true,
+          "automaticReplan": false
+        }
+      }
+    },
+    "walletOrigin": "https://programmable.market",
+    "walletPath": "/developers/api-keys?view=history&chainId={chainId}&launchId={planId}",
+    "walletAdmin": {
+      "path": "/v4/chains/4663/wallet-admin/custom-launch-plans",
+      "authentication": "existing_signed_website_bff_v2_and_active_wallet_owner",
+      "operations": [
+        "list",
+        "read",
+        "proof_hint"
+      ],
+      "resourceSchema": "CustomLaunchPlanResourceV1_1",
+      "listSchema": "CustomLaunchWalletPlanListV1_1",
+      "proofSchema": "CustomLaunchWalletPlanProofReceiptV1_1",
+      "proofMeaning": "non_authoritative_discovery_hint",
+      "legacyResponseUnchanged": true,
+      "atomicResponseVersion": "1.2",
+      "atomicResourceSchema": "CustomLaunchPlanResourceV1_2",
+      "atomicListSchema": "CustomLaunchWalletPlanListV1_2",
+      "atomicProofSchema": "CustomLaunchWalletPlanProofReceiptV1_2"
+    },
+    "resumeUrl": "api_status_path",
+    "location": "api_status_path"
+  },
+  "directEoaCreation": {
+    "action": "deployEoaCreate",
+    "version": "programmable.custom-launch-action.eoa-create.v1",
+    "executionTarget": null,
+    "controllerKinds": [
+      "eoa",
+      "delegated_eoa_v1"
+    ],
+    "executor": "controller_multi_step_v1",
+    "address": "CREATE(controller, exact_transaction_nonce)",
+    "sourceRewrite": false
+  },
+  "delegatedEoaController": {
+    "kind": "delegated_eoa_v1",
+    "authoritySchema": "programmable.delegated-eoa-authority.v1",
+    "authorityFields": [
+      "schemaVersion",
+      "chainId",
+      "delegate",
+      "delegateRuntimeCodeHash"
+    ],
+    "controllerRuntimeCodeHash": "keccak256(0xef0100 || delegate)",
+    "delegateRuntimeBinding": "required",
+    "transactionEnvelopes": [
+      "legacy",
+      "eip2930",
+      "eip1559"
+    ],
+    "authorizationLists": "unsupported",
+    "delegationWrites": "unsupported",
+    "walletUpgrade": "not_required",
+    "batching": "not_supported"
+  },
+  "crossFieldRules": [
+    "unique_ids",
+    "earlier_action_dependencies",
+    "component_artifact_refs",
+    "resolved_address_refs",
+    "market_currency_order",
+    "chain_equality",
+    "runtime_hash_equality",
+    "hook_address_bits",
+    "legacy_return_delta_dependencies",
+    "aggregate_budgets",
+    "validity_window",
+    "fee_mode_scope_rate_recipient",
+    "primary_publication_refs",
+    "exact_source_bundle",
+    "create_create2_preimages",
+    "explicit_open_provenance_policy",
+    "eoa_creation_controller_nonce_and_address"
+  ],
+  "feeModes": {
+    "pool_enforced": {
+      "rateBps": 20,
+      "scope": "proven_pool_paths",
+      "proofRequired": true
+    },
+    "programmable_routed": {
+      "rateBps": 20,
+      "scope": "programmable_built_or_routed_qualifying_swaps"
+    },
+    "not_applicable": {
+      "rateBps": 0,
+      "scope": "no_qualifying_swap_flow",
+      "recipient": null
+    },
+    "launchCharge": "disabled"
+  },
+  "retryModes": [
+    "same_request",
+    "repack_new_idempotency",
+    "poll",
+    "change_contract",
+    "operator_retry"
+  ],
+  "idempotency": {
+    "domain": "custom-launch-plan:create:v1",
+    "keyPrefix": "clp-v1-",
+    "derivesFrom": "rawRequestSha256",
+    "changedBytes": "new_key",
+    "ambiguousMutation": "inspect_same_request",
+    "replan": "immutable_successor_bound_to_final_prefix",
+    "replay": "read_only_before_current_manifest_and_release_admission",
+    "replayBindings": [
+      "current_principal",
+      "current_controller",
+      "chainId",
+      "idempotencyKey",
+      "exact_request_bytes",
+      "previousPlanId"
+    ]
+  },
+  "availability": {
+    "states": [
+      "disabled",
+      "canary",
+      "active",
+      "degraded"
+    ],
+    "staticArtifactIsReadiness": false
+  },
+  "distribution": {
+    "launchIndependent": true,
+    "submissionRequiresStoredOptIn": true,
+    "axes": [
+      "programmableRouting",
+      "uniswapApi",
+      "uniswapLabsRouting",
+      "hooklist"
+    ]
+  },
+  "compatibility": {
+    "multiRoleV2": "byte_and_meaning_stable",
+    "documentationGuideSuffix": ".md",
+    "legacyOpenapi": [
+      "4.0.0",
+      "4.1.0"
+    ]
+  },
+  "artifacts": [
+    {
+      "fileName": "manifest.json",
+      "path": "/v4/chains/4663/custom-launch-contract/manifest.json",
+      "mediaType": "application/json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "schema.json",
+      "path": "/v4/chains/4663/custom-launch-contract/schema.json",
+      "mediaType": "application/schema+json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "openapi.json",
+      "path": "/v4/chains/4663/custom-launch-contract/openapi.json",
+      "mediaType": "application/json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "errors.json",
+      "path": "/v4/chains/4663/custom-launch-contract/errors.json",
+      "mediaType": "application/json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "capabilities.json",
+      "path": "/v4/chains/4663/custom-launch-contract/capabilities.json",
+      "mediaType": "application/json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "discovery.json",
+      "path": "/v4/chains/4663/custom-launch-contract/discovery.json",
+      "mediaType": "application/json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "guide.md",
+      "path": "/v4/chains/4663/custom-launch-contract/guide.md",
+      "mediaType": "text/markdown",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "agent-setup.md",
+      "path": "/v4/chains/4663/custom-launch-contract/agent-setup.md",
+      "mediaType": "text/markdown",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "agent-setup.json",
+      "path": "/v4/chains/4663/custom-launch-contract/agent-setup.json",
+      "mediaType": "application/json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "reference.json",
+      "path": "/v4/chains/4663/custom-launch-contract/reference.json",
+      "mediaType": "application/json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "request-packer.mjs",
+      "path": "/v4/chains/4663/custom-launch-contract/request-packer.mjs",
+      "mediaType": "text/javascript",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    },
+    {
+      "fileName": "artifact-index.json",
+      "path": "/v4/chains/4663/custom-launch-contract/artifact-index.json",
+      "mediaType": "application/json",
+      "generator": "scripts/build-custom-launch-contract-v1.mjs",
+      "generatorVersion": "1.4.2"
+    }
+  ],
+  "manifestDigest": "sha256:c5255621a411c6cb23602bf455b4bd22f65a9cdb24fe890d50f89c00e9468df1"
+}

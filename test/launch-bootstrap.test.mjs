@@ -47,7 +47,8 @@ function fixture(mode = 'manual') {
     address: components.token.address, blockNumber: launched, blockHash: hash(launched), transactionHash: hash(999), index, removed: false});
   const mint = log(ethers.ZeroAddress, components.initializer.address, 10n ** 27n, 0);
   const tx = {hash: hash(999), from: m.transaction.from, to: m.transaction.to, nonce: 3, value: BigInt(m.transaction.valueWei), data: '0x1234',
-    gasLimit: 5000000n, maxFeePerGas: 100000000n, chainId: 4663n, blockNumber: launched, blockHash: hash(launched)};
+    gasLimit: 5000000n, maxFeePerGas: 100000000n, maxPriorityFeePerGas: 0n, type: 2, accessList: [],
+    chainId: 4663n, blockNumber: launched, blockHash: hash(launched)};
   const receipt = {hash: tx.hash, from: tx.from, to: tx.to, status: 1, blockNumber: launched, blockHash: hash(launched), gasUsed: 2000000n,
     gasPrice: 50000000n, logs: [mint, log(components.initializer.address, tx.from, 200n, 1)]};
   const values = {creatorBuyFeeBps: 170n, creatorSellFeeBps: 170n, PLATFORM_FEE_BPS: 30n, lpFee: 0n, module: ethers.ZeroAddress,
@@ -131,12 +132,61 @@ test('automation needs separate exact consent, approved host digest and finalize
 });
 
 test('wrong transaction, fee, factory, inventory, old rewards and gas evidence fail closed', async () => {
-  const changes = [f => {f.tx.nonce++;}, f => {f.tx.value++;}, f => {f.tx.data = '0xabcd';}, f => {f.tx.gasLimit--;},
+  const changes = [f => {f.tx.nonce++;}, f => {f.tx.value++;}, f => {f.tx.data = '0xabcd';}, f => {f.tx.gasLimit = 20999n;},
     f => {f.tx.from = addr(99);}, f => {f.tx.to = addr(99);}, f => {f.receipt.status = 0;}, f => {f.receipt.blockHash = hash(44);},
     f => {f.state.values.creatorBuyFeeBps = 179n;}, f => {f.state.values.graphFactory = addr(88);}, f => {f.state.values.creatorRecipient = addr(88);},
     f => {f.state.values.initialTokensOut = 201n;}, f => {f.state.values.reserved = 1n;}, f => {f.tx.maxFeePerGas = 900000000n;},
     f => {f.receipt.gasPrice = 200000000n;}, f => {f.receipt.gasUsed = 6000000n;},
     f => {f.provider.getBalance = async () => 0n;}, f => {f.provider.getCode = async () => '0x';}];
+  for (const change of changes) {const f = fixture(); change(f); await assert.rejects(verifyLaunchReceipt(f.provider, f.m, hash(999), {now}));}
+});
+
+test('wallet outer gas adjustment preserves exact payload and reviewed maximum liability, including automatic restart', async t => {
+  const f = fixture('after-reviewed-launch'), target = dir(t);
+  f.m.transaction.gasLimit = '12000000';
+  // The same variation observed in the real Rabby test, under the unchanged
+  // main monetary cap. The main transaction/value and manifest stay separate.
+  f.tx.gasLimit = 12188552n; f.tx.maxFeePerGas = 28600000n; f.tx.maxPriorityFeePerGas = 9n;
+  f.receipt.gasUsed = 6281041n; f.receipt.gasPrice = 20050000n;
+  const opts = {...options(f.m), consent: consent(f.m), approvedManifestSha256: launchManifestHash(f.m, ethers)};
+  const active = await runLaunchBootstrapCycle(f.provider, f.m, target, opts);
+  assert.equal(active.state, 'ready-for-approved-services');
+  const proof = JSON.parse(fs.readFileSync(path.join(target, 'launch-proof.json')));
+  assert.equal(proof.gasLiabilityWei, '348592587200000'); assert.equal(proof.signedGasLimit, '12188552');
+  assert.equal(proof.quotedGasLimit, '12000000'); assert.equal(proof.gasLimitAdjusted, true);
+  const replay = await runLaunchBootstrapCycle(f.provider, f.m, target, opts);
+  assert.equal(replay.operatorConfig, active.operatorConfig);
+  assert.equal(JSON.parse(fs.readFileSync(active.operatorConfig)).execution.maxTotalGasWei, '5000000000000000');
+  f.tx.data = '0x1235';
+  await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, target, opts), /reviewed launch/,
+    'Changing even one payload byte must not pass with an affordable gas limit');
+});
+
+test('gas estimates may rise or fall only inside the original signed-liability ceiling', async () => {
+  const f = fixture(); f.tx.gasLimit = 4000000n; f.tx.maxFeePerGas = 200000000n;
+  assert.equal((await verifyLaunchReceipt(f.provider, f.m, hash(999), {now})).proof.gasLiabilityWei, f.m.maxLaunchGasWei);
+  f.tx.maxFeePerGas++;
+  await assert.rejects(verifyLaunchReceipt(f.provider, f.m, hash(999), {now}), /spending boundary/,
+    'A cheap receipt cannot excuse signed maximum liability above the approved cap');
+});
+
+test('existing local UI legacy gasPrice remains recoverable within the same cap', async () => {
+  const f = fixture(); f.tx.type = 0; f.tx.maxFeePerGas = null; f.tx.maxPriorityFeePerGas = null;
+  f.tx.gasPrice = 100000000n; f.tx.gasLimit = 6000000n; f.receipt.gasPrice = f.tx.gasPrice;
+  const result = await verifyLaunchReceipt(f.provider, f.m, hash(999), {now});
+  assert.equal(result.proof.gasLiabilityWei, '600000000000000'); assert.equal(result.proof.gasLimitAdjusted, true);
+  f.tx.maxFeePerGas = 1n;
+  await assert.rejects(verifyLaunchReceipt(f.provider, f.m, hash(999), {now}), /reviewed launch/,
+    'A legacy envelope cannot smuggle incompatible EIP-1559 fee fields');
+});
+
+test('gas adjustment cannot introduce authorization, blob, access-list or unsupported fee liability', async () => {
+  const changes = [f => {f.tx.type = 1;}, f => {f.tx.type = 4;}, f => {f.tx.maxPriorityFeePerGas = -1n;},
+    f => {f.tx.maxPriorityFeePerGas = f.tx.maxFeePerGas + 1n;}, f => {f.tx.maxFeePerGas = null;},
+    f => {f.tx.accessList = [{address: addr(1), storageKeys: []}];}, f => {f.tx.authorizationList = [{}];},
+    f => {f.tx.blobVersionedHashes = [hash(1)];}, f => {f.tx.blobs = [];}, f => {f.tx.sidecars = [];},
+    f => {const send = f.provider.send; f.provider.send = async (...args) => ({...await send(...args), blobGasUsed: '0x1'});},
+    f => {const send = f.provider.send; f.provider.send = async (...args) => ({...await send(...args), blobGasPrice: '0x1'});}];
   for (const change of changes) {const f = fixture(); change(f); await assert.rejects(verifyLaunchReceipt(f.provider, f.m, hash(999), {now}));}
 });
 
@@ -246,6 +296,35 @@ test('missing mint proof and consumed launch nonce cannot be mistaken for a laun
   await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, dir(t), options(f.m)), /mint evidence/);
   f.state.deployed = false; f.state.nonce = 4;
   await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, dir(t), options(f.m)), /nonce was consumed/);
+});
+
+test('v4 bootstrap binds the reviewed pipeline to both runtime configs and rejects prior serial-policy consent', async t => {
+  const f = fixture('after-reviewed-launch');
+  Object.assign(f.m, {schemaVersion: 'robinhook.launch-bootstrap.v3', workerSourceRevision: 'b'.repeat(40)});
+  f.m.accounting.minimumAgeSeconds = 300; f.m.execution.payoutIntervalSeconds = 900;
+  const oldConsent = consent(f.m), originalTransaction = structuredClone(f.m.transaction);
+  f.m.schemaVersion = 'robinhook.launch-bootstrap.v4';
+  Object.assign(f.m.execution, {confirmationMode: 'pipelined-finalized-v1', maxInflightTransactions: 8});
+  const target = dir(t), workerOptions = {...options(f.m), sourceRevision: f.m.workerSourceRevision};
+  await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, target, {...workerOptions, consent: oldConsent}), /consent/);
+  const waiting = await runLaunchBootstrapCycle(f.provider, f.m, target, workerOptions);
+  assert.equal(waiting.state, 'verified-awaiting-review-gate');
+  assert.equal(fs.existsSync(path.join(target, 'production.operator.json')), false);
+  const readonly = loadConfig(path.join(target, 'production.readonly.json'));
+  assert.equal(readonly.execution.broadcastEnabled, false);
+  assert.equal(readonly.minimumAgeSeconds, 300);
+  assert.equal(readonly.execution.payoutIntervalSeconds, 900);
+  assert.equal(readonly.execution.confirmationMode, 'pipelined-finalized-v1');
+  assert.equal(readonly.execution.maxInflightTransactions, 8);
+  const active = await runLaunchBootstrapCycle(f.provider, f.m, target, {...workerOptions,
+    consent: consent(f.m), approvedManifestSha256: launchManifestHash(f.m, ethers)});
+  const config = loadConfig(active.operatorConfig);
+  assert.equal(active.state, 'ready-for-approved-services'); assert.equal(active.signing, false);
+  assert.equal(config.execution.broadcastEnabled, true);
+  assert.equal(config.execution.confirmationMode, 'pipelined-finalized-v1');
+  assert.equal(config.execution.maxInflightTransactions, 8);
+  assert.equal(config.payoutStartTimestamp, now - 60);
+  assert.deepEqual(f.m.transaction, originalTransaction);
 });
 
 test('standby waits offline before admission and pins one exact package across restarts', t => {

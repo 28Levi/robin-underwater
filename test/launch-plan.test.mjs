@@ -12,6 +12,30 @@ const compiled=compileRobinLaunchContracts(process.cwd(),solc);
 const input={intent,compiled,capabilities,factory,distributor,sourceRevision:'1'.repeat(40),nonce:'0x'+'31'.repeat(32),now};
 const built=buildRobinLaunchPlan(input);
 
+test('verified current manifest selects its official packer without changing the MAIN graph or 170/30 contracts',async()=>{
+ const {CURRENT_PLAN_MANIFEST,loadPlanContract}=await import('../src/launch-platform-contract.mjs');
+ const observed=read('vendor/programmable-launch-plan-v1/current-c525/capabilities-observed.json');
+ const current=buildRobinLaunchPlan({...input,capabilities:observed});
+ assert.equal(current.plan.manifestDigest,CURRENT_PLAN_MANIFEST);
+ assert.deepEqual({...current.plan,manifestDigest:PLAN_MANIFEST},built.plan);
+ assert.equal(current.factoryCall,built.factoryCall);assert.deepEqual(current.runtimeCodes,built.runtimeCodes);
+ assert.deepEqual(current.report.hookFees,built.report.hookFees);
+ assert.equal(current.report.routedTradingFee.rateBps,100);
+ assert.equal(current.report.routedTradingFee.waiverVerified,false);assert.equal(current.report.routedTradingFee.totalTradingFeeConfirmed,false);
+ const {loadReplanPacker}=await import('../scripts/reconcile-launch-replan.mjs');
+ const {runCustomLaunchPlanPackerCliV1:pack}=await loadReplanPacker(observed.manifestDigest);
+ const dir=fs.mkdtempSync(path.resolve('output/current-launch-plan-test-'));
+ fs.writeFileSync(path.join(dir,'plan.json'),JSON.stringify(current.plan));
+ assert.equal(await pack(['--input',path.join(dir,'plan.json'),'--out',path.join(dir,'request.json'),'--report',path.join(dir,'report.json')]),0);
+ const report=read(path.join(dir,'report.json'));
+ assert.equal(report.manifestDigest,CURRENT_PLAN_MANIFEST);assert.equal(report.status,'packed');assert.equal(report.productionAuthority,false);
+ assert.equal(report.walletSigning,false);
+ for(const mutate of [c=>c.availability.manifestDigest=PLAN_MANIFEST,c=>c.currentTradeFeePolicy.rateBps=30,
+  c=>c.availability.bindings.execution.atomic.permitAuthorityRuntimeCodeHash='0x'+'0'.repeat(64)]){
+  const altered=structuredClone(observed);mutate(altered);assert.throws(()=>buildRobinLaunchPlan({...input,capabilities:altered}));
+ }
+});
+
 test('current Atomic source plan packs custom ROBIN 170/30 economics and all four runtime bindings',async()=>{
  const dir=fs.mkdtempSync(path.resolve('output/launch-plan-test-'));fs.writeFileSync(path.join(dir,'plan.json'),JSON.stringify(built.plan));
  assert.equal(await runCustomLaunchPlanPackerCliV1(['--input',path.join(dir,'plan.json'),'--out',path.join(dir,'request.json'),'--report',path.join(dir,'report.json')]),0);

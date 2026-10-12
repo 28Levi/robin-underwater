@@ -3,6 +3,7 @@ import {LossLedger,ZERO,address} from './ledger.mjs';
 import {decodeReceipt,hookInterface} from './receipt-adapter.mjs';
 import {twap} from './oracle.mjs';
 import {normalizeNative20Receipt,poolInterface} from './native20-adapter.mjs';
+import {requireInitialPriceWindow} from './price-window-warmup.mjs';
 
 export const transferInterface=new Interface(['event Transfer(address indexed from,address indexed to,uint256 value)']);
 export const rewardInterface=new Interface([
@@ -93,6 +94,13 @@ export async function buildSnapshot(provider,c,previous=null) {
   const prior=await provider.getBlock(ledger.checkpoint.blockNumber);
   if(!prior||prior.hash!==ledger.checkpoint.blockHash)throw Error('Finalized history changed; reconciliation required');
   from=ledger.checkpoint.blockNumber+1;
+ }
+ if(!previous){
+  const [deployment,canonicalFinalized]=await Promise.all([
+   provider.getBlock(c.deploymentBlock),provider.getBlock(finalized.number)]);
+  if(!canonicalFinalized||canonicalFinalized.hash!==finalized.hash
+   ||canonicalFinalized.timestamp!==finalized.timestamp)throw Error('Finalized checkpoint changed');
+  requireInitialPriceWindow(deployment,finalized,c);
  }
  const txs=new Map(),blocks=new Map(),changedAccounts=new Set();
  const pendingRecipients=new Set(previous?.pendingRecipients??[]);

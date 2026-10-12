@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "robin.platform-contract-evidence.v1",
+  "chainId": 4663,
+  "manifestDigest": "sha256:c5255621a411c6cb23602bf455b4bd22f65a9cdb24fe890d50f89c00e9468df1",
+  "recordedDate": "2026-10-12",
+  "source": "https://api.programmable.market/v4/chains/4663/custom-launch-contract",
+  "manifestUrl": "https://api.programmable.market/v4/chains/4663/custom-launch-contract/manifest.json",
+  "artifactIndexUrl": "https://api.programmable.market/v4/chains/4663/custom-launch-contract/artifact-index.json",
+  "requestPackerUrl": "https://api.programmable.market/v4/chains/4663/custom-launch-contract/request-packer.mjs",
+  "filesAreOriginalRecordedBytes": ["manifest.json", "artifact-index.json", "request-packer.mjs"],
+  "capabilitiesObservation": "Public data extracted from the successful capability response recorded 2026-10-12T10:18:49.341Z; availability is historical, not a current readiness assertion.",
+  "legacyManifestDigest": "sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61",
+  "exactManifestChanges": [
+    "/manifestDigest",
+    "/admissionPolicies/openProvenance/tradeFeePolicy/policyVersion",
+    "/admissionPolicies/openProvenance/tradeFeePolicy/rateBps",
+    "/admissionPolicies/openProvenance/tradeFeePolicy/ratePercent"
+  ],
+  "executionAndSchemaUnchanged": true,
+  "routedFeePolicy": {"policyVersion": "programmable.routed-swap-fee.v3", "rateBps": 100},
+  "projectContractFeesChanged": false,
+  "livePoolFeeWaiverVerified": false,
+  "platformAdmission": false,
+  "walletReady": false,
+  "signing": false,
+  "broadcast": false
+}

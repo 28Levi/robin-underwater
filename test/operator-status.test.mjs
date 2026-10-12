@@ -12,10 +12,11 @@ test('production gas failures retain distinct stable blocked codes without leaki
  }
 });
 test('only existing finalized-history waits remain automatic; other failures stay blocked',()=>{
- for(const message of ['Missing window history','Deployment is not finalized','Wait for previous reward allocations to finalize before another plan',
+ for(const message of ['Deployment is not finalized','Wait for previous reward allocations to finalize before another plan',
   'Head changed during preparation; rebuild next cycle','Head changed during estimation; rebuild next cycle'])
   assert.equal(operatorFailureStatus(new Error(message)).state,'waiting');
- for(const error of [new Error('Finalized transaction reverted; reconcile before resuming'),new Error('Operator nonce was consumed by an unknown transaction'),
+ for(const error of [new Error('Missing window history'),new Error('Initial finalized price window is warming up'),
+  new Error('Finalized transaction reverted; reconcile before resuming'),new Error('Operator nonce was consumed by an unknown transaction'),
   {code:'https://rpc.invalid/private-api-key',message:'secret keystore error'},null]){
   const status=operatorFailureStatus(error);assert.equal(status.state,'blocked');
   assert.deepEqual(Object.keys(status).sort(),['reason','state']);assert.doesNotMatch(JSON.stringify(status),/private-api-key|secret/);

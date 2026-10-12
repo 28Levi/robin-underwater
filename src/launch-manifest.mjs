@@ -2,6 +2,7 @@
 export const LAUNCH_MANIFEST_SCHEMA = 'robinhook.launch-bootstrap.v1';
 export const LAUNCH_MANIFEST_SCHEMA_V2 = 'robinhook.launch-bootstrap.v2';
 export const LAUNCH_MANIFEST_SCHEMA_V3 = 'robinhook.launch-bootstrap.v3';
+export const LAUNCH_MANIFEST_SCHEMA_V4 = 'robinhook.launch-bootstrap.v4';
 const HASH = /^0x[0-9a-f]{64}$/;
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
@@ -23,13 +24,14 @@ export function canonicalLaunchJson(value) {
 
 /** An exact release/transaction/automation policy, prepared before the final user wallet action. */
 export function validateLaunchManifest(m) {
-  const scheduledPayouts = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V3;
+  const pipelinedFinality = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V4;
+  const scheduledPayouts = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V3 || pipelinedFinality;
   const separateWorker = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V2 || scheduledPayouts;
   if (!keys(m, ['schemaVersion', 'chainId', 'name', 'symbol', 'sourceRevision', 'planId', 'planHash', 'platformManifestDigest', 'requestSha256',
     'projectMetadataHash', 'fundingPlanHash', 'transaction', 'components', 'infrastructure', 'operator', 'platformRecipient', 'watchFrom',
     'distributorDeployment', 'preserveLaunchBalanceWei', 'fees', 'minimumTokensOut', 'maxLaunchGasWei', 'accounting', 'execution', 'activation',
     ...(separateWorker ? ['workerSourceRevision'] : [])])
-    || ![LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3].includes(m.schemaVersion)
+    || ![LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3, LAUNCH_MANIFEST_SCHEMA_V4].includes(m.schemaVersion)
     || separateWorker && !/^[0-9a-f]{40}$/.test(m.workerSourceRevision)
     || m.chainId !== 4663 || m.name !== 'ROBINHOOK' || m.symbol !== 'ROBIN'
     || !/^[0-9a-f]{40}$/.test(m.sourceRevision) || typeof m.planId !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:@/+\-]{0,255}$/.test(m.planId)
@@ -71,11 +73,13 @@ export function validateLaunchManifest(m) {
     throw Error('Launch manifest changes reviewed accounting policy');
   const e = m.execution;
   if (!keys(e, ['maxGasPerTransactionWei', 'maxTotalGasWei', 'minimumHarvestWei', 'minimumBatchWei', 'retryIntervalSeconds',
-    ...(scheduledPayouts ? ['payoutIntervalSeconds'] : [])])
+    ...(scheduledPayouts ? ['payoutIntervalSeconds'] : []),
+    ...(pipelinedFinality ? ['confirmationMode', 'maxInflightTransactions'] : [])])
     || !positive(e.maxGasPerTransactionWei) || BigInt(e.maxGasPerTransactionWei) > 200000000000000n
     || !positive(e.maxTotalGasWei) || BigInt(e.maxTotalGasWei) > 5000000000000000n
     || BigInt(e.maxGasPerTransactionWei) > BigInt(e.maxTotalGasWei) || !positive(e.minimumHarvestWei) || !positive(e.minimumBatchWei)
-    || e.retryIntervalSeconds !== 3600 || scheduledPayouts && e.payoutIntervalSeconds !== 900)
+    || e.retryIntervalSeconds !== 3600 || scheduledPayouts && e.payoutIntervalSeconds !== 900
+    || pipelinedFinality && (e.confirmationMode !== 'pipelined-finalized-v1' || e.maxInflightTransactions !== 8))
     throw Error('Launch manifest exceeds approved operator policy');
   if (!keys(m.activation, ['mode', 'approvalReference']) || !['manual', 'after-reviewed-launch'].includes(m.activation.mode)
     || typeof m.activation.approvalReference !== 'string' || m.activation.approvalReference.length < 1
@@ -84,7 +88,7 @@ export function validateLaunchManifest(m) {
   return m;
 }
 
-/** V1 binds one revision; V2/V3 separate immutable contract provenance from worker code. */
+/** V1 binds one revision; V2/V3/V4 separate immutable contract provenance from worker code. */
 export function effectiveWorkerSourceRevision(manifest) {
   validateLaunchManifest(manifest);
   return manifest.schemaVersion === LAUNCH_MANIFEST_SCHEMA ? manifest.sourceRevision : manifest.workerSourceRevision;

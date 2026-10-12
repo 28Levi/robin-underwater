@@ -6,7 +6,7 @@ This is an implementation of the handoff, not evidence that a live package has b
 
 ## Inputs
 
-- A `robinhook.launch-bootstrap.v1` manifest validated by `src/launch-manifest.mjs`, plus its independently reviewed canonical SHA-256.
+- An exact launch manifest validated by `src/launch-manifest.mjs`, plus its independently reviewed canonical SHA-256. Current pipeline preparation uses v4; historical v1/v2/v3 retain their original semantics.
 - The exact canonical packed request bytes. A trailing newline changes their identity.
 - The accepted response1.2 resource, either directly or under `resource`/`data` in the saved API result.
 - An explicit path for the local user-review consent. Keep that file and its `.proof.json` companion durable and private to the local operator.
@@ -26,6 +26,8 @@ node scripts/serve-robin-launch-wallet.mjs --manifest PATH --manifest-sha256 sha
 Open the printed loopback URL in the browser containing the launch wallet. Connecting the wallet performs read-only RPC checks. The final review button records the immutable local consent and opens the exact transaction in the user's wallet. The user still reviews and approves the wallet's transaction prompt. No agent or server signs it.
 
 The manual activation mode is the default: launching does not enable automatic payouts. `after-reviewed-launch` requires the standard exact launch review to include the displayed automatic-payout policy and gas limits, producing a manifest-bound consent record. The user has directed that the current reward rules remain in place; the accepted-policy flag records that choice without asking for another separate risk approval. A manifest flag or old approval note alone does not authorize the signer. The configured watcher/host still must receive and validate the exact consent and pass every activation gate.
+
+The v4 review explains that five-minute eligibility uses finalized history and confirmation adds a delay. It displays the 15-minute target, 30-minute finalized price window, approximately 45–50-minute initial warmup observed under test-chain timing, exact-arrival limitation and maximum eight transactions awaiting finality. The manifest hashes both pipeline fields and the exact worker revision. Serial-policy consent or an old host acknowledgement cannot activate this changed policy.
 
 Contract fees are 170 bps for rewards plus 30 bps for the platform. The current open-provenance routed-trading policy may add a route fee unless its existing-pool waiver is actually verified. The review page does not claim a verified aggregate trading fee. Related-wallet loss farming and out-and-back holding-delay limitations remain documented properties of the unchanged policy; the user has chosen to proceed with those rules.
 

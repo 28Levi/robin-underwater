@@ -67,6 +67,7 @@ function details(id, entries) {
 }
 function showPackage() {
   const {transaction: t, components: c, execution: e, accounting: a} = manifest;
+  const pipelined = e.confirmationMode === 'pipelined-finalized-v1';
   const publication = pkg.resource.plan.publication;
   details('details', [
     ['Network', 'Robinhood Chain · 4663'], ['Launch wallet', t.from],
@@ -97,9 +98,16 @@ function showPackage() {
     ['Operator per-transaction gas ceiling', `${ethers.formatEther(e.maxGasPerTransactionWei)} ETH`],
     ['Minimum treasury harvest', `${ethers.formatEther(e.minimumHarvestWei)} ETH`],
     ['Minimum reward batch', `${ethers.formatEther(e.minimumBatchWei)} ETH`],
-    ['Holding requirement', `${a.minimumAgeSeconds / 60} minutes`], ['Price averaging window', `${a.twapWindowSeconds / 60} minutes`],
+    ['Holding requirement', pipelined ? `${a.minimumAgeSeconds / 60} minutes of finalized history; blockchain confirmation adds a delay (about 15–20 minutes in the live test)`
+      : `${a.minimumAgeSeconds / 60} minutes`], ['Price averaging window', `${a.twapWindowSeconds / 60} minutes`],
     ['Payout interval', e.payoutIntervalSeconds === undefined ? 'No scheduled interval in this historical policy'
+      : pipelined ? `Target every ${e.payoutIntervalSeconds / 60} minutes after initial warmup; eligible, funded batches only. Exact arrival and finality times are not guaranteed.`
       : `${e.payoutIntervalSeconds / 60} minutes from the finalized launch timestamp; eligible, funded batches only`],
+    ...(pipelined ? [
+      ['First payout', 'Requires 30 minutes of finalized price history: approximately 45–50 minutes after launch at the finality delay observed in the live test; funding and eligibility still apply.'],
+      ['Confirmation policy', 'Use finalized history and finalized funds. Track payments awaiting finality and reserve their rewards before preparing another batch.'],
+      ['Transactions awaiting finality', `Maximum ${e.maxInflightTransactions}; reaching this limit pauses new transactions until confirmations catch up`],
+    ] : []),
     ['Retry interval', `${e.retryIntervalSeconds / 60} minutes`],
     ['Excluded addresses', a.excludedAddresses.length ? a.excludedAddresses.join(', ') : 'None'],
   ]);

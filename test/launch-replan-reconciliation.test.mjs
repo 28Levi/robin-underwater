@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {reconcileReplanInputs, bindRefreshedPreparation, replanHash, domainHash} from '../src/launch-replan-reconciliation.mjs';
 import {canonicalLaunchJson} from '../src/launch-manifest.mjs';
+import {CURRENT_PLAN_MANIFEST} from '../src/launch-platform-contract.mjs';
 
 const now = Date.parse('2026-10-11T19:00:00Z'), second = Math.floor(now / 1000);
 const PLAN = 'programmable.custom-launch-plan.v1', REPLAN = 'programmable.custom-launch-plan-replan.v1';
 const bytes = value => Buffer.from(canonicalLaunchJson(value));
-const address = '0x' + '1'.repeat(40), manifest = 'sha256:' + '2'.repeat(64);
+const address = '0x' + '1'.repeat(40), defaultManifest = 'sha256:' + '2'.repeat(64);
 function hashes(resource) {
   resource.rawRequestSha256 = replanHash(bytes(resource.plan));
   resource.planHash = domainHash(PLAN, resource.plan);
@@ -15,9 +16,9 @@ function hashes(resource) {
 function report(plan) {
   const request = bytes(plan), hash = replanHash(request);
   return {status: 'packed', rawRequestSha256: hash, byteLength: request.length,
-    idempotencyKey: 'clp-v1-' + hash.slice(7), manifestDigest: manifest, planHash: domainHash(PLAN, plan)};
+    idempotencyKey: 'clp-v1-' + hash.slice(7), manifestDigest: plan.manifestDigest, planHash: domainHash(PLAN, plan)};
 }
-function fixture() {
+function fixture(manifest = defaultManifest) {
   const plan = {schemaVersion: PLAN, chainId: '4663', controller: {kind: 'eoa', address}, manifestDigest: manifest,
     executor: 'atomic_execute_and_stamp_v2', admissionPolicy: 'programmable.custom-launch-policy.provenance.v1', feeObligations: [],
     publication: {visibility: 'listed'}, actions: [{data: '0x1234', gasLimit: '7300000', value: '10000000000000000'}],
@@ -47,6 +48,16 @@ function fixture() {
   return {requestBytes, packReport, preparation, accepted: {resource: current}, evidence: {intent,
     predecessorResponse: {httpStatus: 200, data: predecessor}, postResponse: {httpStatus: 202, data: posted}}, now};
 }
+
+test('same-current-manifest replan preserves its original approval and execution; manifest migration is not inferred',()=>{
+ const input=fixture(CURRENT_PLAN_MANIFEST),reconciled=reconcileReplanInputs(input);
+ const refreshed=bindRefreshedPreparation({reconciled,requestBytes:reconciled.refreshedBytes,
+  packReport:report(input.accepted.resource.plan),preparation:input.preparation});
+ assert.equal(refreshed.manifestDigest,CURRENT_PLAN_MANIFEST);
+ assert.equal(reconciled.provenance.sourceExecutionFeesAndGasUnchanged,true);
+ input.accepted.resource.plan.manifestDigest=defaultManifest;input.accepted.resource.manifestDigest=defaultManifest;hashes(input.accepted.resource);
+ assert.throws(()=>reconcileReplanInputs(input),/Only the server budget timestamps/);
+});
 
 test('server window refresh produces an exact read-only artifact without changing approved preparation', () => {
   const input = fixture(), before = structuredClone(input), reconciled = reconcileReplanInputs(input);

@@ -4,8 +4,11 @@ import {createHash} from 'node:crypto';
 import {AbiCoder,Interface,ZeroAddress,keccak256,toUtf8Bytes,toBeHex,getCreate2Address,getCreateAddress,getAddress,concat,zeroPadValue} from 'ethers';
 import {assertRobinLaunchIntent} from './launch-intent.mjs';
 import {loadNative30Recipe,assertNative30CompiledRuntime,assertNative30MaterializedRuntime} from './native30-runtime.mjs';
+import {LEGACY_PLAN_MANIFEST,assertSupportedPlanCapabilities} from './launch-platform-contract.mjs';
 
-export const PLAN_MANIFEST='sha256:3cd25308629f932d6a75e4a7694e6bcb67e4471fd2c1782d3b11ba5a7e3f8b61';
+// Retained for historical package readers; new preparation selects the exact
+// supported manifest actually supplied by current capability evidence.
+export const PLAN_MANIFEST=LEGACY_PLAN_MANIFEST;
 export const ATOMIC='0xe21827818Fea1F14d59929CAE36a93c0B44e0aE1';
 export const ATOMIC_HASH='0x9c97ca89d17ec48ba9603920f6a27899e83ac0c4514f9acb7a37f4903d374fad';
 export const GRAPH='0x0B6b3F40f84Df25D3bd69238f937096177DD09Bd';
@@ -78,11 +81,12 @@ function constructor(c,args){const types=c.abi.find(a=>a.type==='constructor')?.
 
 export function assertCurrentPlanCapabilities(capabilities,{preflightOnly=false}={}){
  const c=capabilities,a=c?.availability?.bindings?.execution?.atomic;
+ const contract=assertSupportedPlanCapabilities(c);
  const createState=c?.availability?.operations?.create?.state;
  // Offline preflight preparation is not admission: only the create-availability
  // requirement changes. Unknown states and all exact execution roots still fail.
- if(typeof preflightOnly!=='boolean'||c?.schemaVersion!=='programmable.custom-launch-capabilities.v1'||c.chainId!=='4663'||c.manifestDigest!==PLAN_MANIFEST
-  ||c.availability?.manifestDigest!==PLAN_MANIFEST||!(preflightOnly?['active','canary','disabled','degraded'].includes(createState):createState==='active')||c.availability?.operations?.preflight?.state!=='active'
+ if(typeof preflightOnly!=='boolean'||c?.schemaVersion!=='programmable.custom-launch-capabilities.v1'||c.chainId!=='4663'||c.manifestDigest!==contract.manifestDigest
+  ||c.availability?.manifestDigest!==contract.manifestDigest||!(preflightOnly?['active','canary','disabled','degraded'].includes(createState):createState==='active')||c.availability?.operations?.preflight?.state!=='active'
   ||a?.executorKind!=='atomic_execute_and_stamp_v2'||!same(a.address,ATOMIC)||a.runtimeCodeHash!==ATOMIC_HASH||a.selector!=='0x506aba45'
   ||!same(a.poolManager,MANAGER)||a.poolManagerRuntimeCodeHash!==MANAGER_HASH||!same(a.permitAuthority,PERMIT_AUTHORITY)||a.permitAuthorityRuntimeCodeHash!==PERMIT_AUTHORITY_HASH)
   throw Error('Current released Atomic launch capability required');
@@ -92,6 +96,7 @@ export function assertCurrentPlanCapabilities(capabilities,{preflightOnly=false}
 /** Deterministic project-side plan. This does not issue platform admission or a wallet transaction. */
 export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distributor,sourceRevision,nonce,now=Math.floor(Date.now()/1000),graphGasLimit=PROJECT_GAS_LIMIT,totalGasLimit=TOTAL_GAS_LIMIT,validitySeconds=MAX_ORDER_LIFETIME_SECONDS,preflightOnly=false}){
  assertRobinLaunchIntent(intent);assertCurrentPlanCapabilities(capabilities,{preflightOnly});
+ const manifestDigest=capabilities.manifestDigest;
  if(intent.chainId!==4663||intent.decimals!==18||intent.projectBuyFeeBps!==170||intent.projectSellFeeBps!==170||intent.platformFeeBps!==30
   ||intent.lpFeePips!==0||intent.totalBuyFeeBps!==200||intent.totalSellFeeBps!==200||intent.hookRecipe!=='robin-native30-no-module'
   ||intent.initialLiquidityWei!=='0'||intent.maxLaunchValueWei!==intent.initialBuyWei||intent.maxGasCostWei!=='800000000000000')throw Error('ROBIN launch economics changed');
@@ -149,7 +154,7 @@ export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distr
  callEffect('reward-buy-fee','hook','creatorBuyFeeBps',[],['uint16'],[170]);callEffect('reward-sell-fee','hook','creatorSellFeeBps',[],['uint16'],[170]);
  callEffect('platform-fee','hook','PLATFORM_FEE_BPS',[],['uint16'],[30]);
  effects.push({effectId:'initial-buyer-output',kind:'balance',criticality:'critical',target:{address:intent.launchWallet},asset:addresses.token,minimum:intent.minimumTokensOut,maximum:'1000000000000000000000000000'});
- const plan={schemaVersion:'programmable.custom-launch-plan.v1',manifestDigest:PLAN_MANIFEST,admissionPolicy:'programmable.custom-launch-policy.provenance.v1',chainId:'4663',controller:{kind:'eoa',address:getAddress(intent.launchWallet)},executor:'atomic_execute_and_stamp_v2',
+ const plan={schemaVersion:'programmable.custom-launch-plan.v1',manifestDigest,admissionPolicy:'programmable.custom-launch-policy.provenance.v1',chainId:'4663',controller:{kind:'eoa',address:getAddress(intent.launchWallet)},executor:'atomic_execute_and_stamp_v2',
   verificationBundle:{schemaVersion:'programmable.exact-source-verification-bundle.v2',compilationUnits:compiled.units,components:Object.keys(names).sort().map(id=>{const c=contracts[names[id]];return {targetId:id,compilationUnitId:c.compilationUnitId,sourcePath:c.sourcePath,contractName:c.contractName,constructorArguments:constructors[id].args,runtimeMaterialization:materializations[id]};})},components,
   actions:['initializer','token','hook'].map((id,index)=>({actionId:'deploy-'+id,kind:'deployCreate2',componentId:id,factory:{address:GRAPH},salt:effectiveSalt(id,salts[id]),initCode:constructors[id].initCode,dependsOn:index?['deploy-'+['initializer','token','hook'][index-1]]:[],authority:{kind:'controller'},preconditions:[],postconditions:[],execution})),
   markets:[{marketId:'robin-native',kind:'uniswap_v4',poolManager:MANAGER,currency0:{address:ZeroAddress},currency1:{componentId:'token'},fee:0,tickSpacing:60,hooks:{componentId:'hook'}}],
@@ -157,7 +162,7 @@ export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distr
   dependencies:[{dependencyId:'pool-manager',chainId:'4663',address:MANAGER,runtimeCodeHash:MANAGER_HASH},{dependencyId:'graph-factory',chainId:'4663',address:GRAPH,runtimeCodeHash:GRAPH_HASH},{dependencyId:'reward-distributor',chainId:'4663',address:getAddress(intent.creatorFeeRecipient),runtimeCodeHash:distributor.runtimeCodeHash,authoritySnapshot:{operator:getAddress(intent.operator)}}],
   expectedEffects:effects,budgets:{maxTotalValue:intent.initialBuyWei,maxTotalGas:totalGasLimit,validAfter:String(now-60),deadline:String(now-60+validitySeconds)},feeObligations:[],claimDescriptors:[],distributionPreferences:[],
   publication:{visibility:'listed',name:intent.name,symbol:intent.symbol,description:intent.descriptionDraft,imageUrl:intent.image,primaryComponentId:'token',primaryMarketId:'robin-native',links:[intent.website,intent.x,intent.publicSource.url+'/tree/'+sourceRevision]}};
- return {plan,report:{schemaVersion:'robin.launch-plan-preparation.v1',checkedAt:new Date(now*1000).toISOString(),sourceRevision,sourceCommitment,addresses,manifestDigest:PLAN_MANIFEST,graphCommitment:authorization.graphCommitment,authorizedLauncher:ATOMIC,factory:GRAPH,projectCallDataHash:keccak256(factoryCall),initialBuyWei:intent.initialBuyWei,minimumTokensOut:intent.minimumTokensOut,maximumLaunchGasCostWei:intent.maxGasCostWei,graphGasLimit,totalGasLimit,hookFees:{projectBuyBps:170,projectSellBps:170,platformBps:30,lpFeePips:0},hookImplementation:structuredClone(compiled.customHook),native30Runtime,routedTradingFee:{...capabilities.currentTradeFeePolicy,waiverVerified:false,totalTradingFeeConfirmed:false},
+ return {plan,report:{schemaVersion:'robin.launch-plan-preparation.v1',checkedAt:new Date(now*1000).toISOString(),sourceRevision,sourceCommitment,addresses,manifestDigest,graphCommitment:authorization.graphCommitment,authorizedLauncher:ATOMIC,factory:GRAPH,projectCallDataHash:keccak256(factoryCall),initialBuyWei:intent.initialBuyWei,minimumTokensOut:intent.minimumTokensOut,maximumLaunchGasCostWei:intent.maxGasCostWei,graphGasLimit,totalGasLimit,hookFees:{projectBuyBps:170,projectSellBps:170,platformBps:30,lpFeePips:0},hookImplementation:structuredClone(compiled.customHook),native30Runtime,routedTradingFee:{...capabilities.currentTradeFeePolicy,waiverVerified:false,totalTradingFeeConfirmed:false},
   preparationMode:preflightOnly?'preflight-only':'launch-preparation',
   readiness:preflightOnly?'preflight-only-not-admitted-not-wallet-ready':'not-admitted-not-wallet-ready',
   platformAvailability:{create:structuredClone(capabilities.availability.operations.create),preflight:structuredClone(capabilities.availability.operations.preflight)},

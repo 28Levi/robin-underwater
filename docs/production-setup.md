@@ -27,12 +27,14 @@ Maximum token-launch gas cost is 0.0008 ETH. Operator ceilings are 0.0002 ETH pe
 ## Install the reviewed launch
 
 1. Complete the current [launch plan](current-launch-plan.md), [API](launch-plan-api.md) and [handoff](launch-handoff-builder.md) flow. A generic token with the same name is not a compatible replacement.
-2. Preserve the accepted request, pack report, preparation, actual platform resource, manifest and hash. Render's running commit must equal `manifest.sourceRevision`. A source update after admission requires a new reviewed package.
+2. Preserve the accepted request, pack report, preparation, actual platform resource, manifest and hash. Render's running commit must equal `manifest.workerSourceRevision` for v2/v3/v4, or `manifest.sourceRevision` for historical v1. A source update after admission requires a new reviewed local manifest and consent.
 3. Transfer the actual reviewed public manifest through an authenticated host-management channel and run the [admission installer](launch-admission-install.md) on the host. It checks the digest and running revision, then atomically publishes `/var/data/robin/launch/admission.json` without replacing existing state. Admission contains public launch evidence, never credentials.
 4. Preserve the separately server-recorded `launch-review.json` from wallet review and install it through the same authorized channel when required. Do not hand-author consent or infer it from token code. There is no public admission or activation endpoint.
 5. The keyless watcher waits for the exact finalized transaction and verifies nonce, source, code, pool, fees, purchase and budgets before producing production configuration.
 
 The default handoff is manual and generates only `production.readonly.json`. If automatic rewards are intended, prepare the prelaunch handoff explicitly with `--activation after-reviewed-launch` and review its scope before signing. An already admitted manual manifest cannot be converted by a host flag. Do not hand-edit `broadcastEnabled` to bypass the watcher. Automatic startup separately requires the exact automatic-mode manifest, recorded review, host-approved digest and `--services` command described in [launch-bootstrap.md](launch-bootstrap.md). No automatic payout service is currently enabled.
+
+The current example policy prepares v4 finalized pipelining with a 15-minute target and an eight-transaction confirmation bound. Five-minute eligibility is measured against finalized history. Allow 30 minutes of finalized price history before the first allocation, approximately 45–50 minutes after launch under the delay observed in the live test; exact arrival times remain dependent on the chain, funding and eligibility. Verify the actual host is armed before opening the user-signed launch transaction. The hosted watcher then discovers the launch and starts rewards automatically after finalized verification.
 
 ## Connect actual wallet results
 

@@ -3,9 +3,10 @@ import * as ethers from 'ethers';
 import graphArtifact from '../vendor/programmable-launch-plan-v1/graph-factory.json' with {type: 'json'};
 import {inspectPackedRequest, verifyPlanResource} from './launch-plan-api.mjs';
 import {assertRobinLaunchIntent} from './launch-intent.mjs';
-import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3} from './launch-manifest.mjs';
+import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3, LAUNCH_MANIFEST_SCHEMA_V4} from './launch-manifest.mjs';
 import {validateLaunchPackage, boundedLaunchTransaction, ANCHOR, MANAGER, DISTRIBUTOR, DISTRIBUTOR_HASH} from '../signing-ui/robin-launch-guards.mjs';
-import {ATOMIC, ATOMIC_HASH, GRAPH, GRAPH_HASH, PLAN_MANIFEST, PERMIT_AUTHORITY, PERMIT_AUTHORITY_HASH} from './launch-plan.mjs';
+import {ATOMIC, ATOMIC_HASH, GRAPH, GRAPH_HASH, MANAGER_HASH, PERMIT_AUTHORITY, PERMIT_AUTHORITY_HASH} from './launch-plan.mjs';
+import {assertSupportedPlanCapabilities} from './launch-platform-contract.mjs';
 
 // Exact executeAndStampV2 ABI from the verified 4663 Atomic runtime. ABI encoding is
 // decoded below; actual issuer authorization is tested by an unchanged read-only eth_call.
@@ -116,13 +117,16 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
   require(/^[0-9a-f]{40}$/.test(sourceRevision ?? ''), 'Exact final published source revision required.');
   require(workerSourceRevision === undefined || /^[0-9a-f]{40}$/.test(workerSourceRevision), 'Exact worker source revision required when specified.');
   const scheduledPayouts = Object.hasOwn(policy.execution ?? {}, 'payoutIntervalSeconds');
+  const pipelinedFinality = Object.hasOwn(policy.execution ?? {}, 'confirmationMode') || Object.hasOwn(policy.execution ?? {}, 'maxInflightTransactions');
   require(!scheduledPayouts || workerSourceRevision !== undefined, 'Scheduled payout policy requires an explicit worker source revision.');
+  require(!pipelinedFinality || scheduledPayouts && workerSourceRevision !== undefined, 'Pipelined payout policy requires a schedule and explicit worker source revision.');
   const packed = inspectPackedRequest(Buffer.from(requestBytes), packReport), resource = acceptedLaunchResource(accepted);
   verifyPlanResource(resource, packed);
   const plan = packed.plan;
+  const platformContract = assertSupportedPlanCapabilities(capabilities);
   require(canonicalLaunchJson(resource.plan) === canonicalLaunchJson(plan), 'Owned platform resource differs from exact packed request bytes.');
   require(preparation?.schemaVersion === 'robin.launch-plan-preparation.v1' && preparation.sourceRevision === sourceRevision
-    && preparation.manifestDigest === PLAN_MANIFEST && preparation.manifestDigest === packed.plan.manifestDigest
+    && preparation.manifestDigest === platformContract.manifestDigest && preparation.manifestDigest === packed.plan.manifestDigest
     && canonicalLaunchJson(preparation.packer) === canonicalLaunchJson(packReport)
     && preparation.sourceCommitment === sha(Buffer.from(canonicalLaunchJson(plan.verificationBundle?.compilationUnits)))
     && plan.publication.links.includes(`${intent.publicSource.url}/tree/${sourceRevision}`)
@@ -136,8 +140,9 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
   'The current explicit operator or fee budget changed.');
   const cap = capabilities?.availability?.bindings?.execution?.atomic;
   require(capabilities?.schemaVersion === 'programmable.custom-launch-capabilities.v1' && capabilities.chainId === '4663'
-    && capabilities.manifestDigest === PLAN_MANIFEST && cap?.executorKind === 'atomic_execute_and_stamp_v2'
+    && capabilities.manifestDigest === plan.manifestDigest && cap?.executorKind === 'atomic_execute_and_stamp_v2'
     && same(cap.address, ATOMIC) && cap.runtimeCodeHash === ATOMIC_HASH && cap.selector === '0x506aba45'
+    && same(cap.poolManager, MANAGER) && cap.poolManagerRuntimeCodeHash === MANAGER_HASH
     && same(cap.permitAuthority, PERMIT_AUTHORITY) && cap.permitAuthorityRuntimeCodeHash === PERMIT_AUTHORITY_HASH,
   'Current released Atomic capability does not match this package.');
   require(distributor?.verified === true && distributor.finalized === true && distributor.chainId === 4663
@@ -167,7 +172,7 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
     && receipt.blockHash === distributor.blockHash && facts.state.distributorBlock?.hash === distributor.blockHash,
   'Existing distributor receipt is not canonical and successful.');
   const workerBinding = workerSourceRevision === undefined ? {} : {workerSourceRevision};
-  const manifest = {schemaVersion: scheduledPayouts ? LAUNCH_MANIFEST_SCHEMA_V3
+  const manifest = {schemaVersion: pipelinedFinality ? LAUNCH_MANIFEST_SCHEMA_V4 : scheduledPayouts ? LAUNCH_MANIFEST_SCHEMA_V3
     : workerSourceRevision === undefined ? LAUNCH_MANIFEST_SCHEMA : LAUNCH_MANIFEST_SCHEMA_V2,
     chainId: 4663, name: 'ROBINHOOK', symbol: 'ROBIN', sourceRevision, ...workerBinding,
     planId: resource.planId, planHash: resource.planHash, platformManifestDigest: resource.manifestDigest, requestSha256: packed.hash,
@@ -191,6 +196,7 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
   return {manifest, manifestSha256, report: {schemaVersion: 'robinhook.launch-handoff-candidate.v1', checkedAt: new Date(now).toISOString(),
     status: 'candidate-for-final-user-review', manifestSha256, planId: manifest.planId, requestSha256: packed.hash, sourceRevision, ...workerBinding,
     simulationBlock: {number: facts.simulation.blockNumber, hash: facts.simulation.blockHash}, maximumLaunchGasWei: bounded.maximumCost.toString(),
+    routedTradingFee: {...platformContract.tradeFeePolicy, waiverVerified: false, totalTradingFeeConfirmed: false},
     activationMode, automationAuthorized: false, walletSigning: false, transactionBroadcast: false, platformIssuanceCreated: false}};
 }
 

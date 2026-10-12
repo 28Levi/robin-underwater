@@ -1,6 +1,6 @@
 {
   "schemaVersion": "robin.source-release.v1",
-  "createdAt": "2026-10-11T20:59:55.642Z",
+  "createdAt": "2026-10-12T12:54:39.580Z",
   "status": "source-for-review; no production deployment or platform acceptance",
   "files": [
     {
@@ -30,13 +30,13 @@
     },
     {
       "path": "src/execution-journal.mjs",
-      "bytes": 1627,
-      "sha256": "1d7155a689377429893de9495e1f1a032caad51e68b0593065b87396bba5f9ca"
+      "bytes": 4096,
+      "sha256": "5f02bbd6f33ed0f995c7e391eaba5d4e95b8c860441f67b06a3f17d0a6bdf531"
     },
     {
       "path": "src/executor.mjs",
-      "bytes": 16030,
-      "sha256": "f2e28261d4defb8abbf6ac36b8cf95598330495bc10a2e519149212ae40cff35"
+      "bytes": 17596,
+      "sha256": "dbc8d5ace4d885dd29e7904b626ffd65af73c30fb0be5e664079bd6b84103508"
     },
     {
       "path": "src/launch-admission-install.mjs",
@@ -45,8 +45,8 @@
     },
     {
       "path": "src/launch-bootstrap.mjs",
-      "bytes": 19321,
-      "sha256": "f28cdb3358a28acc29738e315a462ede55e6590c2611833f0c09568535486914"
+      "bytes": 20687,
+      "sha256": "dd5b4557d104d617d5736958e079fc05ef7c634799d7d06a9cb391e231e61a80"
     },
     {
       "path": "src/launch-fees.mjs",
@@ -70,13 +70,13 @@
     },
     {
       "path": "src/launch-manifest-builder.mjs",
-      "bytes": 21335,
-      "sha256": "5aace560ae02a04608b51a709402534a2203b07dd41fa313bc0f2b6251e80321"
+      "bytes": 22120,
+      "sha256": "fcae8acb7b42b6c71c3c110d7f2a39a13932d12249e60fb8f46992cee5e9440e"
     },
     {
       "path": "src/launch-manifest.mjs",
-      "bytes": 9122,
-      "sha256": "bd740ca2ea25f5d8d014f22a264576189896b65dd6700081682df923857a42af"
+      "bytes": 9519,
+      "sha256": "09d6d44d06afccff0f5a9eebc946e05ae9184c214c62b06b0b5712105beafd72"
     },
     {
       "path": "src/launch-plan-api.mjs",
@@ -90,8 +90,13 @@
     },
     {
       "path": "src/launch-plan.mjs",
-      "bytes": 21606,
-      "sha256": "17d1eab1bba94c83e88babf66a657c29cae89fa4b666aea6b3f739c78fcf6f5f"
+      "bytes": 21899,
+      "sha256": "0799676225502cc803e853d33af21381fae6fecfcb930ed6ec2c99c25942568d"
+    },
+    {
+      "path": "src/launch-platform-contract.mjs",
+      "bytes": 4207,
+      "sha256": "b6ec8c3bf44f58416e1eab30b98aea7cb3ab0d015e3a7c9b03a1492afc208e55"
     },
     {
       "path": "src/launch-replan-reconciliation.mjs",
@@ -135,8 +140,8 @@
     },
     {
       "path": "src/operator-status.mjs",
-      "bytes": 1323,
-      "sha256": "4eb9aedd573c29f7e458a6f800dc16a00afefac5478a516f946c0c22eb08eb3c"
+      "bytes": 1685,
+      "sha256": "3fcf0cbbac4aa002b516e77f4e5c3e4b06b854f4fa136be7247dd3c6b3e5b382"
     },
     {
       "path": "src/oracle.mjs",
@@ -145,8 +150,8 @@
     },
     {
       "path": "src/payout-plan.mjs",
-      "bytes": 3630,
-      "sha256": "7efadaa43f4289e5a795a1324e67c30d1047071d5c0c31d7b083251fd45bb32d"
+      "bytes": 4900,
+      "sha256": "1cfc15ee80fae486b308a715b1801177fd417ec362b63d2e887f42ee7b68700c"
     },
     {
       "path": "src/payout-schedule.mjs",
@@ -154,9 +159,34 @@
       "sha256": "0d1ca41ca3b8fea72d9a9a2d5ecebd5bc7986f85fd48de4fe8422a1557ab7c4e"
     },
     {
+      "path": "src/pipeline-executor.mjs",
+      "bytes": 10578,
+      "sha256": "051b8e3c36dd57af7eb335d2e42b52073bd67337ed2b0a6759bd1076e5248bce"
+    },
+    {
+      "path": "src/pipeline-reservations.mjs",
+      "bytes": 6472,
+      "sha256": "b65ea21b7a399864bbed812493a222cde4339e3543c8aad4867097b0b3697498"
+    },
+    {
+      "path": "src/price-window-warmup.mjs",
+      "bytes": 1702,
+      "sha256": "8ddd8767e46bca804859b06729424dea39bc7503047d5fb8afff4ec57546d66c"
+    },
+    {
       "path": "src/production-network.mjs",
       "bytes": 3538,
       "sha256": "24633b5af38e53f01ad6ef42079b7faa7983dcf7af83823004af3fa9497b9d0a"
+    },
+    {
+      "path": "src/production-operator-loop.mjs",
+      "bytes": 1296,
+      "sha256": "5dacd762c7644daefb8b369d127c8b92e288ab9c75c380382ed6a65c711c2b5d"
+    },
+    {
+      "path": "src/read-only-rpc-retry.mjs",
+      "bytes": 2974,
+      "sha256": "bf73b333ad956be778ef7ad10f0ffb065143511e6b1a2be4bc29a211491c0df3"
     },
     {
       "path": "src/receipt-adapter.mjs",
@@ -170,8 +200,8 @@
     },
     {
       "path": "src/replay.mjs",
-      "bytes": 9614,
-      "sha256": "d525fec413971b04b2fa552100ea17eb20efabd7d542db634d8213b2aea3ff61"
+      "bytes": 10062,
+      "sha256": "96d8ab30bfc82286d38ee9a82a2400225899c99d5cf892fa0295c391da876dd8"
     },
     {
       "path": "src/reward-round.mjs",
@@ -404,6 +434,21 @@
       "sha256": "3464136878c601605fb051eaaaf9e9ae9597876fee0b802bcb8213647447d28f"
     },
     {
+      "path": "test/executor-pipeline-harvest.test.mjs",
+      "bytes": 6267,
+      "sha256": "8f116c47df5f5a763528d779b7c69f9d9861557b4973180c4f1de60d8a51c519"
+    },
+    {
+      "path": "test/executor-pipeline.test.mjs",
+      "bytes": 17965,
+      "sha256": "c24da89c4a086ce2c1999373802a6828049bec300f30d2513b94413dbcf0bb5a"
+    },
+    {
+      "path": "test/executor-rpc-retry.test.mjs",
+      "bytes": 5358,
+      "sha256": "d9829d219f2f0675c5e1f2b694070893f2c8e489be82afbfd9f1bee4179e5d42"
+    },
+    {
       "path": "test/executor-schedule.test.mjs",
       "bytes": 8115,
       "sha256": "047f280bb3b4f680ddc85bb2ce8012bbbe8544020fcbb3ec0c20043ac6df6b29"
@@ -424,14 +469,19 @@
       "sha256": "a2a432b75b38fae86c27b6243203d16973d557711dfbdff84e614bdb57e7115a"
     },
     {
+      "path": "test/initial-price-window.test.mjs",
+      "bytes": 8863,
+      "sha256": "4f5dac7688a870561130ac132ea2c798af0f84659d149fec487db41f3df28d9d"
+    },
+    {
       "path": "test/launch-admission-install.test.mjs",
       "bytes": 9997,
       "sha256": "aa8c296b733262ce91954416f3a5b46aab80f3af226d524a1f263c3ded6a4b55"
     },
     {
       "path": "test/launch-bootstrap.test.mjs",
-      "bytes": 24951,
-      "sha256": "4dc04b21c8cd0d41ac8f4632a810f0a1a9a368c5eaf32389eb0db2d90c663ae1"
+      "bytes": 30822,
+      "sha256": "f784b0220c2b3bc589eb8128b9519eab04de7ddc88cdfcedbf16d08a7ed0adc7"
     },
     {
       "path": "test/launch-fees.test.mjs",
@@ -445,8 +495,8 @@
     },
     {
       "path": "test/launch-handoff-cli.test.mjs",
-      "bytes": 5440,
-      "sha256": "cd12c988806b90ff0ca63d375903e550340515e34cd27a7d674630b7a5460e3e"
+      "bytes": 5578,
+      "sha256": "590fd3161d0ed8cb642899d5b602d6cc9c30ce6866e70bf4d4c8ec09a9fd11c2"
     },
     {
       "path": "test/launch-intent.test.mjs",
@@ -455,8 +505,8 @@
     },
     {
       "path": "test/launch-manifest-builder.test.mjs",
-      "bytes": 15515,
-      "sha256": "13623745d56ea609769c6c9b46e636fc6aaafd17d0e26f5cfcd9d179857990eb"
+      "bytes": 19682,
+      "sha256": "c335b24c9cca01b4a96bbbbff3ed0bb20f08d769a327a30743efa0ff979b03a2"
     },
     {
       "path": "test/launch-plan-api.test.mjs",
@@ -465,13 +515,18 @@
     },
     {
       "path": "test/launch-plan.test.mjs",
-      "bytes": 17014,
-      "sha256": "a01973d1d35ac3a939240ce0fb25ec7262b68c9003640daf9109472877c7c157"
+      "bytes": 18999,
+      "sha256": "7afc56eb1b77e8b8ec5407d349e6faccfb9ad18a1f8bffc1cf9396358825171c"
+    },
+    {
+      "path": "test/launch-platform-contract.test.mjs",
+      "bytes": 2942,
+      "sha256": "df77c07f824144b112e22821e468fd7d5798823abe2586d356e80f4d90312058"
     },
     {
       "path": "test/launch-replan-reconciliation.test.mjs",
-      "bytes": 9470,
-      "sha256": "2d10fc1946a6e3145ef32f7398ebb83631b9c73df325350fd0cd49507633d242"
+      "bytes": 10356,
+      "sha256": "d01d321440b1d1048dccf89330daaf65a1ef2f7817e190a6f91e6af99a1d9a04"
     },
     {
       "path": "test/launch-review-api.test.mjs",
@@ -500,8 +555,8 @@
     },
     {
       "path": "test/operator-status.test.mjs",
-      "bytes": 1752,
-      "sha256": "8ad7c5fa3f8ca291bca6e02e332c7e295a58e1e0de8e0adc3bd03733999cf5aa"
+      "bytes": 1824,
+      "sha256": "df06d0437b18c051d9dfd9b2a03ddf591ebe0fa4c934f2fafb2a602f21473cef"
     },
     {
       "path": "test/payout-plan.test.mjs",
@@ -514,14 +569,29 @@
       "sha256": "13feeda7a45c091358cbb1b865cea497f7feb2861a827d52676631f9c36436eb"
     },
     {
+      "path": "test/pipeline-journal.test.mjs",
+      "bytes": 3117,
+      "sha256": "ae44e0d7eb96a9141bcba545516575700797c34dd079be301adec3e0c0aca92b"
+    },
+    {
+      "path": "test/pipeline-reservations.test.mjs",
+      "bytes": 6855,
+      "sha256": "90ef261d5804a09102c865a13b9978aff1c917996db00b0d13cb814666b9bff9"
+    },
+    {
       "path": "test/production-network.test.mjs",
       "bytes": 2454,
       "sha256": "351611841d02299a629b96b4ca248bdceb99b79e890392fd48f768b9b0d368a6"
     },
     {
+      "path": "test/read-only-rpc-retry.test.mjs",
+      "bytes": 6626,
+      "sha256": "6b927457d42ed5cea6d2df8c2c640f03a5f2034f1186a2924af7fa71fe58631d"
+    },
+    {
       "path": "test/readiness-launch-policy.test.mjs",
-      "bytes": 7330,
-      "sha256": "7f6a513aa5e6d2cfc5765c5d8b850dc6130517fda1380377fd501278d2497bfd"
+      "bytes": 13338,
+      "sha256": "8534c16b90efbad488f5f4afa7c3576d0bca919842bcaf7c6d01ec57338e3e78"
     },
     {
       "path": "test/readiness-worker-revision.test.mjs",
@@ -614,6 +684,11 @@
       "sha256": "6f8067dbb83796d94bcba69513153889a612fd155dcaf82fa65730a3e5baac25"
     },
     {
+      "path": "test/watch-launch-feed-isolation.test.mjs",
+      "bytes": 7373,
+      "sha256": "fa9441fbd8606e28bb48cc0d8f7815a25fce205f6c38cb9e37e5b57f7660226e"
+    },
+    {
       "path": "integration/readiness-native30-executor-site.test.mjs",
       "bytes": 8823,
       "sha256": "f2a96d04e18155ef4633a87011a97a06aded4c8d046d133d1bb7914dbc3791c2"
@@ -632,6 +707,31 @@
       "path": "vendor/programmable-launch-plan-v1/capabilities-observed.json",
       "bytes": 115650,
       "sha256": "97fa1f93697a5afc4aaaad51aa4d5d65503a683ec82d832a89555f40f7aee9ee"
+    },
+    {
+      "path": "vendor/programmable-launch-plan-v1/current-c525/artifact-index.json",
+      "bytes": 11122,
+      "sha256": "813946d98987f21bd38d8e2825df50f02b3ce40b84dde97e17b421dbae63387f"
+    },
+    {
+      "path": "vendor/programmable-launch-plan-v1/current-c525/capabilities-observed.json",
+      "bytes": 183576,
+      "sha256": "4299a28df30bbadc5976c71c86e2d62e2b18b716a1c09137a5afb515df8842ee"
+    },
+    {
+      "path": "vendor/programmable-launch-plan-v1/current-c525/manifest.json",
+      "bytes": 141557,
+      "sha256": "9f868ed3d50f9753efeb048bb14a0458fd3f1bb9c0ee23c80b5a311631e77767"
+    },
+    {
+      "path": "vendor/programmable-launch-plan-v1/current-c525/provenance.json",
+      "bytes": 1577,
+      "sha256": "08b16a57642067e7ef3baa6a9e15fe00372e634f59be0cd0eda82a216929d9fd"
+    },
+    {
+      "path": "vendor/programmable-launch-plan-v1/current-c525/request-packer.mjs",
+      "bytes": 156705,
+      "sha256": "0ab5c5d510f2b83f885e4816d216205a1631740095ecb5f123b2ee1ed865c298"
     },
     {
       "path": "vendor/programmable-launch-plan-v1/graph-factory.json",
@@ -730,18 +830,18 @@
     },
     {
       "path": "docs/launch-admission-install.md",
-      "bytes": 4076,
-      "sha256": "b9a11730d4b5628d64627e0deebc8920db9f489baf38ccc41a9e823531a6f0fb"
+      "bytes": 4208,
+      "sha256": "b206e963100e30c9028ced579cc5128ecf25a8ac6189bfcaba4f571f9c74add3"
     },
     {
       "path": "docs/launch-bootstrap.md",
-      "bytes": 9199,
-      "sha256": "20a6d5e2c1fa6c42dae544f33ac74e71ba0f9aa4c3bbd186235f7db0f0017c7e"
+      "bytes": 9931,
+      "sha256": "5808a9b799438c14ac9902a4df0d5fccd8f14f3e0b3490ca5f525e5a66de9001"
     },
     {
       "path": "docs/launch-handoff-builder.md",
-      "bytes": 5857,
-      "sha256": "5211145eaf62e10264641c9fa2e1eb0cb24119e38c71519171ce06aac66220b0"
+      "bytes": 6197,
+      "sha256": "426aee49c4765b9dd6d700e9c5e05208e0833aed7c25e7580b20c0fde9bc0a87"
     },
     {
       "path": "docs/launch-later.md",
@@ -755,8 +855,8 @@
     },
     {
       "path": "docs/launch-policy.example.json",
-      "bytes": 553,
-      "sha256": "91dca875e78b836c0922979f6d1c46e6381a71803c154d5a8d632de94a303bd5"
+      "bytes": 637,
+      "sha256": "61010a237025b9bfc7af6ffd1e5ce72c13ee0bcd574cae8ac38005f83e7baa61"
     },
     {
       "path": "docs/launch-review-api.md",
@@ -770,8 +870,8 @@
     },
     {
       "path": "docs/launch-wallet-review.md",
-      "bytes": 6640,
-      "sha256": "9626923f4a8ac1fdf99a7b0f9b554176a1ff19135fc28c2074ab8ceb90545d3a"
+      "bytes": 7203,
+      "sha256": "78e2019dd984f88e477eefdffefa60d7584cc5548816a71c93778b00a3c1c829"
     },
     {
       "path": "docs/local-rehearsal.md",
@@ -800,13 +900,13 @@
     },
     {
       "path": "docs/production-setup.md",
-      "bytes": 6657,
-      "sha256": "52458019668d962170cd4eb5fe84fd826695038ea92355dc4652213b420f903b"
+      "bytes": 7362,
+      "sha256": "b817611a26494cb1e29215229e38d9b4e48e246431151beb14fd66f8c4cf26ac"
     },
     {
       "path": "docs/reward-timing.md",
-      "bytes": 2251,
-      "sha256": "6f55e3cb42cd56ed69fb3df119256f011103214ac828dcd16c3ebf434a3893fe"
+      "bytes": 3423,
+      "sha256": "8d335fe4c296135d6349cad1a657096f3419feaf8d1b611385a209b33f87ed87"
     },
     {
       "path": "docs/robin-distributor.public.json",
@@ -940,8 +1040,8 @@
     },
     {
       "path": "scripts/production-operator.mjs",
-      "bytes": 2558,
-      "sha256": "31b861a668d44be5952aec4da6bfcb3496ec4400b01e3f0ad1692cffd47d91b0"
+      "bytes": 2746,
+      "sha256": "5348f297ffbe4e364e3d5c7147a6e2fe9d13923b26d4ca0641656c875b62eafd"
     },
     {
       "path": "scripts/export-wallet-feed.mjs",
@@ -980,8 +1080,8 @@
     },
     {
       "path": "scripts/prepare-robin-launch-plan.mjs",
-      "bytes": 3648,
-      "sha256": "387877fb698d6dfd23f0058fa2f0baf74abd88f41a98b925097328a9f30659dd"
+      "bytes": 3409,
+      "sha256": "75878a30c3ce155948944cf783f68f38d9d9ed4e5b87988941903733c14d835b"
     },
     {
       "path": "scripts/robin-launch-api.mjs",
@@ -1015,8 +1115,8 @@
     },
     {
       "path": "scripts/watch-launch.mjs",
-      "bytes": 6155,
-      "sha256": "f0125a18a538efc3f932a003eeb7bd79d6e70f3a1a7f7acd3d3d1879681ed766"
+      "bytes": 6811,
+      "sha256": "92721bae75c29fbe77d60226e7a1312803ac8fb210b8fdcb2e38b1f2555d47b4"
     },
     {
       "path": "scripts/launch-standby.mjs",
@@ -1030,8 +1130,8 @@
     },
     {
       "path": "scripts/reconcile-launch-replan.mjs",
-      "bytes": 4333,
-      "sha256": "5307888d980d51abd7842816c4fc6673f36d7656916d3519e9d3c34c098fe609"
+      "bytes": 4322,
+      "sha256": "eb458ad51e3b33fa5342a57de28a0e4003f8216b8b6b573e78071c73ebad4bd8"
     },
     {
       "path": "signing-ui/guards.mjs",
@@ -1050,8 +1150,8 @@
     },
     {
       "path": "signing-ui/robin-launch-app.js",
-      "bytes": 22489,
-      "sha256": "b64d5f92157837d82edfb71ecc41382cc387ecefd1abe2e8868b51477f69731c"
+      "bytes": 23460,
+      "sha256": "defbdd88e69963a6b1a8616145c2ad46b544840623a4de62f99e0bc630079bea"
     },
     {
       "path": "signing-ui/robin-launch.html",

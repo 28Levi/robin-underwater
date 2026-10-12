@@ -7,6 +7,7 @@ import {buildLaunchHandoff, inspectAtomicLaunchEnvelope, ATOMIC_LAUNCH_ABI, read
 import {compileRobinLaunchContracts, buildRobinLaunchPlan, ATOMIC, ATOMIC_HASH, GRAPH, GRAPH_HASH, MANAGER, MANAGER_HASH, PERMIT_AUTHORITY, PERMIT_AUTHORITY_HASH} from '../src/launch-plan.mjs';
 import {DISTRIBUTOR, DISTRIBUTOR_HASH, ANCHOR} from '../signing-ui/robin-launch-guards.mjs';
 import {canonicalLaunchJson} from '../src/launch-manifest.mjs';
+import {CURRENT_PLAN_MANIFEST} from '../src/launch-platform-contract.mjs';
 import {launchReviewFixture, NOW} from './helpers/launch-review-fixture.mjs';
 
 const read = f => JSON.parse(fs.readFileSync(f, 'utf8').replace(/^\uFEFF/, ''));
@@ -26,8 +27,11 @@ const atomic = new ethers.Interface(ATOMIC_LAUNCH_ABI);
 const crypto = {...ethers, keccak256: value => ({'manager-mock': MANAGER_HASH, 'atomic-mock': ATOMIC_HASH,
   'graph-mock': GRAPH_HASH, 'permit-mock': PERMIT_AUTHORITY_HASH, 'distributor-mock': DISTRIBUTOR_HASH}[value] ?? ethers.keccak256(value))};
 
-function fixture() {
-  const previous = launchReviewFixture(), plan = structuredClone(built.plan), requestBytes = Buffer.from(canonicalLaunchJson(plan));
+function fixture({current = false, nonce = '7'} = {}) {
+  const previous = launchReviewFixture(), plan = structuredClone(built.plan);
+  const selectedCapabilities = current ? read('vendor/programmable-launch-plan-v1/current-c525/capabilities-observed.json') : structuredClone(capabilities);
+  if (current) plan.manifestDigest = CURRENT_PLAN_MANIFEST;
+  const requestBytes = Buffer.from(canonicalLaunchJson(plan));
   const rawRequestSha256 = sha(requestBytes), planHash = sha(ethers.toUtf8Bytes('mock-not-issued-platform-plan'));
   const packReport = {status: 'packed', rawRequestSha256, byteLength: requestBytes.length, idempotencyKey: 'clp-v1-' + rawRequestSha256.slice(7), manifestDigest: plan.manifestDigest, planHash};
   const order = {chainId: 4663, executor: ATOMIC, executorRuntimeCodeHash: ATOMIC_HASH, controller: intent.launchWallet,
@@ -46,10 +50,11 @@ function fixture() {
   accepted.preflight = {planHash, manifestDigest: plan.manifestDigest, launchEligibility: {status: 'ready', hardBlockers: []}};
   accepted.admission = {...accepted.admission, planHash, rawRequestSha256, manifestDigest: plan.manifestDigest, expiresAt};
   accepted.manualReview = {...accepted.manualReview, approvedAt: new Date(NOW - 60000).toISOString(), expiresAt};
-  accepted.steps[0].transaction = {...accepted.steps[0].transaction, to: ATOMIC, data, deadline: plan.budgets.deadline, gasLimit: built.report.totalGasLimit};
+  accepted.steps[0].transaction = {...accepted.steps[0].transaction, nonce, to: ATOMIC, data, deadline: plan.budgets.deadline, gasLimit: built.report.totalGasLimit};
   const state = {...previous.state, routerCode: 'atomic-mock', factoryCode: 'graph-mock',
     head: {...previous.state.head, hash: hash('head')}, finalized: {...previous.state.finalized, hash: hash('finalized')},
-    distributorBlock: {hash: distributor.blockHash}, watchBlock: {hash: hash('finalized')}, gasPrice: '60000000', gasEstimate: '7800000'};
+    distributorBlock: {hash: distributor.blockHash}, watchBlock: {hash: hash('finalized')}, gasPrice: '60000000', gasEstimate: '7800000',
+    latestNonce: ethers.toQuantity(nonce), pendingNonce: ethers.toQuantity(nonce)};
   const facts = {schemaVersion: 'robinhook.launch-chain-facts.v1', checkedAt: new Date(NOW).toISOString(),
     resourceSha256: sha(Buffer.from(canonicalLaunchJson(accepted))), permitAuthorityCode: 'permit-mock', state,
     distributorReceipt: {status: '0x1', contractAddress: DISTRIBUTOR, transactionHash: distributor.transactionHash,
@@ -57,9 +62,34 @@ function fixture() {
     simulation: {result: hash('mock-call-result-NOT-platform-issuance'), calldataHash: ethers.keccak256(data),
       blockNumber: Number(BigInt(state.head.number)), blockHash: state.head.hash, stateOverrides: false}};
   const policy = Object.fromEntries(['preserveLaunchBalanceWei', 'accounting', 'execution'].map(k => [k, previous.manifest[k]]));
-  return {requestBytes, packReport, preparation: {...built.report, packer: packReport}, accepted, intent: structuredClone(intent),
-    distributor, policy, sourceRevision, capabilities: structuredClone(capabilities), facts, now: NOW, crypto};
+  return {requestBytes, packReport, preparation: {...built.report, manifestDigest: plan.manifestDigest, packer: packReport}, accepted, intent: structuredClone(intent),
+    distributor, policy, sourceRevision, capabilities: selectedCapabilities, facts, now: NOW, crypto};
 }
+
+test('current-manifest MAIN handoff uses the observed wallet nonce and still needs exact new approval, facts and review', () => {
+  for (const nonce of ['7','8']) {
+    const input = fixture({current: true, nonce});
+    const result = buildLaunchHandoff({...input, policy: read('docs/launch-policy.example.json'), workerSourceRevision: '2'.repeat(40), activationMode: 'after-reviewed-launch'});
+    assert.equal(result.manifest.platformManifestDigest, CURRENT_PLAN_MANIFEST);
+    assert.equal(result.manifest.transaction.nonce, nonce);
+    assert.equal(result.manifest.schemaVersion, 'robinhook.launch-bootstrap.v4');
+    assert.equal(result.manifest.accounting.minimumAgeSeconds, 300);
+    assert.equal(result.manifest.execution.payoutIntervalSeconds, 900);
+    assert.equal(result.manifest.execution.confirmationMode, 'pipelined-finalized-v1');
+    assert.equal(result.manifest.execution.maxInflightTransactions, 8);
+    assert.equal(result.report.automationAuthorized, false);
+    assert.equal(result.report.walletSigning, false);
+    assert.equal(result.report.routedTradingFee.rateBps, 100);
+    assert.equal(result.report.routedTradingFee.waiverVerified, false);
+    for (const mutate of [x=>x.preparation.manifestDigest=capabilities.manifestDigest,
+      x=>x.capabilities=structuredClone(capabilities),x=>x.accepted.manualReview.state='pending',
+      x=>x.capabilities.availability.bindings.execution.atomic.poolManagerRuntimeCodeHash=ethers.ZeroHash,
+      x=>x.facts.state.pendingNonce=ethers.toQuantity(BigInt(nonce)+1n),x=>x.facts.simulation.result='0x']) {
+      const altered=structuredClone({...input, crypto: undefined});altered.crypto=crypto;mutate(altered);
+      assert.throws(()=>buildLaunchHandoff(altered));
+    }
+  }
+});
 
 test('fixture-only accepted plan becomes a deterministic manual review candidate, never consent or issuance', () => {
   const a = buildLaunchHandoff(fixture()), b = buildLaunchHandoff(fixture());
@@ -107,6 +137,7 @@ test('explicit scheduled policy emits v3 with fresh review identity and unchange
   const input = fixture(), original = buildLaunchHandoff(input);
   const requestBefore = Buffer.from(input.requestBytes), resourceBefore = canonicalLaunchJson(input.accepted);
   const policy = read('docs/launch-policy.example.json'), workerSourceRevision = '2'.repeat(40);
+  delete policy.execution.confirmationMode; delete policy.execution.maxInflightTransactions;
   const revised = buildLaunchHandoff({...input, policy, workerSourceRevision});
   assert.equal(revised.manifest.schemaVersion, 'robinhook.launch-bootstrap.v3');
   assert.equal(revised.manifest.accounting.minimumAgeSeconds, 300);
@@ -121,6 +152,30 @@ test('explicit scheduled policy emits v3 with fresh review identity and unchange
   assert.throws(() => buildLaunchHandoff({...input, policy}), /explicit worker source revision/);
   for (const mutate of [p => p.accounting.minimumAgeSeconds = 3600, p => p.execution.payoutIntervalSeconds = 300,
     p => delete p.execution.payoutIntervalSeconds]) {
+    const changed = structuredClone(policy); mutate(changed);
+    assert.throws(() => buildLaunchHandoff({...input, policy: changed, workerSourceRevision}), /policy/);
+  }
+});
+
+test('explicit finalized pipeline emits v4 without altering contracts and rejects incomplete or weakened review policy', () => {
+  const input = fixture({current: true}), policy = read('docs/launch-policy.example.json');
+  const workerSourceRevision = '2'.repeat(40), legacyPolicy = structuredClone(policy);
+  delete legacyPolicy.execution.confirmationMode; delete legacyPolicy.execution.maxInflightTransactions;
+  const legacy = buildLaunchHandoff({...input, policy: legacyPolicy, workerSourceRevision});
+  const revised = buildLaunchHandoff({...input, policy, workerSourceRevision});
+  assert.equal(revised.manifest.schemaVersion, 'robinhook.launch-bootstrap.v4');
+  assert.equal(revised.manifest.execution.confirmationMode, 'pipelined-finalized-v1');
+  assert.equal(revised.manifest.execution.maxInflightTransactions, 8);
+  assert.notEqual(revised.manifestSha256, legacy.manifestSha256);
+  const {schemaVersion, execution, ...unchanged} = revised.manifest;
+  const {confirmationMode, maxInflightTransactions, ...legacyExecution} = execution;
+  assert.deepEqual({...unchanged, schemaVersion: 'robinhook.launch-bootstrap.v3', execution: legacyExecution}, legacy.manifest);
+  assert.equal(revised.report.automationAuthorized, false);
+  assert.equal(revised.report.walletSigning, false);
+  assert.throws(() => buildLaunchHandoff({...input, policy}), /explicit worker source revision/);
+  for (const mutate of [p => delete p.execution.confirmationMode, p => delete p.execution.maxInflightTransactions,
+    p => p.execution.confirmationMode = 'latest', p => p.execution.maxInflightTransactions = 9,
+    p => p.execution.maxInflightTransactions = '8', p => delete p.execution.payoutIntervalSeconds]) {
     const changed = structuredClone(policy); mutate(changed);
     assert.throws(() => buildLaunchHandoff({...input, policy: changed, workerSourceRevision}), /policy/);
   }

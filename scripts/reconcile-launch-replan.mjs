@@ -1,10 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import {fileURLToPath, pathToFileURL} from 'node:url';
+import {fileURLToPath} from 'node:url';
 import {reconcileReplanInputs, bindRefreshedPreparation, replanHash} from '../src/launch-replan-reconciliation.mjs';
+import {loadPlanContract} from '../src/launch-platform-contract.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+export async function loadReplanPacker(manifestDigest) {
+  const contract = loadPlanContract(manifestDigest), packerBytes = fs.readFileSync(contract.packerUrl);
+  const entry = contract.index.artifacts?.find(a => a.fileName === 'request-packer.mjs');
+  if (!entry || replanHash(packerBytes) !== entry.contentSha256 || packerBytes.length !== entry.byteLength)
+    throw Error('Official replan packer bytes differ.');
+  const {runCustomLaunchPlanPackerCliV1} = await import(contract.packerUrl.href);
+  return {runCustomLaunchPlanPackerCliV1, entry};
+}
 export function parseReplanOptions(args) {
   const required = ['request', 'pack-report', 'preparation', 'accepted-package', 'replan-evidence-dir', 'out'];
   const options = new Map();
@@ -25,12 +33,7 @@ export async function prepareReplanHandoffInputs(args) {
     evidence: {intent: json(path.join(evidenceDir, 'intent.json')), postResponse: json(path.join(evidenceDir, 'post-response.json')),
       predecessorResponse: json(path.join(evidenceDir, 'predecessor-response.json'))}};
   const reconciled = reconcileReplanInputs(inputs);
-  const vendor = path.join(root, 'vendor/programmable-launch-plan-v1'), packerPath = path.join(vendor, 'request-packer.mjs');
-  const index = json(path.join(vendor, 'artifact-index.json')), entry = index.artifacts?.find(a => a.fileName === 'request-packer.mjs');
-  const packerBytes = fs.readFileSync(packerPath);
-  if (!entry || replanHash(packerBytes) !== entry.contentSha256 || packerBytes.length !== entry.byteLength
-    || index.manifestDigest !== inputs.packReport.manifestDigest) throw Error('Official packer artifact or manifest digest differs.');
-  const {runCustomLaunchPlanPackerCliV1} = await import(pathToFileURL(packerPath).href);
+  const {runCustomLaunchPlanPackerCliV1, entry} = await loadReplanPacker(inputs.packReport.manifestDigest);
   fs.mkdirSync(out, {recursive: false});
   const write = (name, bytes) => fs.writeFileSync(path.join(out, name), bytes, {flag: 'wx', mode: 0o600});
   const writeJson = (name, value) => write(name, JSON.stringify(value, null, 2) + '\n');

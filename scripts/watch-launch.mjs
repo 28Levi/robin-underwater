@@ -37,9 +37,13 @@ try {
   release = acquireLock(path.join(dir, 'launch-supervisor.lock'));
   const consentFile = options['--consent'] ?? process.env.ROBIN_LAUNCH_CONSENT_FILE;
   const url = process.env.ROBIN_WALLET_FEED_URL, token = process.env.ROBIN_WALLET_FEED_PUBLISH_TOKEN;
-  if (Boolean(url) !== Boolean(token)) throw Error('Configure both feed publication settings or neither');
-  const publisher = url ? {url, token} : null;
-  const refreshSeconds = walletFeedIntervalSeconds(process.env.ROBIN_WALLET_FEED_INTERVAL_SECONDS);
+  let publisher = null, feedConfigurationUnavailable = false;
+  let refreshSeconds = walletFeedIntervalSeconds();
+  try {
+    if (Boolean(url) !== Boolean(token)) throw Error('Configure both feed publication settings or neither');
+    publisher = url ? {url, token} : null;
+    refreshSeconds = walletFeedIntervalSeconds(process.env.ROBIN_WALLET_FEED_INTERVAL_SECONDS);
+  } catch { feedConfigurationUnavailable = true; }
   const stoppedFile = path.join(dir, 'operator-stopped.json');
   const operatorScript = fileURLToPath(new URL('./production-operator.mjs', import.meta.url));
   do {
@@ -48,11 +52,6 @@ try {
       const consent = consentFile && fs.existsSync(consentFile) ? JSON.parse(fs.readFileSync(consentFile, 'utf8')) : null;
       status = await runLaunchBootstrapCycle(provider, manifest, dir, {expectedManifestSha256: options['--manifest-sha256'], sourceRevision, consent,
         approvedManifestSha256: process.env.ROBIN_AUTOMATION_APPROVED_MANIFEST_SHA256 ?? null});
-      if (status.readOnlyConfig) {
-        const config = JSON.parse(fs.readFileSync(status.readOnlyConfig, 'utf8'));
-        const feed = await runWalletFeedCycle(provider, config, feedDir, {publisher});
-        status = {...status, walletFeed: feed.state};
-      }
       if (options['--services'] && status.automaticRewardsApproved && !stop.signal.aborted && !operatorChild && !fs.existsSync(stoppedFile)) {
         expectedOperatorStop = false;
         operatorChild = spawn(process.execPath, [operatorScript, status.operatorConfig, '--send'], {
@@ -75,6 +74,18 @@ try {
       status = {state: 'blocked', reason: 'Launch verification or service setup failed; preserve state and reconcile before activation',
         checkedAt: new Date().toISOString(), signing: false, broadcast: false};
       atomicWrite(path.join(dir, 'launch-bootstrap-status.json'), status);
+    }
+    // Public display work is optional and starts only AFTER the independent
+    // reviewed operator gate. Slow collection cannot delay the first spawn;
+    // feed configuration, lock or write errors never enter the signing gate's
+    // failure path. Do not write another file from this catch (it may also fail).
+    if (status.readOnlyConfig) {
+      try {
+        if (feedConfigurationUnavailable) throw Error('Optional feed configuration unavailable');
+        const config = JSON.parse(fs.readFileSync(status.readOnlyConfig, 'utf8'));
+        const feed = await runWalletFeedCycle(provider, config, feedDir, {publisher});
+        status = {...status, walletFeed: feed.state};
+      } catch { status = {...status, walletFeed: 'unavailable'}; }
     }
     console.log(JSON.stringify(status));
     if (options['--once']) { if (status.state === 'blocked' || status.state === 'expired') process.exitCode = 2; break; }
