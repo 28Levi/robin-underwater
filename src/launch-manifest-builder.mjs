@@ -3,10 +3,13 @@ import * as ethers from 'ethers';
 import graphArtifact from '../vendor/programmable-launch-plan-v1/graph-factory.json' with {type: 'json'};
 import {inspectPackedRequest, verifyPlanResource} from './launch-plan-api.mjs';
 import {assertRobinLaunchIntent} from './launch-intent.mjs';
-import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3, LAUNCH_MANIFEST_SCHEMA_V4} from './launch-manifest.mjs';
+import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3, LAUNCH_MANIFEST_SCHEMA_V4, LAUNCH_MANIFEST_SCHEMA_V5} from './launch-manifest.mjs';
 import {validateLaunchPackage, boundedLaunchTransaction, ANCHOR, MANAGER, DISTRIBUTOR, DISTRIBUTOR_HASH} from '../signing-ui/robin-launch-guards.mjs';
 import {ATOMIC, ATOMIC_HASH, GRAPH, GRAPH_HASH, MANAGER_HASH, PERMIT_AUTHORITY, PERMIT_AUTHORITY_HASH} from './launch-plan.mjs';
 import {assertSupportedPlanCapabilities} from './launch-platform-contract.mjs';
+import {fileURLToPath} from 'node:url';
+import {LAUNCH_GUARD_RECIPE, assertLaunchGuardIntent} from './launch-guard-policy.mjs';
+import {LAUNCH_GUARD_SOURCE_PATH, LAUNCH_GUARD_SOURCE_SHA256, loadLaunchGuardRecipe, assertLaunchGuardMaterializedRuntime} from './launch-guard-runtime.mjs';
 
 // Exact executeAndStampV2 ABI from the verified 4663 Atomic runtime. ABI encoding is
 // decoded below; actual issuer authorization is tested by an unchanged read-only eth_call.
@@ -22,6 +25,42 @@ const keys = (value, expected) => value && typeof value === 'object' && !Array.i
   && Object.keys(value).length === expected.length && expected.every(key => Object.hasOwn(value, key));
 const componentIds = ['initializer', 'token', 'hook', 'feeVault'];
 
+function selectedHook(preparation) {
+  const implementation = preparation?.hookImplementation;
+  if (implementation?.recipe === LAUNCH_GUARD_RECIPE) {
+    require(implementation.contractName === 'RobinhookLaunchGuardHookV1'
+      && implementation.sourcePath === LAUNCH_GUARD_SOURCE_PATH
+      && implementation.sourceSha256 === LAUNCH_GUARD_SOURCE_SHA256
+      && implementation.normalizedNative30Runtime === false,
+    'The project launch guard source identity changed.');
+    return {contractName: 'RobinhookLaunchGuardHookV1', compilationUnitId: 'robin-launch-guard', sourcePath: LAUNCH_GUARD_SOURCE_PATH};
+  }
+  require(implementation?.recipe === 'robin-native30-no-module', 'Unknown prepared hook implementation.');
+  return {contractName: 'RobinhookNativeFeeHookV1', compilationUnitId: 'robin-native30', sourcePath: 'src/robinhook-fee-v1/RobinhookNativeFeeHookV1.sol'};
+}
+
+function reviewedGuard(plan, preparation, intent) {
+  require(intent.hookRecipe === preparation?.hookImplementation?.recipe, 'Prepared hook differs from the requested launch policy.');
+  if (intent.hookRecipe !== LAUNCH_GUARD_RECIPE) return null;
+  const guard = assertLaunchGuardIntent(intent), recipe = loadLaunchGuardRecipe(fileURLToPath(new URL('..', import.meta.url)));
+  require(canonicalLaunchJson(guard) === canonicalLaunchJson(preparation.launchGuard)
+    && same(preparation.initialBuyRecipient, guard.initialBuyRecipient), 'Prepared launch guard or initial buyer changed.');
+  const units = plan.verificationBundle?.compilationUnits?.filter(u => u.compilationUnitId === 'robin-launch-guard');
+  require(units?.length === 1 && units[0].standardJsonInputSha256 === recipe.standardJsonInputSha256
+    && sha(Buffer.from(units[0].standardJsonInputBase64, 'base64')) === recipe.standardJsonInputSha256,
+  'Exact project launch guard compilation input required.');
+  const runtimeCodes = {};
+  for (const id of ['hook', 'feeVault']) {
+    const materials = plan.verificationBundle.components.filter(c => c.targetId === id);
+    require(materials.length === 1, 'Exact guard runtime components required.');
+    runtimeCodes[id] = '0x' + Buffer.from(materials[0].runtimeMaterialization.deployedRuntimeCodeBase64, 'base64').toString('hex');
+  }
+  assertLaunchGuardMaterializedRuntime({recipe, runtimeCodes, addresses: preparation.addresses,
+    creatorRecipient: intent.creatorFeeRecipient, poolManager: MANAGER,
+    initialSqrtPriceX96: '1747735933952748037356115466503453', earlyBuyers: guard.allowedBuyers});
+  return guard;
+}
+
 export function acceptedLaunchResource(value) {
   if (value?.resource) return value.resource;
   if (value?.data) {
@@ -33,6 +72,7 @@ export function acceptedLaunchResource(value) {
 
 function exactComponents(plan, preparation) {
   require(Array.isArray(plan.components) && plan.components.length === 4, 'Exactly the four reviewed ROBIN components are required.');
+  const hook = selectedHook(preparation);
   const result = {};
   for (const id of componentIds) {
     const matches = plan.components.filter(c => c.componentId === id), materials = plan.verificationBundle?.components?.filter(c => c.targetId === id);
@@ -42,10 +82,10 @@ function exactComponents(plan, preparation) {
       && material?.deployedRuntimeCodeHash === c.runtimeCodeHash
       && ethers.keccak256(Buffer.from(material.deployedRuntimeCodeBase64, 'base64')) === c.runtimeCodeHash,
     `${id} prediction differs from final source preparation.`);
-    if (id === 'hook') require(materials[0].contractName === 'RobinhookNativeFeeHookV1'
-      && materials[0].compilationUnitId === 'robin-native30'
-      && materials[0].sourcePath === 'src/robinhook-fee-v1/RobinhookNativeFeeHookV1.sol',
-    'The current ROBIN 30 bps custom hook source binding is required.');
+    if (id === 'hook') require(materials[0].contractName === hook.contractName
+      && materials[0].compilationUnitId === hook.compilationUnitId
+      && materials[0].sourcePath === hook.sourcePath,
+    'The selected ROBIN custom hook source binding is required.');
     result[id] = {address: ethers.getAddress(c.expectedAddress), runtimeCodeHash: c.runtimeCodeHash};
   }
   return result;
@@ -53,6 +93,7 @@ function exactComponents(plan, preparation) {
 
 /** Inspects the actual signed envelope without manufacturing a platform signature or admission. */
 export function inspectAtomicLaunchEnvelope(resource, plan, preparation, intent) {
+  const guard = reviewedGuard(plan, preparation, intent);
   const step = resource?.steps?.[0], t = step?.transaction;
   require(Array.isArray(resource?.steps) && resource.steps.length === 1 && t && same(t.to, ATOMIC)
     && t.chainId === '4663' && same(t.from, intent.launchWallet) && t.value === intent.initialBuyWei,
@@ -95,7 +136,7 @@ export function inspectAtomicLaunchEnvelope(resource, plan, preparation, intent)
   }
   const init = initializer.decodeFunctionData('initialize', graphCall.targets[0].initializerCalldata);
   require(same(init.token, preparation.addresses.token) && same(init.hook, preparation.addresses.hook)
-    && same(init.buyer, intent.launchWallet) && init.minimumTokensOut === BigInt(intent.minimumTokensOut),
+    && same(init.buyer, guard ? guard.initialBuyRecipient : intent.launchWallet) && init.minimumTokensOut === BigInt(intent.minimumTokensOut),
   'Initial purchase buyer or minimum token output changed.');
   const predicted = exactComponents(plan, preparation);
   require(components.length === 4, 'Atomic component snapshot count changed.');
@@ -123,6 +164,8 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
   const packed = inspectPackedRequest(Buffer.from(requestBytes), packReport), resource = acceptedLaunchResource(accepted);
   verifyPlanResource(resource, packed);
   const plan = packed.plan;
+  const guard = intent.hookRecipe === LAUNCH_GUARD_RECIPE ? assertLaunchGuardIntent(intent) : null;
+  require(!guard || pipelinedFinality, 'Launch guard requires the reviewed finalized payout pipeline policy.');
   const platformContract = assertSupportedPlanCapabilities(capabilities);
   require(canonicalLaunchJson(resource.plan) === canonicalLaunchJson(plan), 'Owned platform resource differs from exact packed request bytes.');
   require(preparation?.schemaVersion === 'robin.launch-plan-preparation.v1' && preparation.sourceRevision === sourceRevision
@@ -172,9 +215,9 @@ export function buildLaunchHandoff({requestBytes, packReport, preparation, accep
     && receipt.blockHash === distributor.blockHash && facts.state.distributorBlock?.hash === distributor.blockHash,
   'Existing distributor receipt is not canonical and successful.');
   const workerBinding = workerSourceRevision === undefined ? {} : {workerSourceRevision};
-  const manifest = {schemaVersion: pipelinedFinality ? LAUNCH_MANIFEST_SCHEMA_V4 : scheduledPayouts ? LAUNCH_MANIFEST_SCHEMA_V3
+  const manifest = {schemaVersion: guard ? LAUNCH_MANIFEST_SCHEMA_V5 : pipelinedFinality ? LAUNCH_MANIFEST_SCHEMA_V4 : scheduledPayouts ? LAUNCH_MANIFEST_SCHEMA_V3
     : workerSourceRevision === undefined ? LAUNCH_MANIFEST_SCHEMA : LAUNCH_MANIFEST_SCHEMA_V2,
-    chainId: 4663, name: 'ROBINHOOK', symbol: 'ROBIN', sourceRevision, ...workerBinding,
+    chainId: 4663, name: 'ROBINHOOK', symbol: 'ROBIN', sourceRevision, ...workerBinding, ...(guard ? {launchGuard: guard} : {}),
     planId: resource.planId, planHash: resource.planHash, platformManifestDigest: resource.manifestDigest, requestSha256: packed.hash,
     projectMetadataHash: hashJson(plan.publication), fundingPlanHash: hashJson(plan.budgets),
     transaction: {from: ethers.getAddress(t.from), to: ethers.getAddress(t.to), nonce: t.nonce, valueWei: t.value,

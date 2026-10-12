@@ -72,6 +72,12 @@ function showPackage() {
   details('details', [
     ['Network', 'Robinhood Chain · 4663'], ['Launch wallet', t.from],
     ['Initial purchase', `${ethers.formatEther(t.valueWei)} ETH`],
+    ...(manifest.launchGuard ? [
+      ['Initial purchase recipient', manifest.launchGuard.initialBuyRecipient],
+      ['First 30 seconds', 'Only the five listed wallets may initiate buys through the approved router. Public buys open automatically 30 seconds after pool initialization. Sells stay open.'],
+      ['Early-buy wallets', manifest.launchGuard.allowedBuyers.join(', ')],
+      ['Early-buy scope', 'Restricts buy initiators in this pool; token recipients, transfers and other pools are unrestricted.'],
+    ] : []),
     ['Minimum received', `${ethers.formatUnits(manifest.minimumTokensOut, 18)} ROBIN`],
     ['Total supply', '1,000,000,000 ROBIN'],
     ['Contract buy / sell fees', '2% each: 1.7% for rewards + 0.3% Programmable. Trading-route fees require their separate quote.'],
@@ -111,7 +117,7 @@ function showPackage() {
     ['Retry interval', `${e.retryIntervalSeconds / 60} minutes`],
     ['Excluded addresses', a.excludedAddresses.length ? a.excludedAddresses.join(', ') : 'None'],
   ]);
-  $('review-label').textContent = `I reviewed ROBINHOOK / ROBIN, the ${ethers.formatEther(t.valueWei)} ETH purchase, ${ethers.formatEther(manifest.maxLaunchGasWei)} ETH launch gas ceiling, addresses, contract and worker revisions, and ${automatic() ? 'automatic payout policy' : 'manual payout activation'} above.`;
+  $('review-label').textContent = `I reviewed ROBINHOOK / ROBIN, the ${ethers.formatEther(t.valueWei)} ETH purchase${manifest.launchGuard ? ', its recipient and the five-wallet 30-second buy restriction' : ''}, ${ethers.formatEther(manifest.maxLaunchGasWei)} ETH launch gas ceiling, addresses, contract and worker revisions, and ${automatic() ? 'automatic payout policy' : 'manual payout activation'} above.`;
 }
 async function loadPackage() {
   const response = await fetch('/package.json', {cache: 'no-store'}), result = await response.json();

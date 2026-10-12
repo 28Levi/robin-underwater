@@ -9,6 +9,7 @@ import {DISTRIBUTOR, DISTRIBUTOR_HASH, ANCHOR} from '../signing-ui/robin-launch-
 import {canonicalLaunchJson} from '../src/launch-manifest.mjs';
 import {CURRENT_PLAN_MANIFEST} from '../src/launch-platform-contract.mjs';
 import {launchReviewFixture, NOW} from './helpers/launch-review-fixture.mjs';
+import {LAUNCH_GUARD_RECIPE, EARLY_BUYERS} from '../src/launch-guard-policy.mjs';
 
 const read = f => JSON.parse(fs.readFileSync(f, 'utf8').replace(/^\uFEFF/, ''));
 const hash = text => ethers.keccak256(ethers.toUtf8Bytes(text));
@@ -27,7 +28,8 @@ const atomic = new ethers.Interface(ATOMIC_LAUNCH_ABI);
 const crypto = {...ethers, keccak256: value => ({'manager-mock': MANAGER_HASH, 'atomic-mock': ATOMIC_HASH,
   'graph-mock': GRAPH_HASH, 'permit-mock': PERMIT_AUTHORITY_HASH, 'distributor-mock': DISTRIBUTOR_HASH}[value] ?? ethers.keccak256(value))};
 
-function fixture({current = false, nonce = '7'} = {}) {
+function fixture({current = false, nonce = '7', baseBuild = built, baseIntent = intent} = {}) {
+  const built = baseBuild, intent = baseIntent;
   const previous = launchReviewFixture(), plan = structuredClone(built.plan);
   const selectedCapabilities = current ? read('vendor/programmable-launch-plan-v1/current-c525/capabilities-observed.json') : structuredClone(capabilities);
   if (current) plan.manifestDigest = CURRENT_PLAN_MANIFEST;
@@ -62,9 +64,53 @@ function fixture({current = false, nonce = '7'} = {}) {
     simulation: {result: hash('mock-call-result-NOT-platform-issuance'), calldataHash: ethers.keccak256(data),
       blockNumber: Number(BigInt(state.head.number)), blockHash: state.head.hash, stateOverrides: false}};
   const policy = Object.fromEntries(['preserveLaunchBalanceWei', 'accounting', 'execution'].map(k => [k, previous.manifest[k]]));
-  return {requestBytes, packReport, preparation: {...built.report, manifestDigest: plan.manifestDigest, packer: packReport}, accepted, intent: structuredClone(intent),
+  return {requestBytes, packReport, preparation: {...structuredClone(built.report), manifestDigest: plan.manifestDigest, packer: packReport}, accepted, intent: structuredClone(intent),
     distributor, policy, sourceRevision, capabilities: selectedCapabilities, facts, now: NOW, crypto};
 }
+
+let guardedBuild;
+function guardedFixture() {
+  const guardIntent = {...intent, hookRecipe: LAUNCH_GUARD_RECIPE,
+    launchGuard: {windowSeconds: 30, allowedBuyers: [...EARLY_BUYERS]}, initialBuyRecipient: intent.launchWallet};
+  guardedBuild ??= buildRobinLaunchPlan({intent: guardIntent, capabilities, distributor, sourceRevision, now: NOW / 1000,
+    nonce: '0x' + '32'.repeat(32), factory: read('vendor/programmable-launch-plan-v1/graph-factory.json'),
+    compiled: compileRobinLaunchContracts(process.cwd(), solc, {launchGuard: true})});
+  const input={...fixture({baseBuild: guardedBuild, baseIntent: guardIntent}),
+    policy: read('docs/launch-policy.example.json'), workerSourceRevision: '2'.repeat(40)};
+  // Fixture-only gas price keeps the 12M outer ceiling within the unchanged
+  // 0.0008 ETH cap after the wallet's 25% fee-price buffer.
+  input.facts.state.gasPrice='50000000';
+  return input;
+}
+
+test('guarded handoff binds five buyers and the unchanged initial recipient in v5 without claiming a routed fee waiver', () => {
+  const input = guardedFixture(), result = buildLaunchHandoff(input);
+  assert.equal(result.manifest.schemaVersion, 'robinhook.launch-bootstrap.v5');
+  assert.deepEqual(result.manifest.launchGuard.allowedBuyers, EARLY_BUYERS);
+  assert.equal(result.manifest.launchGuard.windowSeconds, 30);
+  assert.equal(result.manifest.launchGuard.initialBuyRecipient, input.intent.launchWallet.toLowerCase());
+  assert.equal(result.manifest.transaction.from.toLowerCase(), result.manifest.launchGuard.initialBuyRecipient);
+  assert.equal(result.report.routedTradingFee.waiverVerified, false);
+  assert.equal(result.report.routedTradingFee.totalTradingFeeConfirmed, false);
+  assert.equal(result.report.walletSigning, false);
+});
+
+test('guarded handoff rejects policy, source, compilation input and bytecode substitutions', () => {
+  for (const mutate of [x => x.preparation.launchGuard.allowedBuyers.pop(),
+    x => x.intent.initialBuyRecipient = EARLY_BUYERS[0],
+    x => x.preparation.initialBuyRecipient = EARLY_BUYERS[0],
+    x => x.preparation.hookImplementation.sourceSha256 = 'sha256:' + '0'.repeat(64),
+    x => x.accepted.plan.verificationBundle.components.find(c => c.targetId === 'hook').contractName = 'RobinhookNativeFeeHookV1',
+    x => x.accepted.plan.verificationBundle.compilationUnits.find(c => c.compilationUnitId === 'robin-launch-guard').standardJsonInputBase64 = 'e30=',
+    x => x.accepted.plan.verificationBundle.components.find(c => c.targetId === 'hook').runtimeMaterialization.deployedRuntimeCodeBase64 = 'AA==']) {
+    const x = guardedFixture();mutate(x);
+    assert.throws(() => inspectAtomicLaunchEnvelope(x.accepted, x.accepted.plan, x.preparation, x.intent));
+  }
+  const x=guardedFixture();delete x.policy.execution.confirmationMode;delete x.policy.execution.maxInflightTransactions;
+  assert.throws(()=>buildLaunchHandoff(x),/finalized payout pipeline/);
+  const expensive=guardedFixture();expensive.facts.state.gasPrice='60000000';
+  assert.throws(()=>buildLaunchHandoff(expensive),/approved gas budget/);
+});
 
 test('current-manifest MAIN handoff uses the observed wallet nonce and still needs exact new approval, facts and review', () => {
   for (const nonce of ['7','8']) {

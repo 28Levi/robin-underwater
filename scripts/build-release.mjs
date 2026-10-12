@@ -3,10 +3,10 @@ const root=process.cwd(),destination=path.resolve(process.argv[2]??'output/sourc
 if(fs.existsSync(destination)&&fs.readdirSync(destination).length)throw Error('Release destination must be empty; preserve prior releases');
 fs.mkdirSync(destination,{recursive:true});
 const roots=['src','lib','contracts','test','integration','vendor','assets','docs','package.json','package-lock.json','README.md','.gitignore','.gitattributes','.dockerignore','Dockerfile',
- 'config.example.json','execution.example.json','production.execution.example.json','hardhat.config.cjs','hardhat.native20.config.cjs','hardhat.rehearsal.config.cjs','launch-intent.json',
+ 'config.example.json','execution.example.json','production.execution.example.json','hardhat.config.cjs','hardhat.native20.config.cjs','hardhat.rehearsal.config.cjs','launch-intent.json','launch-guard-intent.json',
  'scripts/compile.mjs','scripts/compile-native20.mjs','scripts/demo.mjs','scripts/check-platform.mjs','scripts/snapshot.mjs','scripts/prepare-payout.mjs',
  'scripts/operator.mjs','scripts/executor.mjs','scripts/production-operator.mjs','scripts/export-wallet-feed.mjs','scripts/check-wallet-feed.mjs','scripts/estimate-launch-gas.mjs','scripts/refresh-platform.mjs','scripts/build-release.mjs',
- 'scripts/rehearse-local.mjs','scripts/verify-recovery-report.mjs','scripts/prepare-robin-launch-plan.mjs','scripts/robin-launch-api.mjs','scripts/robin-launch-review-api.mjs',
+ 'scripts/rehearse-local.mjs','scripts/verify-recovery-report.mjs','scripts/prepare-robin-launch-plan.mjs','scripts/prepare-robin-guard-launch-plan.mjs','scripts/robin-launch-api.mjs','scripts/robin-launch-review-api.mjs',
  'scripts/serve-robin-launch-wallet.mjs','scripts/prepare-launch-handoff.mjs','scripts/refresh-robin-distributor.mjs','scripts/install-launch-admission.mjs','scripts/watch-launch.mjs','scripts/launch-standby.mjs','scripts/check-launch-host-ready.mjs','scripts/reconcile-launch-replan.mjs','signing-ui/guards.mjs','signing-ui/moss-launch-guards.mjs',
  'signing-ui/robin-launch-guards.mjs','signing-ui/robin-launch-app.js','signing-ui/robin-launch.html','signing-ui/wallet-connection.mjs',
  'research/coverage.json','research/capabilities.json','research/readiness.json','research/router-test-provenance.json','research/permit2-sourcify.json','research/current'];

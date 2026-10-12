@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "robin.launch-intent.draft.v1",
+  "name": "ROBINHOOK",
+  "symbol": "ROBIN",
+  "chainId": 4663,
+  "supply": "1000000000",
+  "decimals": 18,
+  "capitalSource": "buyer-funded",
+  "initialLiquidityWei": "0",
+  "projectBuyFeeBps": 170,
+  "projectSellFeeBps": 170,
+  "platformFeeBps": 30,
+  "lpFeePips": 0,
+  "totalBuyFeeBps": 200,
+  "totalSellFeeBps": 200,
+  "feeSelectionStatus": "confirmed-2026-10-11-170bps-rewards-30bps-platform-200bps-contract-total-each-direction",
+  "hookRecipe": "robin-30-second-buy-allowlist-v1",
+  "creatorFeeRecipient": "0x62C12ae94CcbbE470CC1857261Fae9E36074Fb36",
+  "operator": "0x9C366d4E42b8f987e8398A27b3b9A02803493088",
+  "operatorCustody": "explicitly-approved-Render-secret-installation-complete; correct-address-restore-verified; funded; payout-activation-pending",
+  "rpcReadiness": "Alchemy-on-Render-historical-state-logs-receipts-and-chain-identity-verified",
+  "rpcUsageBudget": {
+    "provider": "Alchemy",
+    "monthlyAccountLimitUsd": 5,
+    "status": "user-approved-and-saved; shared-with-other-account-apps"
+  },
+  "descriptionDraft": "ROBINHOOK uses collected project trading fees to help eligible holders with the deepest remaining percentage losses recover first. Tied loss levels share relief in proportion to eligible purchase cost. A background service calculates and sends funded ETH rewards. For the first 30 seconds, buys on the launch pool are restricted to five preselected wallets through the supported router. Public buying then opens automatically.",
+  "website": "https://robinhook.wtf/",
+  "websiteDecision": "public-robinhook-website; source-repository-remains-separate",
+  "x": "https://x.com/HOOKHOOD",
+  "image": "https://robinhook.wtf/assets/robinhook-token-logo.png",
+  "publicSource": {
+    "url": "https://github.com/28Levi/robin-underwater",
+    "revision": "979656912b8e2ebcf67124f30868220593468db2"
+  },
+  "operatorHostingDecision": "Render-one-worker-plus-1GB-disk; 7.25-USD-monthly-base-approved-2026-09-13; service-srv-daj6jt95efls73foumv0-created; payouts-inactive",
+  "localImage": "assets/robinhook-token-logo.png",
+  "privateWebsiteReview": "https://robin-underwater.dreamy-gleam-6937.chatgpt.site",
+  "launchWallet": "0x9479ac7ED3A72866F63F37013F2c7Cc68936B519",
+  "initialBuyWei": "10000000000000000",
+  "minimumTokensOut": "4701823804994213697915087",
+  "maxLaunchValueWei": "10000000000000000",
+  "maxGasCostWei": "800000000000000",
+  "maxDistributorGasCostWei": "200000000000000",
+  "maxCombinedDeploymentGasCostWei": "1000000000000000",
+  "operatorGasBudgetWei": "5000000000000000",
+  "operatorMaxGasPerTransactionWei": "200000000000000",
+  "gasBudgetApproval": "approved-2026-09-13; no-automatic-refills; both-wallets-funded",
+  "status": "draft-guarded-launch-five-wallets-confirmed",
+  "launchReadiness": "new-contract-and-new-platform-review-required; initial-purchase-unchanged",
+  "rewardModelDecision": {
+    "model": "deepest-percentage-first-recovery-ladder",
+    "feeCappedAlternative": "rejected-by-user",
+    "twoWalletFarmingRisk": "accepted-by-user-not-fixed",
+    "transferOutAccounting": "remove-proportional-purchase-cost-and-prior-relief-from-sender; carry-both-to-recipient",
+    "approvedAt": "2026-10-10"
+  },
+  "economicAssessment": {
+    "status": "confirmed-local-counterexamples",
+    "findings": [
+      "profitable-two-wallet-reward-farming",
+      "equal-balance-round-trip-after-final-rpc-read"
+    ],
+    "resolvedFindings": [
+      {
+        "finding": "ordinary-transfer-age-griefing",
+        "resolution": "ledger-v2-amount-specific-maturity; covered by regression tests"
+      },
+      {
+        "finding": "incoming-dust-payout-cancellation",
+        "resolution": "outgoing-only exclusions and minimum-balance per-recipient skip; covered by contract/round tests"
+      }
+    ],
+    "report": "docs/router-and-economic-validation.md",
+    "rewardRuleChanged": true
+  },
+  "distributorDeployment": {
+    "address": "0x62C12ae94CcbbE470CC1857261Fae9E36074Fb36",
+    "transactionHash": "0xe9e909d732221c44d4bcd96b71dc72cf87df1d11cfc4143f5ac7862b0d0c379a",
+    "status": "verified-and-finalized",
+    "verificationFile": "deploy/distributor.mainnet.json"
+  },
+  "localRehearsal": {
+    "passed": true,
+    "regressionTestsPassed": 104,
+    "regressionTestsFailed": 0,
+    "report": "output/robinhook-ladder-rehearsal.json",
+    "summary": "docs/hood-launch-readiness.md",
+    "botLivenessFixPendingRenderDeployment": true,
+    "realTestFundsSpentWei": "0"
+  },
+  "minimumTokensOutApproval": {
+    "approved": true,
+    "slippageBps": 100,
+    "approvedAt": "2026-09-19",
+    "simulation": "output/hood-initial-buy-simulation.json"
+  },
+  "identityUpdatedAt": "2026-10-10",
+  "launchGuard": {
+    "windowSeconds": 30,
+    "allowedBuyers": [
+      "0x828a661bfa21f44d4fd79dc805b8538e708b30d4",
+      "0x938ff56d9e596307f5a3bdbc443052eb6c9eb36d",
+      "0x61da6d6e9455373d08d8d345bce01132d3d4423c",
+      "0x764263ecf27d51680b96ca3c05ff8b6880f58038",
+      "0x9479ac7ed3a72866f63f37013f2c7cc68936b519"
+    ]
+  },
+  "initialBuyRecipient": "0x9479ac7ED3A72866F63F37013F2c7Cc68936B519"
+}

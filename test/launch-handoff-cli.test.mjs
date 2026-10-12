@@ -60,6 +60,15 @@ test('missing distributor and malformed inputs fail before any network or output
   assert.equal(requests, 0); assert.equal(fs.existsSync(args.at(-1)), false);
 });
 
+test('guarded handoff selects its explicit intent file before any network call', async t => {
+  const {dir,args}=fixture(t),intent=path.join(dir,'guard-intent.json');
+  fs.writeFileSync(intent,'not JSON');
+  let requests=0;t.mock.method(globalThis,'fetch',async()=>{requests++;throw Error('Unexpected network');});
+  await assert.rejects(prepareLaunchHandoff([...args,'--intent',intent]),SyntaxError);
+  assert.equal(requests,0);assert.equal(fs.existsSync(args.at(-1)),false);
+  assert.throws(()=>parseHandoffOptions([...args,'--intent',intent,'--intent',intent]),/repeated/);
+});
+
 test('handoff CLI preserves previous output evidence instead of overwriting it', t => {
   const {args} = fixture(t), out = args.at(-1); fs.mkdirSync(out); fs.writeFileSync(path.join(out, 'manifest.json'), 'original');
   assert.throws(() => readHandoffInputs(parseHandoffOptions(args)), /previous handoff evidence/);

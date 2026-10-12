@@ -9,6 +9,7 @@ import {canonicalLaunchJson, validateLaunchManifest, launchManifestHash, validat
 import {productionConfigFromLaunch, verifyLaunchReceipt, operatorStartupAllowed, runLaunchBootstrapCycle} from '../src/launch-bootstrap.mjs';
 import {standbySettings, inspectLaunchAdmission} from '../src/launch-standby.mjs';
 import {loadConfig} from '../src/config.mjs';
+import {EARLY_BUYERS, EARLY_BUY_SECONDS, EARLY_BUY_ROUTER, EARLY_BUY_ROUTER_CODE_HASH} from '../src/launch-guard-policy.mjs';
 
 const now = 1800000000, first = ROBINHOOD_ANCHOR.blockNumber + 10, launched = first + 2;
 const addr = n => `0x${n.toString(16).padStart(40, '0')}`;
@@ -26,6 +27,9 @@ const getters = new ethers.Interface([
   'function lockedLiquidity() view returns(uint128)', 'function seededTokenAmount() view returns(uint256)', 'function graphFactory() view returns(address)',
   'function creatorRecipient() view returns(address)', 'function PLATFORM_RECIPIENT() view returns(address)', 'function operator() view returns(address)',
   'function feeVault() view returns(address)', 'function reserved() view returns(uint256)',
+  'function EARLY_BUY_WINDOW() view returns(uint256)', 'function publicBuysAt() view returns(uint256)',
+  'function CANONICAL_EARLY_BUY_ROUTER() view returns(address)', 'function CANONICAL_EARLY_BUY_ROUTER_CODE_HASH() view returns(bytes32)',
+  ...[0, 1, 2, 3, 4].map(index => `function earlyBuyer${index}() view returns(address)`),
 ]);
 function fixture(mode = 'manual') {
   const code = '0x6001600155', components = Object.fromEntries(['token', 'hook', 'initializer', 'feeVault', 'distributor'].map((key, i) =>
@@ -81,6 +85,83 @@ const options = m => ({expectedManifestSha256: launchManifestHash(m, ethers), so
 const consent = m => ({schemaVersion: 'robinhook.launch-review.v1', manifestSha256: launchManifestHash(m, ethers), account: m.transaction.from,
   nonce: m.transaction.nonce, reviewedAt: now - 100, automationAccepted: m.activation.mode === 'after-reviewed-launch',
   economicRiskAccepted: m.activation.mode === 'after-reviewed-launch', execution: structuredClone(m.execution)});
+
+function guardedFixture() {
+  const f = fixture('after-reviewed-launch');
+  f.m.transaction.from = EARLY_BUYERS[4]; f.tx.from = EARLY_BUYERS[4]; f.receipt.from = EARLY_BUYERS[4];
+  Object.assign(f.m, {schemaVersion: 'robinhook.launch-bootstrap.v4', workerSourceRevision: 'b'.repeat(40)});
+  f.m.accounting.minimumAgeSeconds = 300;
+  Object.assign(f.m.execution, {payoutIntervalSeconds: 900, confirmationMode: 'pipelined-finalized-v1', maxInflightTransactions: 8});
+  const previousConsent = consent(f.m);
+  f.m.schemaVersion = 'robinhook.launch-bootstrap.v5';
+  f.m.launchGuard = {windowSeconds: EARLY_BUY_SECONDS, allowedBuyers: [...EARLY_BUYERS], initialBuyRecipient: EARLY_BUYERS[4],
+    router: EARLY_BUY_ROUTER, routerCodeHash: EARLY_BUY_ROUTER_CODE_HASH};
+  Object.assign(f.state.values, {initialBuyer: EARLY_BUYERS[4], EARLY_BUY_WINDOW: 30n, publicBuysAt: BigInt(now - 60 + 30),
+    CANONICAL_EARLY_BUY_ROUTER: EARLY_BUY_ROUTER, CANONICAL_EARLY_BUY_ROUTER_CODE_HASH: EARLY_BUY_ROUTER_CODE_HASH,
+    ...Object.fromEntries(EARLY_BUYERS.map((buyer, index) => [`earlyBuyer${index}`, buyer]))});
+  f.receipt.logs[1] = {...f.receipt.logs[1], ...transfer.encodeEventLog(transfer.getEvent('Transfer'),
+    [POOL_MANAGER, EARLY_BUYERS[4], 200n])};
+  const getCode = f.provider.getCode;
+  f.provider.getCode = (account, block) => account.toLowerCase() === EARLY_BUY_ROUTER.toLowerCase()
+    ? fs.readFileSync('research/current/universalRouter-runtime.txt', 'utf8') : getCode(account, block);
+  return {...f, previousConsent};
+}
+
+test('v5 strictly binds the five early wallets and requires an approved initial purchase recipient', () => {
+  const {m} = guardedFixture();
+  assert.equal(validateLaunchManifest(m), m);
+  for (const change of [g => {g.initialBuyRecipient = null;}, g => {g.initialBuyRecipient = addr(1);}, g => {g.initialBuyRecipient = EARLY_BUYERS[0];},
+    g => {g.windowSeconds = 31;}, g => {g.allowedBuyers[0] = addr(1);}, g => {g.allowedBuyers.reverse();},
+    g => {g.allowedBuyers[0] = g.allowedBuyers[1];}, g => {g.router = addr(1);}, g => {g.routerCodeHash = hash(1);},
+    g => {g.bootstrapException = true;}]) {
+    const modified = structuredClone(m); change(modified.launchGuard);
+    assert.throws(() => validateLaunchManifest(modified), /Launch guard/);
+  }
+  const missing = structuredClone(m); delete missing.launchGuard;
+  assert.throws(() => validateLaunchManifest(missing), /manifest/);
+  const legacy = {...m, schemaVersion: 'robinhook.launch-bootstrap.v4'};
+  assert.throws(() => validateLaunchManifest(legacy), /manifest/);
+  delete legacy.launchGuard;
+  assert.equal(validateLaunchManifest(legacy), legacy, 'historical v4 keeps its original policy');
+});
+
+test('v5 bootstrap preserves the approved launch buyer and proves the on-chain 30-second clock before enabling the pipeline', async t => {
+  const f = guardedFixture(), target = dir(t);
+  assert.equal(f.m.launchGuard.initialBuyRecipient, f.m.transaction.from);
+  const optionsV5 = {...options(f.m), sourceRevision: f.m.workerSourceRevision};
+  await assert.rejects(runLaunchBootstrapCycle(f.provider, f.m, target, {...optionsV5, consent: f.previousConsent}), /consent/);
+  const result = await verifyLaunchReceipt(f.provider, f.m, hash(999), {now});
+  assert.equal(result.state, 'verified');
+  assert.deepEqual(result.proof.launchGuard, {policyVerified: true, ...f.m.launchGuard,
+    router: EARLY_BUY_ROUTER.toLowerCase(), publicBuysAt: now - 30});
+  for (const mutate of [p => {delete p.launchGuard;}, p => {p.launchGuard.publicBuysAt++;},
+    p => {p.launchGuard.initialBuyRecipient = EARLY_BUYERS[0];}, p => {p.launchGuard.policyVerified = false;}]) {
+    const proof = structuredClone(result.proof); mutate(proof);
+    assert.throws(() => productionConfigFromLaunch(f.m, proof), /launch guard/);
+  }
+  const active = await runLaunchBootstrapCycle(f.provider, f.m, target, {...optionsV5,
+    consent: consent(f.m), approvedManifestSha256: launchManifestHash(f.m, ethers)});
+  assert.equal(active.state, 'ready-for-approved-services');
+  const c = loadConfig(active.operatorConfig);
+  assert.equal(c.execution.confirmationMode, 'pipelined-finalized-v1');
+  assert.equal(c.execution.payoutIntervalSeconds, 900); assert.equal(c.minimumAgeSeconds, 300);
+  assert.equal(c.payoutStartTimestamp, now - 60);
+  assert.ok(f.state.calls.every(call => [launched, launched - 1].includes(call.blockTag)));
+});
+
+test('v5 refuses changed on-chain guard state, recipient transfers and router bytecode', async () => {
+  for (const change of [f => {f.state.values.initialBuyer = EARLY_BUYERS[0];},
+    f => {f.state.values.EARLY_BUY_WINDOW = 31n;}, f => {f.state.values.publicBuysAt++;}, f => {f.state.values.publicBuysAt--;},
+    ...[0, 1, 2, 3, 4].map(index => f => {f.state.values[`earlyBuyer${index}`] = addr(99);}),
+    f => {f.state.values.CANONICAL_EARLY_BUY_ROUTER = addr(99);}, f => {f.state.values.CANONICAL_EARLY_BUY_ROUTER_CODE_HASH = hash(99);},
+    f => {f.receipt.logs[1] = {...f.receipt.logs[1], ...transfer.encodeEventLog(transfer.getEvent('Transfer'),
+      [POOL_MANAGER, EARLY_BUYERS[0], 200n])};},
+    ...[launched, launched + 1].map(number => f => {const getCode = f.provider.getCode;
+      f.provider.getCode = (account, block) => account.toLowerCase() === EARLY_BUY_ROUTER.toLowerCase() && block === number ? '0x6000' : getCode(account, block);})]) {
+    const f = guardedFixture(); change(f);
+    await assert.rejects(verifyLaunchReceipt(f.provider, f.m, hash(999), {now}), /initialization|Launch guard|initial purchase/);
+  }
+});
 
 test('immutable manifest canonical hashing and fixed policy boundaries', () => {
   const {m} = fixture(); assert.equal(validateLaunchManifest(m), m);

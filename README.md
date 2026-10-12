@@ -8,6 +8,8 @@ ROBINHOOK is a transferable token whose project trading fees fund ETH rewards fo
 
 Start with [the current launch guide](docs/launch-later.md). Use the exact custom ROBIN fee graph and existing fee distributor. A generic token with the same ticker does not connect to this reward service automatically. Historical HOOD and MOSS packages must not be submitted.
 
+MAIN now requires the [five-wallet, 30-second opening window](docs/current-launch-plan.md#main-five-wallet-opening-window), including the B519 launch wallet. Use `launch-guard-intent.json` and `scripts/prepare-robin-guard-launch-plan.mjs`; the previous unguarded MAIN packages are superseded. The new contract and version 5 worker handoff need fresh platform approval and review before launch.
+
 - Website: https://robinhook.wtf/ and https://www.robinhook.wtf/.
 - Source: https://github.com/28Levi/robin-underwater. Launch preparation and Render must bind the same exact commit.
 - Launch wallet: `0x9479ac7ED3A72866F63F37013F2c7Cc68936B519`.

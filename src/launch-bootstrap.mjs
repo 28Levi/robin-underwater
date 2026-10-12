@@ -22,6 +22,13 @@ const initializerAbi = ['function initialBuyer() view returns(address)', 'functi
   'function lockedLiquidity() view returns(uint128)', 'function seededTokenAmount() view returns(uint256)', 'function graphFactory() view returns(address)'];
 const vaultAbi = ['function creatorRecipient() view returns(address)', 'function PLATFORM_RECIPIENT() view returns(address)'];
 const distributorAbi = ['function operator() view returns(address)', 'function reserved() view returns(uint256)'];
+const launchGuardAbi = ['function EARLY_BUY_WINDOW() view returns(uint256)', 'function publicBuysAt() view returns(uint256)',
+  'function CANONICAL_EARLY_BUY_ROUTER() view returns(address)', 'function CANONICAL_EARLY_BUY_ROUTER_CODE_HASH() view returns(bytes32)',
+  ...[0, 1, 2, 3, 4].map(index => `function earlyBuyer${index}() view returns(address)`)];
+const expectedLaunchGuardProof = (manifest, timestamp) => ({policyVerified: true,
+  windowSeconds: manifest.launchGuard.windowSeconds, publicBuysAt: timestamp + manifest.launchGuard.windowSeconds,
+  initialBuyRecipient: address(manifest.launchGuard.initialBuyRecipient), allowedBuyers: manifest.launchGuard.allowedBuyers.map(address),
+  router: address(manifest.launchGuard.router), routerCodeHash: manifest.launchGuard.routerCodeHash});
 
 function readState(file, manifest, manifestSha256) {
   if (!fs.existsSync(file)) return {manifestSha256, cursor: {number: manifest.watchFrom.blockNumber, hash: manifest.watchFrom.blockHash}, transactionHash: null};
@@ -50,6 +57,8 @@ export function productionConfigFromLaunch(manifest, proof, {broadcastEnabled = 
     || m.execution.payoutIntervalSeconds !== undefined && proof.checkpoint.timestamp === 0
     || proof.checkpoint.blockNumber <= m.watchFrom.blockNumber || typeof broadcastEnabled !== 'boolean')
     throw Error('A verified exact launch proof is required');
+  if (m.launchGuard && canonicalLaunchJson(proof.launchGuard ?? null) !== canonicalLaunchJson(expectedLaunchGuardProof(m, proof.checkpoint.timestamp)))
+    throw Error('Verified launch guard policy and initialization clock are required');
   const component = name => address(m.components[name].address);
   const config = {name: m.name, symbol: m.symbol, chainId: m.chainId, rpcUrlEnvironment: 'ROBIN_RPC_URL',
     // This selects the compatible receipt ABI; exact runtime and 170/30 fees are checked separately.
@@ -108,7 +117,8 @@ export async function verifyLaunchReceipt(provider, manifest, transactionHash, {
     throw Error('Existing distributor deployment proof changed');
   const pinned = {call: request => provider.call({...request, blockTag: block.number})};
   const proof = {schemaVersion: 'robinhook.launch-proof.v1', manifestSha256, verified: true, finalized: true,
-    transactionHash, checkpoint: {blockNumber: block.number, blockHash: block.hash, timestamp: block.timestamp}};
+    transactionHash, checkpoint: {blockNumber: block.number, blockHash: block.hash, timestamp: block.timestamp},
+    ...(m.launchGuard ? {launchGuard: expectedLaunchGuardProof(m, block.timestamp)} : {})};
   const config = productionConfigFromLaunch(m, proof);
   await verifyProductionToken(pinned, config);
   const init = new ethers.Contract(initializer, initializerAbi, pinned), feeVault = new ethers.Contract(m.components.feeVault.address, vaultAbi, pinned);
@@ -118,11 +128,25 @@ export async function verifyLaunchReceipt(provider, manifest, transactionHash, {
     init.initialBuyer(), init.initialBuyWei(), init.initialTokensOut(), init.minimumInitialTokensOut(), init.initialized(), init.token(), init.hook(),
     init.lockedLiquidity(), init.seededTokenAmount(), init.graphFactory(), feeVault.creatorRecipient(), feeVault.PLATFORM_RECIPIENT(), distributor.operator(), hook.feeVault(),
   ]);
-  if (!initialized || address(buyer) !== address(t.from) || initialBuy !== BigInt(t.valueWei) || minimum !== BigInt(m.minimumTokensOut)
+  const initialBuyRecipient = m.launchGuard ? m.launchGuard.initialBuyRecipient : t.from;
+  if (!initialized || address(buyer) !== address(initialBuyRecipient) || initialBuy !== BigInt(t.valueWei) || minimum !== BigInt(m.minimumTokensOut)
     || received < minimum || address(initToken) !== token || address(initHook) !== address(config.hook) || liquidity <= 0n || seeded <= 0n
     || address(factory) !== address(m.infrastructure.graphDeployer.address)
     || address(recipient) !== address(config.distributor) || address(platform) !== address(m.platformRecipient) || address(operator) !== address(m.operator)
     || address(hookVault) !== address(config.execution.feeVault)) throw Error('Launch initialization or fee destinations differ from reviewed policy');
+  if (m.launchGuard) {
+    const guard = new ethers.Contract(m.components.hook.address, launchGuardAbi, pinned), policy = m.launchGuard;
+    const [window, opensAt, router, routerHash, buyers, routerAtLaunch, routerCurrent] = await Promise.all([
+      guard.EARLY_BUY_WINDOW(), guard.publicBuysAt(), guard.CANONICAL_EARLY_BUY_ROUTER(), guard.CANONICAL_EARLY_BUY_ROUTER_CODE_HASH(),
+      Promise.all([0, 1, 2, 3, 4].map(index => guard[`earlyBuyer${index}`]())),
+      provider.getCode(policy.router, block.number), provider.getCode(policy.router, finalized.number),
+    ]);
+    if (window !== BigInt(policy.windowSeconds) || opensAt !== BigInt(block.timestamp) + window
+      || address(router) !== address(policy.router) || routerHash !== policy.routerCodeHash
+      || buyers.some((value, index) => address(value) !== address(policy.allowedBuyers[index]))
+      || ethers.keccak256(routerAtLaunch) !== policy.routerCodeHash || ethers.keccak256(routerCurrent) !== policy.routerCodeHash)
+      throw Error('Launch guard policy, router or initialization clock differs from the reviewed launch');
+  }
   let minted = 0n, initialTransfers = 0n;
   for (const log of receipt.logs) {
     if (address(log.address) !== token) continue;
@@ -132,7 +156,7 @@ export async function verifyLaunchReceipt(provider, manifest, transactionHash, {
       if (address(event.args.to) !== initializer) throw Error('Launch minted inventory to the wrong owner');
       minted += event.args.value;
     }
-    if (address(event.args.to) === address(t.from)) initialTransfers += event.args.value;
+    if (address(event.args.to) === address(initialBuyRecipient)) initialTransfers += event.args.value;
   }
   if (minted !== 10n ** 27n || initialTransfers !== received) throw Error('Launch receipt inventory or initial purchase differs');
   const priorVault = new ethers.Contract(config.distributor, distributorAbi, provider);

@@ -6,7 +6,7 @@ import {buildLaunchHandoff, readLaunchChainFacts} from '../src/launch-manifest-b
 
 export function parseHandoffOptions(args) {
   const options = new Map(), required = ['request', 'pack-report', 'preparation', 'accepted-package', 'distributor', 'policy', 'source-revision', 'out'];
-  const allowed = new Set([...required, 'activation', 'worker-source-revision']);
+  const allowed = new Set([...required, 'activation', 'worker-source-revision', 'intent']);
   for (let i = 0; i < args.length; i += 2) {
     const key = args[i]?.replace(/^--/, ''), value = args[i + 1];
     if (!allowed.has(key) || !args[i].startsWith('--') || !value || value.startsWith('--') || options.has(key)) throw Error('Invalid or repeated handoff option');
@@ -34,8 +34,9 @@ export function readHandoffInputs(options) {
 
 export async function prepareLaunchHandoff(args) {
   // Validate and read every explicit local input before any public network request.
-  const {out, ...inputs} = readHandoffInputs(parseHandoffOptions(args));
-  const intent = json('launch-intent.json');
+  const options = parseHandoffOptions(args);
+  const {out, ...inputs} = readHandoffInputs(options);
+  const intent = json(options.get('intent') ?? 'launch-intent.json');
   const response = await fetch('https://api.programmable.market/v4/chains/4663/custom-launch-capabilities',
     {redirect: 'error', signal: AbortSignal.timeout(20000), headers: {Accept: 'application/json'}});
   if (!response.ok) throw Error(`Current capabilities unavailable (${response.status})`);

@@ -123,6 +123,7 @@ const descriptions = [
   ['/signing-ui/guards.mjs', 'signing-ui/guards.mjs', 'text/javascript; charset=utf-8'],
   ['/signing-ui/wallet-connection.mjs', 'signing-ui/wallet-connection.mjs', 'text/javascript; charset=utf-8'],
   ['/src/launch-manifest.mjs', 'src/launch-manifest.mjs', 'text/javascript; charset=utf-8'],
+  ['/src/launch-guard-policy.mjs', 'src/launch-guard-policy.mjs', 'text/javascript; charset=utf-8'],
   ['/ethers.js', 'node_modules/ethers/dist/ethers.umd.min.js', 'text/javascript; charset=utf-8'],
 ];
 const assets = new Map(await Promise.all(descriptions.map(async ([url, file, type]) => [url, {bytes: await fs.readFile(path.join(root, file)), type}])));

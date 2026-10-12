@@ -25,11 +25,15 @@ Refresh first-party capabilities from https://api.programmable.market/v4/chains/
 
 Follow [launch preparation](current-launch-plan.md), supplying the actual source revision and fresh distributor proof. Preserve every output directory. The current flow is Custom Launch Plan V1, response 1.2 and `atomic_execute_and_stamp_v2`; the old `/custom-launches` creation endpoint is retired.
 
+For MAIN, select `launch-guard-intent.json` with `scripts/prepare-robin-guard-launch-plan.mjs`. It permits only the five reviewed buy initiators, including B519, during the first 30 seconds. Old unguarded MAIN packages are superseded. This changed contract requires a fresh review; keep the initial 0.01 ETH purchase with B519.
+
 Use [launch:api](launch-plan-api.md) for the existing account/key's scope check, preflight and idempotent creation/recovery. Credentials use the documented hidden stdin channel, never shell arguments or chat. A pending platform review is not a wallet-ready package. A timeout must recover the same request/resource rather than create another launch.
 
 ## Review the real transaction
 
 Use [launch:handoff](launch-handoff-builder.md) with the actual accepted resource. It verifies the signed platform envelope, source graph, full transaction simulation, gas, nonce, value, expiry and identities. The default candidate is manual and neither sends money nor activates rewards.
+
+The new MAIN recipe also requires `--intent launch-guard-intent.json` and `--worker-source-revision` with the exact updated worker commit. These produce a version 5 manifest that verifies the opening window and all five buyers before enabling rewards.
 
 For automatic rewards after launch, explicitly select `--activation after-reviewed-launch` when building this prelaunch handoff. Review the exact resulting automation policy before the final wallet action. That option only prepares a candidate: the separate recorded consent, host-approved digest, service gate and exact finalized launch remain required. An already admitted manual manifest cannot later be switched by changing an environment flag; a separate post-launch activation workflow is not implemented.
 

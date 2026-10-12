@@ -6,6 +6,38 @@ On 2026-10-10 the public capabilities reported active create and preflight opera
 
 ## Offline builder
 
+### MAIN: five-wallet opening window
+
+The requested MAIN launch now uses `launch-guard-intent.json` and the separate `robin-30-second-buy-allowlist-v1` recipe. Old unguarded MAIN packages are superseded. The new contract, `src/robinhook-launch-guard-v1/RobinhookLaunchGuardHookV1.sol`, needs a fresh platform review; it cannot be substituted into an old approved transaction.
+
+For 30 seconds from pool initialization, these five wallets may initiate buys through the pinned canonical router:
+
+- `0x828a661bfa21f44d4fd79dc805b8538e708b30d4`
+- `0x938ff56d9e596307f5a3bdbc443052eb6c9eb36d`
+- `0x61da6d6e9455373d08d8d345bce01132d3d4423c`
+- `0x764263ecf27d51680b96ca3c05ff8b6880f58038`
+- `0x9479ac7ed3a72866f63f37013f2c7cc68936b519`
+
+The authenticated initializer also allows B519's existing 0.01 ETH launch purchase, with its tokens still going to B519. Everyone can buy when the block timestamp reaches the initialization timestamp plus 30 seconds. Selling is unchanged. There is no owner function to extend or restart the window or edit the five wallets.
+
+The restriction identifies the buy initiator, not the final recipient. An allowed buyer can send purchased tokens to someone else. Token transfers and other pools are not restricted. During the opening window, arbitrary routers and spoofed hook data cannot grant permission: the hook verifies the canonical router's address, exact code hash, and authenticated caller.
+
+Prepare the new recipe with the same fresh evidence and source revision requirements below:
+
+```sh
+node scripts/prepare-robin-guard-launch-plan.mjs \
+  --source-revision EXACT_PUBLISHED_COMMIT \
+  --capabilities output/current-plan-capabilities.json \
+  --distributor output/distributor-deployment.verified.json \
+  --out output/robin-guarded-launch-plan
+```
+
+Use `--preflight-only` only under the conditions described below. This command creates an offline request, not approval or a wallet transaction. For the eventual reviewed handoff, pass `--intent launch-guard-intent.json` to `scripts/prepare-launch-handoff.mjs`, together with the pipelined timing policy and exact worker revision. Version 5 of the manifest binds the opening window, all five buyers, B519's initial purchase and the canonical router. The launch watcher verifies them against the actual finalized launch before starting rewards.
+
+The new hook retains the 170-bps project / 30-bps platform fee split and original fee vault. Its own runtime pin is under `vendor/robin-launch-guard-v1/`; it is not the platform's official Native30 hook recipe and does not establish a routed-fee waiver. Fresh route evidence is still required. Local EVM tests cover both buy types, all five buyers, fake routers and hook data, the 29/30-second boundary, selling, and the exact factory deployment with the initial purchase. The guarded project graph used 6,076,577 gas locally; the complete Atomic transaction still needs its own platform simulation and must fit the unchanged 0.0008 ETH gas-cost cap.
+
+### Historical unguarded recipe
+
 `src/launch-plan.mjs` compiles the custom ROBIN 30-bps hook fork, original token and initializer with their pinned Solidity compiler. The graph uses the existing GraphFactory at `0x0B6b3F40f84Df25D3bd69238f937096177DD09Bd` and the current Atomic executor at `0xe21827818Fea1F14d59929CAE36a93c0B44e0aE1` as its authorized launcher. Source revision, source commitment, controller and a fresh nonce bind the namespace and deterministic addresses. The initializer still receives its call from the GraphFactory and sends the first purchase to the explicit launch wallet.
 
 The output contains four exact source/runtime components: initializer, ROBIN token, hook and its fee-vault child. It binds the existing distributor and its operator as an external dependency. Critical completion effects cover runtime hashes, fee-vault derivation, token identity and supply, initialization, the first buyer, exact purchase value, minimum tokens received and rewards destination.

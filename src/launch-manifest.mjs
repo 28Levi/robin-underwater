@@ -1,8 +1,10 @@
 // Browser-safe shared launch boundary. This module never accesses a wallet, filesystem or network.
+import {EARLY_BUY_SECONDS, EARLY_BUYERS, EARLY_BUY_ROUTER, EARLY_BUY_ROUTER_CODE_HASH} from './launch-guard-policy.mjs';
 export const LAUNCH_MANIFEST_SCHEMA = 'robinhook.launch-bootstrap.v1';
 export const LAUNCH_MANIFEST_SCHEMA_V2 = 'robinhook.launch-bootstrap.v2';
 export const LAUNCH_MANIFEST_SCHEMA_V3 = 'robinhook.launch-bootstrap.v3';
 export const LAUNCH_MANIFEST_SCHEMA_V4 = 'robinhook.launch-bootstrap.v4';
+export const LAUNCH_MANIFEST_SCHEMA_V5 = 'robinhook.launch-bootstrap.v5';
 const HASH = /^0x[0-9a-f]{64}$/;
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
@@ -24,14 +26,15 @@ export function canonicalLaunchJson(value) {
 
 /** An exact release/transaction/automation policy, prepared before the final user wallet action. */
 export function validateLaunchManifest(m) {
-  const pipelinedFinality = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V4;
+  const guardedLaunch = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V5;
+  const pipelinedFinality = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V4 || guardedLaunch;
   const scheduledPayouts = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V3 || pipelinedFinality;
   const separateWorker = m?.schemaVersion === LAUNCH_MANIFEST_SCHEMA_V2 || scheduledPayouts;
   if (!keys(m, ['schemaVersion', 'chainId', 'name', 'symbol', 'sourceRevision', 'planId', 'planHash', 'platformManifestDigest', 'requestSha256',
     'projectMetadataHash', 'fundingPlanHash', 'transaction', 'components', 'infrastructure', 'operator', 'platformRecipient', 'watchFrom',
     'distributorDeployment', 'preserveLaunchBalanceWei', 'fees', 'minimumTokensOut', 'maxLaunchGasWei', 'accounting', 'execution', 'activation',
-    ...(separateWorker ? ['workerSourceRevision'] : [])])
-    || ![LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3, LAUNCH_MANIFEST_SCHEMA_V4].includes(m.schemaVersion)
+    ...(separateWorker ? ['workerSourceRevision'] : []), ...(guardedLaunch ? ['launchGuard'] : [])])
+    || ![LAUNCH_MANIFEST_SCHEMA, LAUNCH_MANIFEST_SCHEMA_V2, LAUNCH_MANIFEST_SCHEMA_V3, LAUNCH_MANIFEST_SCHEMA_V4, LAUNCH_MANIFEST_SCHEMA_V5].includes(m.schemaVersion)
     || separateWorker && !/^[0-9a-f]{40}$/.test(m.workerSourceRevision)
     || m.chainId !== 4663 || m.name !== 'ROBINHOOK' || m.symbol !== 'ROBIN'
     || !/^[0-9a-f]{40}$/.test(m.sourceRevision) || typeof m.planId !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:@/+\-]{0,255}$/.test(m.planId)
@@ -40,6 +43,18 @@ export function validateLaunchManifest(m) {
     || !account(m.operator) || !account(m.platformRecipient) || !positive(m.minimumTokensOut)
     || !amount(m.preserveLaunchBalanceWei) || !positive(m.maxLaunchGasWei) || BigInt(m.maxLaunchGasWei) > 800000000000000n)
     throw Error('Invalid reviewed ROBIN launch manifest');
+  if (guardedLaunch) {
+    const g = m.launchGuard;
+    if (!keys(g, ['windowSeconds', 'allowedBuyers', 'initialBuyRecipient', 'router', 'routerCodeHash'])
+      || g.windowSeconds !== EARLY_BUY_SECONDS || !Array.isArray(g.allowedBuyers)
+      || g.allowedBuyers.length !== EARLY_BUYERS.length
+      || g.allowedBuyers.some((buyer, index) => !account(buyer) || buyer.toLowerCase() !== EARLY_BUYERS[index])
+      || !account(g.initialBuyRecipient) || g.initialBuyRecipient.toLowerCase() !== EARLY_BUYERS[4]
+      || !account(m.transaction?.from) || g.initialBuyRecipient.toLowerCase() !== m.transaction.from.toLowerCase()
+      || !account(g.router) || g.router.toLowerCase() !== EARLY_BUY_ROUTER.toLowerCase()
+      || g.routerCodeHash !== EARLY_BUY_ROUTER_CODE_HASH)
+      throw Error('Launch guard must bind the exact five wallets, 30-second window, approved initial buyer and trusted router');
+  }
   const t = m.transaction;
   if (!keys(t, ['from', 'to', 'nonce', 'valueWei', 'calldataHash', 'routerRuntimeCodeHash', 'expiresAt', 'transactionDigest', 'apiVersion', 'stepId', 'gasLimit'])
     || !account(t.from) || !account(t.to) || !amount(t.nonce) || BigInt(t.nonce) > BigInt(Number.MAX_SAFE_INTEGER)
@@ -88,7 +103,7 @@ export function validateLaunchManifest(m) {
   return m;
 }
 
-/** V1 binds one revision; V2/V3/V4 separate immutable contract provenance from worker code. */
+/** V1 binds one revision; V2-V5 separate immutable contract provenance from worker code. */
 export function effectiveWorkerSourceRevision(manifest) {
   validateLaunchManifest(manifest);
   return manifest.schemaVersion === LAUNCH_MANIFEST_SCHEMA ? manifest.sourceRevision : manifest.workerSourceRevision;

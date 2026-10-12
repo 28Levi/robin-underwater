@@ -5,6 +5,8 @@ import {AbiCoder,Interface,ZeroAddress,keccak256,toUtf8Bytes,toBeHex,getCreate2A
 import {assertRobinLaunchIntent} from './launch-intent.mjs';
 import {loadNative30Recipe,assertNative30CompiledRuntime,assertNative30MaterializedRuntime} from './native30-runtime.mjs';
 import {LEGACY_PLAN_MANIFEST,assertSupportedPlanCapabilities} from './launch-platform-contract.mjs';
+import {LAUNCH_GUARD_RECIPE,EARLY_BUY_ROUTER,EARLY_BUY_ROUTER_CODE_HASH,assertLaunchGuardIntent} from './launch-guard-policy.mjs';
+import {loadLaunchGuardRecipe,assertLaunchGuardCompiledRuntime,assertLaunchGuardMaterializedRuntime} from './launch-guard-runtime.mjs';
 
 // Retained for historical package readers; new preparation selects the exact
 // supported manifest actually supplied by current capability evidence.
@@ -38,7 +40,8 @@ const sha=bytes=>'sha256:'+createHash('sha256').update(bytes).digest('hex');
 const read=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,''));
 
 /** Reproduce the upstream kernel, then compile the separately identified ROBIN fork. No network or signing. */
-export function compileRobinLaunchContracts(root,solc){
+export function compileRobinLaunchContracts(root,solc,{launchGuard=false}={}){
+ if(typeof launchGuard!=='boolean')throw Error('Explicit launch guard compilation mode required');
  const reviewed=read(path.join(root,'vendor/programmable-native20/artifact.json'));
  if(solc.version()!==reviewed.compilerVersion)throw Error('Exact reviewed compiler required');
  const kernel=structuredClone(reviewed.standardJsonInput),native=structuredClone(kernel),robin=structuredClone(kernel);
@@ -46,25 +49,40 @@ export function compileRobinLaunchContracts(root,solc){
  robin.sources[customHookPath]={content:fs.readFileSync(path.join(root,customHookPath),'utf8')};
  Object.assign(native.sources,read(path.join(root,'vendor/programmable-native20/native20-dependencies.json')).sources);
  for(const name of ['RobinhoodNative20Token','RobinhoodNative20Initializer'])native.sources[`src/${name}.sol`]={content:fs.readFileSync(path.join(root,`vendor/programmable-native20/src/${name}.sol`),'utf8')};
+ const guardPath='src/robinhook-launch-guard-v1/RobinhookLaunchGuardHookV1.sol';
+ const guard=structuredClone(kernel);
+ if(launchGuard)guard.sources[guardPath]={content:fs.readFileSync(path.join(root,guardPath),'utf8')};
  const units=[],contracts={};
- for(const [id,input]of [['kernel',kernel],['native20',native],['robin-native30',robin]]){
+ for(const [id,input]of [['kernel',kernel],['native20',native],['robin-native30',robin],...(launchGuard?[['robin-launch-guard',guard]]:[])]){
   const output=JSON.parse(solc.compile(JSON.stringify(input)));
   const errors=(output.errors??[]).filter(e=>e.severity==='error');if(errors.length)throw Error(errors.map(e=>e.formattedMessage).join('\n'));
   const bytes=Buffer.from(canonicalJson(input));units.push({compilationUnitId:id,compilerVersion:solc.version().split('.Emscripten')[0],standardJsonInputBase64:bytes.toString('base64'),standardJsonInputSha256:sha(bytes)});
   const names=new Map();const walk=x=>{if(!x||typeof x!=='object')return;if(x.nodeType==='VariableDeclaration'&&x.mutability==='immutable')names.set(String(x.id),x.name);for(const v of Object.values(x))if(Array.isArray(v))v.forEach(walk);else walk(v);};
   for(const source of Object.values(output.sources))walk(source.ast);
   for(const [sourcePath,row]of Object.entries(output.contracts))for(const [contractName,c]of Object.entries(row)){
-   if(!['RobinhoodNativeFeeHookV1','RobinhookNativeFeeHookV1','RobinhoodNativeFeeVaultV1','RobinhoodNative20Token','RobinhoodNative20Initializer'].includes(contractName))continue;
+   if(!['RobinhoodNativeFeeHookV1','RobinhookNativeFeeHookV1','RobinhookLaunchGuardHookV1','RobinhoodNativeFeeVaultV1','RobinhoodNative20Token','RobinhoodNative20Initializer'].includes(contractName))continue;
    if(id==='native20'&&contractName.startsWith('RobinhoodNativeFee'))continue;
    if(id==='robin-native30'&&contractName!=='RobinhookNativeFeeHookV1')continue;
+   if(id==='robin-launch-guard'&&contractName!=='RobinhookLaunchGuardHookV1')continue;
    contracts[contractName]={...c,sourcePath,contractName,compilationUnitId:id,names};
   }
  }
  if('0x'+contracts.RobinhoodNativeFeeHookV1.evm.bytecode.object!==reviewed.kernel.creationBytecode)throw Error('Reviewed Native20 kernel changed');
  const native30Recipe=loadNative30Recipe(root),native30Runtime=assertNative30CompiledRuntime(contracts,native30Recipe);
- return {units,contracts,reviewed,native30Recipe,customHook:{recipe:'robin-native30-no-module',contractName:'RobinhookNativeFeeHookV1',sourcePath:customHookPath,native30Runtime,
+ const launchGuardRecipe=launchGuard?loadLaunchGuardRecipe(root):null;
+ const launchGuardRuntime=launchGuard?assertLaunchGuardCompiledRuntime(contracts,launchGuardRecipe):null;
+ const original={recipe:'robin-native30-no-module',contractName:'RobinhookNativeFeeHookV1',sourcePath:customHookPath,native30Runtime,
   sourceSha256:sha(Buffer.from(robin.sources[customHookPath].content)),upstreamContractName:reviewed.kernel.contractName,
-  upstreamSourceSha256:sha(Buffer.from(kernel.sources[reviewed.kernel.sourcePath].content)),canonicalUpstreamReproduced:true}};
+  upstreamSourceSha256:sha(Buffer.from(kernel.sources[reviewed.kernel.sourcePath].content)),canonicalUpstreamReproduced:true};
+ // Keep the native30 compilation above as an independent compatibility check,
+ // but the exact-source bundle may contain only units used by its components.
+ // Removing the unused native30 unit also retains the required UTF-8 order.
+ const sourceUnits=launchGuard?units.filter(unit=>unit.compilationUnitId!=='robin-native30'):units;
+ return {units:sourceUnits,contracts,reviewed,native30Recipe,...(launchGuard?{launchGuardRecipe}:{}),customHook:launchGuard?{
+  recipe:'robin-30-second-buy-allowlist-v1',contractName:'RobinhookLaunchGuardHookV1',sourcePath:guardPath,
+  sourceSha256:sha(Buffer.from(guard.sources[guardPath].content)),canonicalUpstreamReproduced:true,
+  baseNative30:original,launchGuardRuntime,normalizedNative30Runtime:false,platformAdmission:false,
+ }:original};
 }
 
 function materialize(c,values){
@@ -96,9 +114,13 @@ export function assertCurrentPlanCapabilities(capabilities,{preflightOnly=false}
 /** Deterministic project-side plan. This does not issue platform admission or a wallet transaction. */
 export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distributor,sourceRevision,nonce,now=Math.floor(Date.now()/1000),graphGasLimit=PROJECT_GAS_LIMIT,totalGasLimit=TOTAL_GAS_LIMIT,validitySeconds=MAX_ORDER_LIFETIME_SECONDS,preflightOnly=false}){
  assertRobinLaunchIntent(intent);assertCurrentPlanCapabilities(capabilities,{preflightOnly});
+ const guarded=intent.hookRecipe===LAUNCH_GUARD_RECIPE;
+ const launchGuard=guarded?assertLaunchGuardIntent(intent):null;
+ const initialBuyer=guarded?launchGuard.initialBuyRecipient:intent.launchWallet;
+ if(compiled.customHook?.recipe!==intent.hookRecipe)throw Error('Compiled hook differs from the selected launch policy');
  const manifestDigest=capabilities.manifestDigest;
  if(intent.chainId!==4663||intent.decimals!==18||intent.projectBuyFeeBps!==170||intent.projectSellFeeBps!==170||intent.platformFeeBps!==30
-  ||intent.lpFeePips!==0||intent.totalBuyFeeBps!==200||intent.totalSellFeeBps!==200||intent.hookRecipe!=='robin-native30-no-module'
+  ||intent.lpFeePips!==0||intent.totalBuyFeeBps!==200||intent.totalSellFeeBps!==200||!['robin-native30-no-module',LAUNCH_GUARD_RECIPE].includes(intent.hookRecipe)
   ||intent.initialLiquidityWei!=='0'||intent.maxLaunchValueWei!==intent.initialBuyWei||intent.maxGasCostWei!=='800000000000000')throw Error('ROBIN launch economics changed');
  if(!same(intent.launchWallet,'0x9479ac7ED3A72866F63F37013F2c7Cc68936B519')||!same(intent.creatorFeeRecipient,'0x62C12ae94CcbbE470CC1857261Fae9E36074Fb36')||!same(intent.operator,'0x9C366d4E42b8f987e8398A27b3b9A02803493088'))throw Error('ROBIN launch authority changed');
  if(!/^[a-f0-9]{40}$/.test(sourceRevision??''))throw Error('Exact published source revision required');
@@ -111,7 +133,7 @@ export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distr
  const verifiedAge=now-Date.parse(distributor?.checkedAt)/1000;
  if(distributor?.verified!==true||distributor.finalized!==true||distributor.chainId!==4663||!same(distributor.address,intent.creatorFeeRecipient)||!same(distributor.operator,intent.operator)
   ||distributor.runtimeCodeHash!==DISTRIBUTOR_HASH||!Number.isFinite(verifiedAge)||verifiedAge< -30||verifiedAge>3600)throw Error('Fresh finalized distributor verification required');
- const names={initializer:'RobinhoodNative20Initializer',token:'RobinhoodNative20Token',hook:'RobinhookNativeFeeHookV1',feeVault:'RobinhoodNativeFeeVaultV1'};
+ const names={initializer:'RobinhoodNative20Initializer',token:'RobinhoodNative20Token',hook:guarded?'RobinhookLaunchGuardHookV1':'RobinhookNativeFeeHookV1',feeVault:'RobinhoodNativeFeeVaultV1'};
  const sourceCommitment=sha(Buffer.from(canonicalJson(compiled.units)));
  const routeNamespace=keccak256(coder.encode(['string','address','bytes32','bytes32'],['ROBINHOOK custom launch plan v1',intent.launchWallet,zeroPadValue('0x'+sourceRevision,32),'0x'+sourceCommitment.slice(7)]));
  const topologyHash=keccak256(toUtf8Bytes(canonicalJson({targets:['initializer','token','hook'],pool:{manager:MANAGER,fee:0,tickSpacing:60},sourceRevision})));
@@ -121,16 +143,20 @@ export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distr
  const contracts=compiled.contracts,constructors={},addresses={},salts={initializer:toBeHex(1,32),token:toBeHex(2,32)};
  constructors.initializer=constructor(contracts[names.initializer],[MANAGER,GRAPH]);addresses.initializer=predict('initializer',salts.initializer,constructors.initializer.initCode);
  constructors.token=constructor(contracts[names.token],[addresses.initializer,intent.name,intent.symbol]);addresses.token=predict('token',salts.token,constructors.token.initCode);
- constructors.hook=constructor(contracts[names.hook],[MANAGER,[addresses.token,0,60,PRICE,addresses.initializer,intent.creatorFeeRecipient,170,170,ZeroAddress,0]]);
- for(let i=0;i<262144;i++){salts.hook=toBeHex(i,32);addresses.hook=predict('hook',salts.hook,constructors.hook.initCode);if((BigInt(addresses.hook)&0x3fffn)===0x20ccn)break;}
+ constructors.hook=constructor(contracts[names.hook],[MANAGER,[addresses.token,0,60,PRICE,addresses.initializer,intent.creatorFeeRecipient,170,170,ZeroAddress,0],...(guarded?[launchGuard.allowedBuyers]:[])]);
+ const hookInitCodeHash=keccak256(constructors.hook.initCode);
+ for(let i=0;i<262144;i++){salts.hook=toBeHex(i,32);addresses.hook=getCreate2Address(GRAPH,effectiveSalt('hook',salts.hook),hookInitCodeHash);if((BigInt(addresses.hook)&0x3fffn)===0x20ccn)break;}
  if((BigInt(addresses.hook)&0x3fffn)!==0x20ccn)throw Error('Hook salt search exhausted');
  addresses.feeVault=getCreateAddress({from:addresses.hook,nonce:1});constructors.feeVault=constructor(contracts[names.feeVault],[MANAGER,intent.creatorFeeRecipient]);
  const a=value=>({type:'address',value}),u=(value,type='uint256')=>({type,value});
  const values={poolManager:a(MANAGER),graphFactory:a(GRAPH),token:a(addresses.token),initializer:a(addresses.initializer),feeVault:a(addresses.feeVault),kernel:a(addresses.hook),creatorRecipient:a(intent.creatorFeeRecipient),lpFee:u(0,'uint24'),tickSpacing:u(60,'int24'),initialSqrtPriceX96:u(PRICE,'uint160'),creatorBuyFeeBps:u(170,'uint16'),creatorSellFeeBps:u(170,'uint16'),module:a(ZeroAddress),moduleCodeHash:u('0x'+'00'.repeat(32),'bytes32'),maxModuleLpFeePips:u(0,'uint24')};
+ if(guarded)launchGuard.allowedBuyers.forEach((buyer,index)=>{values['earlyBuyer'+index]=a(buyer);});
  const materializations=Object.fromEntries(Object.entries(names).map(([id,name])=>[id,materialize(contracts[name],values)]));
  const runtimeCodes=Object.fromEntries(Object.entries(materializations).map(([id,m])=>[id,'0x'+Buffer.from(m.deployedRuntimeCodeBase64,'base64').toString('hex')]));
- const native30Runtime=assertNative30MaterializedRuntime({recipe:compiled.native30Recipe,runtimeCodes,addresses,creatorRecipient:intent.creatorFeeRecipient,poolManager:MANAGER,initialSqrtPriceX96:PRICE});
- const init=new Interface(contracts[names.initializer].abi).encodeFunctionData('initialize',[addresses.token,addresses.hook,intent.launchWallet,intent.minimumTokensOut]);
+ const native30Runtime=guarded?null:assertNative30MaterializedRuntime({recipe:compiled.native30Recipe,runtimeCodes,addresses,creatorRecipient:intent.creatorFeeRecipient,poolManager:MANAGER,initialSqrtPriceX96:PRICE});
+ const launchGuardRuntime=guarded?assertLaunchGuardMaterializedRuntime({recipe:compiled.launchGuardRecipe,runtimeCodes,addresses,
+  creatorRecipient:intent.creatorFeeRecipient,poolManager:MANAGER,initialSqrtPriceX96:PRICE,earlyBuyers:launchGuard.allowedBuyers}):null;
+ const init=new Interface(contracts[names.initializer].abi).encodeFunctionData('initialize',[addresses.token,addresses.hook,initialBuyer,intent.minimumTokensOut]);
  const targets=['initializer','token','hook'].map(id=>({targetIdHash:targetIdHash(id),applicantSalt:salts[id],deploymentValue:'0',initializerValue:id==='initializer'?intent.initialBuyWei:'0',initCode:constructors[id].initCode,initializerCalldata:id==='initializer'?init:'0x',runtimeCodeHash:materializations[id].deployedRuntimeCodeHash}));
  // Match the verified factory's _reviewedGraphCommitment directly. No legacy
  // Router tooling or undeclared viem dependency is required by the release.
@@ -148,12 +174,18 @@ export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distr
  effects.push({effectId:'feeVault-child',kind:'child',criticality:'critical',componentId:'feeVault',runtimeCodeHash:materializations.feeVault.deployedRuntimeCodeHash,derivation:{kind:'create',parent:{componentId:'hook'},nonce:'1'}});
  const callEffect=(id,componentId,fn,args,outputs,result)=>{const iface=new Interface(contracts[names[componentId]].abi);effects.push({effectId:id,kind:'callResult',criticality:'critical',target:{componentId},data:iface.encodeFunctionData(fn,args),expected:coder.encode(outputs,result)});};
  callEffect('token-name','token','name',[],['string'],[intent.name]);callEffect('token-symbol','token','symbol',[],['string'],[intent.symbol]);callEffect('fixed-supply','token','totalSupply',[],['uint256'],['1000000000000000000000000000']);
- callEffect('initial-buyer','initializer','initialBuyer',[],['address'],[intent.launchWallet]);callEffect('initial-value','initializer','initialBuyWei',[],['uint256'],[intent.initialBuyWei]);
+ callEffect('initial-buyer','initializer','initialBuyer',[],['address'],[initialBuyer]);callEffect('initial-value','initializer','initialBuyWei',[],['uint256'],[intent.initialBuyWei]);
  callEffect('initial-minimum','initializer','minimumInitialTokensOut',[],['uint256'],[intent.minimumTokensOut]);callEffect('initialized','initializer','initialized',[],['bool'],[true]);
  callEffect('rewards-destination','feeVault','creatorRecipient',[],['address'],[intent.creatorFeeRecipient]);
  callEffect('reward-buy-fee','hook','creatorBuyFeeBps',[],['uint16'],[170]);callEffect('reward-sell-fee','hook','creatorSellFeeBps',[],['uint16'],[170]);
  callEffect('platform-fee','hook','PLATFORM_FEE_BPS',[],['uint16'],[30]);
- effects.push({effectId:'initial-buyer-output',kind:'balance',criticality:'critical',target:{address:intent.launchWallet},asset:addresses.token,minimum:intent.minimumTokensOut,maximum:'1000000000000000000000000000'});
+ if(guarded){
+  callEffect('early-buy-window','hook','EARLY_BUY_WINDOW',[],['uint256'],[30]);
+  callEffect('early-buy-router','hook','CANONICAL_EARLY_BUY_ROUTER',[],['address'],[EARLY_BUY_ROUTER]);
+  callEffect('early-buy-router-code','hook','CANONICAL_EARLY_BUY_ROUTER_CODE_HASH',[],['bytes32'],[EARLY_BUY_ROUTER_CODE_HASH]);
+  launchGuard.allowedBuyers.forEach((buyer,index)=>callEffect('early-buyer-'+index,'hook','earlyBuyer'+index,[],['address'],[buyer]));
+ }
+ effects.push({effectId:'initial-buyer-output',kind:'balance',criticality:'critical',target:{address:initialBuyer},asset:addresses.token,minimum:intent.minimumTokensOut,maximum:'1000000000000000000000000000'});
  const plan={schemaVersion:'programmable.custom-launch-plan.v1',manifestDigest,admissionPolicy:'programmable.custom-launch-policy.provenance.v1',chainId:'4663',controller:{kind:'eoa',address:getAddress(intent.launchWallet)},executor:'atomic_execute_and_stamp_v2',
   verificationBundle:{schemaVersion:'programmable.exact-source-verification-bundle.v2',compilationUnits:compiled.units,components:Object.keys(names).sort().map(id=>{const c=contracts[names[id]];return {targetId:id,compilationUnitId:c.compilationUnitId,sourcePath:c.sourcePath,contractName:c.contractName,constructorArguments:constructors[id].args,runtimeMaterialization:materializations[id]};})},components,
   actions:['initializer','token','hook'].map((id,index)=>({actionId:'deploy-'+id,kind:'deployCreate2',componentId:id,factory:{address:GRAPH},salt:effectiveSalt(id,salts[id]),initCode:constructors[id].initCode,dependsOn:index?['deploy-'+['initializer','token','hook'][index-1]]:[],authority:{kind:'controller'},preconditions:[],postconditions:[],execution})),
@@ -162,7 +194,8 @@ export function buildRobinLaunchPlan({intent,compiled,capabilities,factory,distr
   dependencies:[{dependencyId:'pool-manager',chainId:'4663',address:MANAGER,runtimeCodeHash:MANAGER_HASH},{dependencyId:'graph-factory',chainId:'4663',address:GRAPH,runtimeCodeHash:GRAPH_HASH},{dependencyId:'reward-distributor',chainId:'4663',address:getAddress(intent.creatorFeeRecipient),runtimeCodeHash:distributor.runtimeCodeHash,authoritySnapshot:{operator:getAddress(intent.operator)}}],
   expectedEffects:effects,budgets:{maxTotalValue:intent.initialBuyWei,maxTotalGas:totalGasLimit,validAfter:String(now-60),deadline:String(now-60+validitySeconds)},feeObligations:[],claimDescriptors:[],distributionPreferences:[],
   publication:{visibility:'listed',name:intent.name,symbol:intent.symbol,description:intent.descriptionDraft,imageUrl:intent.image,primaryComponentId:'token',primaryMarketId:'robin-native',links:[intent.website,intent.x,intent.publicSource.url+'/tree/'+sourceRevision]}};
- return {plan,report:{schemaVersion:'robin.launch-plan-preparation.v1',checkedAt:new Date(now*1000).toISOString(),sourceRevision,sourceCommitment,addresses,manifestDigest,graphCommitment:authorization.graphCommitment,authorizedLauncher:ATOMIC,factory:GRAPH,projectCallDataHash:keccak256(factoryCall),initialBuyWei:intent.initialBuyWei,minimumTokensOut:intent.minimumTokensOut,maximumLaunchGasCostWei:intent.maxGasCostWei,graphGasLimit,totalGasLimit,hookFees:{projectBuyBps:170,projectSellBps:170,platformBps:30,lpFeePips:0},hookImplementation:structuredClone(compiled.customHook),native30Runtime,routedTradingFee:{...capabilities.currentTradeFeePolicy,waiverVerified:false,totalTradingFeeConfirmed:false},
+ if(guarded)plan.dependencies.push({dependencyId:'early-buy-router',chainId:'4663',address:EARLY_BUY_ROUTER,runtimeCodeHash:EARLY_BUY_ROUTER_CODE_HASH});
+ return {plan,report:{schemaVersion:'robin.launch-plan-preparation.v1',checkedAt:new Date(now*1000).toISOString(),sourceRevision,sourceCommitment,addresses,manifestDigest,graphCommitment:authorization.graphCommitment,authorizedLauncher:ATOMIC,factory:GRAPH,projectCallDataHash:keccak256(factoryCall),initialBuyWei:intent.initialBuyWei,minimumTokensOut:intent.minimumTokensOut,maximumLaunchGasCostWei:intent.maxGasCostWei,graphGasLimit,totalGasLimit,hookFees:{projectBuyBps:170,projectSellBps:170,platformBps:30,lpFeePips:0},hookImplementation:structuredClone(compiled.customHook),native30Runtime,...(guarded?{launchGuard,launchGuardRuntime,initialBuyRecipient:initialBuyer}:{}),routedTradingFee:{...capabilities.currentTradeFeePolicy,waiverVerified:false,totalTradingFeeConfirmed:false},
   preparationMode:preflightOnly?'preflight-only':'launch-preparation',
   readiness:preflightOnly?'preflight-only-not-admitted-not-wallet-ready':'not-admitted-not-wallet-ready',
   platformAvailability:{create:structuredClone(capabilities.availability.operations.create),preflight:structuredClone(capabilities.availability.operations.preflight)},
